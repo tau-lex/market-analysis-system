@@ -1,0 +1,116 @@
+Source: tarantool
+Priority: optional
+Maintainer: Roman Tsisyk <roman@tarantool.org>
+Uploaders: Dmitry E. Oboukhov <unera@debian.org>
+Build-Depends: cdbs, debhelper (>= 8),
+ cmake,
+ libreadline-dev,
+ libncurses5-dev,
+ libyaml-dev,
+# Dependecies below are needed for fiber stack traces
+# libiberty.so is provided by binutils-dev (<< 2.24) for wheezy and precise
+ libiberty-dev | binutils-dev (<< 2.24),
+# libbfd-*.so
+ binutils-dev,
+# zlib is implicitly needed by libbfd #808516
+ zlib1g-dev,
+# liblz4-dev (>= r131),
+ libssl-dev
+Section: database
+Standards-Version: 3.9.6
+Homepage: http://tarantool.org/
+VCS-Browser: https://github.com/tarantool/tarantool
+VCS-Git: git://github.com/tarantool/tarantool.git
+
+Package: tarantool-common
+Architecture: all
+Priority: optional
+Conflicts: tarantool-common (<< 1.5.3),
+ tarantool-lts-common,
+ tarantool-lts,
+ tarantool-lts-modules,
+ tarantool-lts-client,
+ tarantool-lts-postgresql-module,
+ tarantool-lts-mysql-module,
+ tarantool-lts-dev,
+ tarantool-dbg (<< 1.5.2),
+ tarantool-common (<< 1.6~),
+ tarantool-client (<< 1.6~),
+ tarantool-client-dbg (<< 1.6~),
+ tarantool-plugins (<< 1.6~),
+ tarantool-mysql-plugin (<< 1.6~),
+ tarantool-postgresql-plugin (<< 1.6~),
+ tarantool-modules,
+ tarantool-mysql-module,
+ tarantool-postgresql-module,
+ libtarantool-dev (<< 1.6~)
+Replaces: tarantool-common (<< 1.5.3), tarantool-lts-common
+Depends: ${misc:Depends}, adduser, lsb-base
+Description: Tarantool in-memory database - common files
+ Tarantool is an in-memory database and Lua application server.
+ This package provides scripts to work with tarantool configuration
+ and log files.
+
+Package: tarantool
+Architecture: i386 amd64 armhf arm64
+Priority: optional
+Depends: ${shlibs:Depends}, ${misc:Depends}, binutils, libgomp1, libyaml-0-2,
+ openssl, tarantool-common (>= 1.6)
+Replaces: tarantool-lts
+Conflicts: tarantool-lts-common,
+ tarantool-lts,
+ tarantool-lts-modules,
+ tarantool-lts-postgresql-module,
+ tarantool-lts-mysql-module,
+ tarantool-lts-dev,
+ tarantool-lts-client,
+ tarantool-dbg (<< 1.5.2),
+ tarantool-common (<< 1.6~),
+ tarantool-client (<< 1.6~),
+ tarantool-client-dbg (<< 1.6~),
+ tarantool-plugins (<< 1.6~),
+ tarantool-mysql-plugin (<< 1.6~),
+ tarantool-postgresql-plugin (<< 1.6~),
+ libtarantool-dev (<< 1.6~),
+ tarantool-modules (<< 1.6.7),
+ tarantool-mysql-module (<< 1.6.7),
+ tarantool-postgresql-module (<< 1.6.7)
+Description: In-memory database with a Lua application server
+ Tarantool is an in-memory database and a Lua application server.
+ Its key properties include:
+ .
+  * flexible data model
+  * multiple index types: HASH, TREE, BITSET
+  * optional persistence and strong data durability
+  * log streaming replication
+  * Lua functions, procedures, triggers, with rich access to database API,
+    JSON support, inter-procedure and network communication libraries
+ .
+ This package provides Tarantool command line interpreter and server.
+
+Package: tarantool-dev
+Architecture: i386 amd64 armhf arm64
+Priority: optional
+Section: libdevel
+Replaces: tarantool-lts-dev
+Conflicts: tarantool-lts-common,
+ tarantool-lts,
+ tarantool-lts-modules,
+ tarantool-lts-postgresql-module,
+ tarantool-lts-mysql-module,
+ tarantool-lts-client,
+ tarantool-lts-dev,
+ tarantool-dbg (<< 1.5.2),
+ tarantool-common (<< 1.6~),
+ tarantool-client (<< 1.6~),
+ tarantool-client-dbg (<< 1.6~),
+ tarantool-plugins (<< 1.6~),
+ tarantool-mysql-plugin (<< 1.6~),
+ tarantool-postgresql-plugin (<< 1.6~),
+ libtarantool-dev (<< 1.6~)
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ tarantool (= ${binary:Version})
+Description: Tarantool in-memory database - development headers
+ Tarantool is an in-memory database and Lua application server.
+ This package provides server development files needed to build pluggable
+ modules.

@@ -1,0 +1,37 @@
+Target OS: FreeBSD 10.1 (RELEASE)
+
+1. Install necessary packages:
+-------------
+pkg install sudo git cmake gmake readline
+
+
+2. Download & build tarantool source code:
+-------------
+
+git clone git://github.com/tarantool/tarantool.git
+
+cd tarantool
+mkdir build && cd build
+git submodule update --init --recursive
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+gmake
+
+3. Set up python 2.7
+-------------
+
+From packages:
+pkg install python27 py27-yaml py27-daemon py27-msgpack
+
+From pip:
+
+pkg install py27-virtualenv
+virtualenv .venv
+source .venv/bin/activate
+pip install -r ../test-run/requirements.txt
+
+4. Run tarantool test suite
+-------------
+gmake test
+
+-- EOF
+

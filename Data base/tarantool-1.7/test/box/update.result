@@ -1,0 +1,820 @@
+s = box.schema.space.create('tweedledum')
+---
+...
+index = s:create_index('pk')
+---
+...
+-- test delete field
+s:insert{1000001, 1000002, 1000003, 1000004, 1000005}
+---
+- [1000001, 1000002, 1000003, 1000004, 1000005]
+...
+s:update({1000001}, {{'#', 1, 1}})
+---
+- error: Attempt to modify a tuple field which is part of index 'pk' in space 'tweedledum'
+...
+s:truncate()
+---
+...
+-- test arithmetic
+s:insert{1, 0}
+---
+- [1, 0]
+...
+s:update(1, {{'+', 2, 10}})
+---
+- [1, 10]
+...
+s:update(1, {{'+', 2, 15}})
+---
+- [1, 25]
+...
+s:update(1, {{'-', 2, 5}})
+---
+- [1, 20]
+...
+s:update(1, {{'-', 2, 20}})
+---
+- [1, 0]
+...
+s:update(1, {{'|', 2, 0x9}})
+---
+- [1, 9]
+...
+s:update(1, {{'|', 2, 0x6}})
+---
+- [1, 15]
+...
+s:update(1, {{'&', 2, 0xabcde}})
+---
+- [1, 14]
+...
+s:update(1, {{'&', 2, 0x2}})
+---
+- [1, 2]
+...
+s:update(1, {{'^', 2, 0xa2}})
+---
+- [1, 160]
+...
+s:update(1, {{'^', 2, 0xa2}})
+---
+- [1, 2]
+...
+s:truncate()
+---
+...
+-- test delete multiple fields
+s:insert{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+---
+- [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+...
+s:update({0}, {{'#', 42, 1}})
+---
+- error: Field 42 was not found in the tuple
+...
+s:update({0}, {{'#', 4, 'abirvalg'}})
+---
+- error: 'Argument type in operation ''#'' on field 4 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'#', 2, 1}, {'#', 4, 2}, {'#', 6, 1}})
+---
+- [0, 2, 3, 6, 7, 9, 10, 11, 12, 13, 14, 15]
+...
+s:update({0}, {{'#', 4, 3}})
+---
+- [0, 2, 3, 10, 11, 12, 13, 14, 15]
+...
+s:update({0}, {{'#', 5, 123456}})
+---
+- [0, 2, 3, 10]
+...
+s:update({0}, {{'#', 3, 4294967295}})
+---
+- [0, 2]
+...
+s:update({0}, {{'#', 2, 0}})
+---
+- error: 'Field 2 UPDATE error: cannot delete 0 fields'
+...
+s:truncate()
+---
+...
+-- test insert field
+s:insert{1, 3, 6, 9}
+---
+- [1, 3, 6, 9]
+...
+s:update({1}, {{'!', 2, 2}})
+---
+- [1, 2, 3, 6, 9]
+...
+s:update({1}, {{'!', 4, 4}, {'!', 4, 5}, {'!', 5, 7}, {'!', 5, 8}})
+---
+- [1, 2, 3, 5, 8, 7, 4, 6, 9]
+...
+s:update({1}, {{'!', 10, 10}, {'!', 10, 11}, {'!', 10, 12}})
+---
+- [1, 2, 3, 5, 8, 7, 4, 6, 9, 12, 11, 10]
+...
+s:truncate()
+---
+...
+s:insert{1, 'tuple'}
+---
+- [1, 'tuple']
+...
+s:update({1}, {{'#', 2, 1}, {'!', 2, 'inserted tuple'}, {'=', 3, 'set tuple'}})
+---
+- [1, 'inserted tuple', 'set tuple']
+...
+s:truncate()
+---
+...
+s:insert{1, 'tuple'}
+---
+- [1, 'tuple']
+...
+s:update({1}, {{'=', 2, 'set tuple'}, {'!', 2, 'inserted tuple'}, {'#', 3, 1}})
+---
+- [1, 'inserted tuple']
+...
+s:update({1}, {{'!', 1, 3}, {'!', 1, 2}})
+---
+- error: Attempt to modify a tuple field which is part of index 'pk' in space 'tweedledum'
+...
+s:truncate()
+---
+...
+-- test update's assign opearations
+s:replace{1, 'field string value'}
+---
+- [1, 'field string value']
+...
+s:update({1}, {{'=', 2, 'new field string value'}, {'=', 3, 42}, {'=', 4, 0xdeadbeef}})
+---
+- [1, 'new field string value', 42, 3735928559]
+...
+-- test multiple update opearations on the same field
+s:update({1}, {{'+', 3, 16}, {'&', 4, 0xffff0000}, {'|', 4, 0x0000a0a0}, {'^', 4, 0xffff00aa}})
+---
+- error: 'Field 4 UPDATE error: double update of the same field'
+...
+-- test update splice operation
+s:replace{1953719668, 'something to splice'}
+---
+- [1953719668, 'something to splice']
+...
+s:update(1953719668, {{':', 2, 1, 4, 'no'}})
+---
+- [1953719668, 'nothing to splice']
+...
+s:update(1953719668, {{':', 2, 1, 2, 'every'}})
+---
+- [1953719668, 'everything to splice']
+...
+-- check an incorrect offset
+s:update(1953719668, {{':', 2, 100, 2, 'every'}})
+---
+- [1953719668, 'everything to spliceevery']
+...
+s:update(1953719668, {{':', 2, -100, 2, 'every'}})
+---
+- error: 'SPLICE error on field 2: offset is out of bound'
+...
+s:truncate()
+---
+...
+s:insert{1953719668, 'hello', 'october', '20th'}:unpack()
+---
+- 1953719668
+- hello
+- october
+- 20th
+...
+s:truncate()
+---
+...
+s:insert{1953719668, 'hello world'}
+---
+- [1953719668, 'hello world']
+...
+s:update(1953719668, {{'=', 2, 'bye, world'}})
+---
+- [1953719668, 'bye, world']
+...
+s:delete{1953719668}
+---
+- [1953719668, 'bye, world']
+...
+s:replace({10, 'abcde'})
+---
+- [10, 'abcde']
+...
+s:update(10,  {{':', 2, 0, 0, '!'}})
+---
+- error: 'SPLICE error on field 2: offset is out of bound'
+...
+s:update(10,  {{':', 2, 1, 0, '('}})
+---
+- [10, '(abcde']
+...
+s:update(10,  {{':', 2, 2, 0, '({'}})
+---
+- [10, '(({abcde']
+...
+s:update(10,  {{':', 2, -1, 0, ')'}})
+---
+- [10, '(({abcde)']
+...
+s:update(10,  {{':', 2, -2, 0, '})'}})
+---
+- [10, '(({abcde}))']
+...
+-- test update delete operations
+s:update({1}, {{'#', 4, 1}, {'#', 3, 1}})
+---
+...
+-- test update insert operations
+s:update({1}, {{'!', 2, 1}, {'!', 2, 2}, {'!', 2, 3}, {'!', 2, 4}})
+---
+...
+-- s:update: zero field
+s:insert{48}
+---
+- [48]
+...
+s:update(48, {{'=', 0, 'hello'}})
+---
+- error: Field 0 was not found in the tuple
+...
+-- s:update: push/pop fields
+s:insert{1684234849}
+---
+- [1684234849]
+...
+s:update({1684234849}, {{'#', 2, 1}})
+---
+- error: Field 2 was not found in the tuple
+...
+s:update({1684234849}, {{'!', -1, 'push1'}})
+---
+- [1684234849, 'push1']
+...
+s:update({1684234849}, {{'!', -1, 'push2'}})
+---
+- [1684234849, 'push1', 'push2']
+...
+s:update({1684234849}, {{'!', -1, 'push3'}})
+---
+- [1684234849, 'push1', 'push2', 'push3']
+...
+s:update({1684234849}, {{'#', 2, 1}, {'!', -1, 'swap1'}})
+---
+- [1684234849, 'push2', 'push3', 'swap1']
+...
+s:update({1684234849}, {{'#', 2, 1}, {'!', -1, 'swap2'}})
+---
+- [1684234849, 'push3', 'swap1', 'swap2']
+...
+s:update({1684234849}, {{'#', 2, 1}, {'!', -1, 'swap3'}})
+---
+- [1684234849, 'swap1', 'swap2', 'swap3']
+...
+s:update({1684234849}, {{'#', -1, 1}, {'!', -1, 'noop1'}})
+---
+- [1684234849, 'swap1', 'swap2', 'noop1']
+...
+s:update({1684234849}, {{'#', -1, 1}, {'!', -1, 'noop2'}})
+---
+- [1684234849, 'swap1', 'swap2', 'noop2']
+...
+s:update({1684234849}, {{'#', -1, 1}, {'!', -1, 'noop3'}})
+---
+- [1684234849, 'swap1', 'swap2', 'noop3']
+...
+--
+-- negative indexes
+--
+box.tuple.new({1, 2, 3, 4, 5}):update({{'!', 0, 'Test'}})
+---
+- error: Field 0 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'!', -1, 'Test'}})
+---
+- [1, 2, 3, 4, 5, 'Test']
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'!', -3, 'Test'}})
+---
+- [1, 2, 3, 'Test', 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'!', -5, 'Test'}})
+---
+- [1, 'Test', 2, 3, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'!', -6, 'Test'}})
+---
+- ['Test', 1, 2, 3, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'!', -7, 'Test'}})
+---
+- error: Field -7 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'!', -100500, 'Test'}})
+---
+- error: Field -100500 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'=', 0, 'Test'}})
+---
+- error: Field 0 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'=', -1, 'Test'}})
+---
+- [1, 2, 3, 4, 'Test']
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'=', -3, 'Test'}})
+---
+- [1, 2, 'Test', 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'=', -5, 'Test'}})
+---
+- ['Test', 2, 3, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'=', -6, 'Test'}})
+---
+- error: Field -6 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'=', -100500, 'Test'}})
+---
+- error: Field -100500 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'+', 0, 100}})
+---
+- error: Field 0 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'+', -1, 100}})
+---
+- [1, 2, 3, 4, 105]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'+', -3, 100}})
+---
+- [1, 2, 103, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'+', -5, 100}})
+---
+- [101, 2, 3, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'+', -6, 100}})
+---
+- error: Field -6 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'+', -100500, 100}})
+---
+- error: Field -100500 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'|', 0, 100}})
+---
+- error: Field 0 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'|', -1, 100}})
+---
+- [1, 2, 3, 4, 101]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'|', -3, 100}})
+---
+- [1, 2, 103, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'|', -5, 100}})
+---
+- [101, 2, 3, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'|', -6, 100}})
+---
+- error: Field -6 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'|', -100500, 100}})
+---
+- error: Field -100500 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'#', 0, 1}})
+---
+- error: Field 0 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'#', -1, 1}})
+---
+- [1, 2, 3, 4]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'#', -3, 1}})
+---
+- [1, 2, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'#', -5, 1}})
+---
+- [2, 3, 4, 5]
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'#', -6, 1}})
+---
+- error: Field -6 was not found in the tuple
+...
+box.tuple.new({1, 2, 3, 4, 5}):update({{'#', -100500, 1}})
+---
+- error: Field -100500 was not found in the tuple
+...
+--
+-- #416: UPDATEs from Lua can't be properly restored due to one based indexing
+--
+env = require('test_run')
+---
+...
+test_run = env.new()
+---
+...
+test_run:cmd('restart server default')
+s = box.space.tweedledum
+---
+...
+s:select{}
+---
+- - [10, '(({abcde}))']
+  - [48]
+  - [1684234849, 'swap1', 'swap2', 'noop3']
+...
+s:truncate()
+---
+...
+s:drop()
+---
+...
+-- #521: Cryptic error message in update operation
+s = box.schema.space.create('tweedledum')
+---
+...
+index = s:create_index('pk')
+---
+...
+s:insert{1, 2, 3}
+---
+- [1, 2, 3]
+...
+s:update({1})
+---
+- error: Usage index:update(key, ops)
+...
+s:update({1}, {'=', 1, 1})
+---
+- error: Illegal parameters, update operations must be an array {{op,..}, {op,..}}
+...
+s:drop()
+---
+...
+-- #528: Different types in arithmetical update, overflow check
+ffi = require('ffi')
+---
+...
+s = box.schema.create_space('tweedledum')
+---
+...
+index = s:create_index('pk')
+---
+...
+s:insert{0, -1}
+---
+- [0, -1]
+...
+-- + --
+s:update({0}, {{'+', 2, "a"}}) -- err
+---
+- error: 'Argument type in operation ''+'' on field 2 does not match field type: expected
+    a NUMBER'
+...
+s:update({0}, {{'+', 2, 10}}) -- neg(ative) + pos(itive) = pos(itive) 9
+---
+- [0, 9]
+...
+s:update({0}, {{'+', 2, 5}}) -- pos + pos = pos 14
+---
+- [0, 14]
+...
+s:update({0}, {{'+', 2, -4}}) -- pos + neg = pos 10
+---
+- [0, 10]
+...
+s:update({0}, {{'+', 2, -22}}) -- pos + neg = neg -12
+---
+- [0, -12]
+...
+s:update({0}, {{'+', 2, -3}}) -- neg + neg = neg -15
+---
+- [0, -15]
+...
+s:update({0}, {{'+', 2, 7}}) -- neg + pos = neg -8
+---
+- [0, -8]
+...
+-- - --
+s:update({0}, {{'-', 2, "a"}}) -- err
+---
+- error: 'Argument type in operation ''-'' on field 2 does not match field type: expected
+    a NUMBER'
+...
+s:update({0}, {{'-', 2, 16}}) -- neg(ative) - pos(itive) = neg(ative) -24
+---
+- [0, -24]
+...
+s:update({0}, {{'-', 2, -4}}) -- neg - neg = neg 20
+---
+- [0, -20]
+...
+s:update({0}, {{'-', 2, -32}}) -- neg - neg = pos 12
+---
+- [0, 12]
+...
+s:update({0}, {{'-', 2, 3}}) -- pos - pos = pos 9
+---
+- [0, 9]
+...
+s:update({0}, {{'-', 2, -5}}) -- pos - neg = pos 14
+---
+- [0, 14]
+...
+s:update({0}, {{'-', 2, 17}}) -- pos - pos = neg -3
+---
+- [0, -3]
+...
+-- bit --
+s:replace{0, 0} -- 0
+---
+- [0, 0]
+...
+s:update({0}, {{'|', 2, 24}}) -- 24
+---
+- [0, 24]
+...
+s:update({0}, {{'|', 2, 2}}) -- 26
+---
+- [0, 26]
+...
+s:update({0}, {{'&', 2, 50}}) -- 18
+---
+- [0, 18]
+...
+s:update({0}, {{'^', 2, 6}}) -- 20
+---
+- [0, 20]
+...
+s:update({0}, {{'|', 2, -1}}) -- err
+---
+- error: 'Argument type in operation ''|'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'&', 2, -1}}) -- err
+---
+- error: 'Argument type in operation ''&'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'^', 2, -1}}) -- err
+---
+- error: 'Argument type in operation ''^'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:replace{0, -1} -- -1
+---
+- [0, -1]
+...
+s:update({0}, {{'|', 2, 2}}) -- err
+---
+- error: 'Argument type in operation ''|'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'&', 2, 40}}) -- err
+---
+- error: 'Argument type in operation ''&'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'^', 2, 6}}) -- err
+---
+- error: 'Argument type in operation ''^'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:replace{0, 1.5} -- 1.5
+---
+- [0, 1.5]
+...
+s:update({0}, {{'|', 2, 2}}) -- err
+---
+- error: 'Argument type in operation ''|'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'&', 2, 40}}) -- err
+---
+- error: 'Argument type in operation ''&'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'^', 2, 6}}) -- err
+---
+- error: 'Argument type in operation ''^'' on field 2 does not match field type: expected
+    a UINT'
+...
+-- double
+s:replace{0, 5} -- 5
+---
+- [0, 5]
+...
+s:update({0}, {{'+', 2, 1.5}}) -- int + double = double 6.5
+---
+- [0, 6.5]
+...
+s:update({0}, {{'|', 2, 2}}) -- err (double!)
+---
+- error: 'Argument type in operation ''|'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'-', 2, 0.5}}) -- double - double = double 6
+---
+- [0, 6]
+...
+s:update({0}, {{'+', 2, 1.5}}) -- double + double = double 7.5
+---
+- [0, 7.5]
+...
+-- float
+s:replace{0, ffi.new("float", 1.5)} -- 1.5
+---
+- [0, 1.5]
+...
+s:update({0}, {{'+', 2, 2}}) -- float + int = float 3.5
+---
+- [0, 3.5]
+...
+s:update({0}, {{'+', 2, ffi.new("float", 3.5)}}) -- float + int = float 7
+---
+- [0, 7]
+...
+s:update({0}, {{'|', 2, 2}}) -- err (float!)
+---
+- error: 'Argument type in operation ''|'' on field 2 does not match field type: expected
+    a UINT'
+...
+s:update({0}, {{'-', 2, ffi.new("float", 1.5)}}) -- float - float = float 5.5
+---
+- [0, 5.5]
+...
+s:update({0}, {{'+', 2, ffi.new("float", 3.5)}}) -- float + float = float 9
+---
+- [0, 9]
+...
+s:update({0}, {{'-', 2, ffi.new("float", 9)}}) -- float + float = float 0
+---
+- [0, 0]
+...
+s:update({0}, {{'+', 2, ffi.new("float", 1.2)}}) -- float + float = float 1.2
+---
+- [0, 1.2000000476837]
+...
+-- overflow --
+s:replace{0, 0xfffffffffffffffeull}
+---
+- [0, 18446744073709551614]
+...
+s:update({0}, {{'+', 2, 1}}) -- ok
+---
+- [0, 18446744073709551615]
+...
+s:update({0}, {{'+', 2, 1}}) -- overflow
+---
+- error: Integer overflow when performing '+' operation on field 2
+...
+s:update({0}, {{'+', 2, 100500}}) -- overflow
+---
+- error: Integer overflow when performing '+' operation on field 2
+...
+s:replace{0, 1}
+---
+- [0, 1]
+...
+s:update({0}, {{'+', 2, 0xffffffffffffffffull}})  -- overflow
+---
+- error: Integer overflow when performing '+' operation on field 2
+...
+s:replace{0, -1}
+---
+- [0, -1]
+...
+s:update({0}, {{'+', 2, 0xffffffffffffffffull}})  -- ok
+---
+- [0, 18446744073709551614]
+...
+s:replace{0, 0}
+---
+- [0, 0]
+...
+s:update({0}, {{'-', 2, 0x7fffffffffffffffull}})  -- ok
+---
+- [0, -9223372036854775807]
+...
+s:replace{0, -1}
+---
+- [0, -1]
+...
+s:update({0}, {{'-', 2, 0x7fffffffffffffffull}})  -- ok
+---
+- [0, -9223372036854775808]
+...
+s:replace{0, -2}
+---
+- [0, -2]
+...
+s:update({0}, {{'-', 2, 0x7fffffffffffffffull}})  -- overflow
+---
+- error: Integer overflow when performing '-' operation on field 2
+...
+s:replace{0, 1}
+---
+- [0, 1]
+...
+s:update({0}, {{'-', 2, 0xffffffffffffffffull}})  -- overflow
+---
+- error: Integer overflow when performing '-' operation on field 2
+...
+s:replace{0, 0xffffffffffffffefull}
+---
+- [0, 18446744073709551599]
+...
+s:update({0}, {{'-', 2, -16}})  -- ok
+---
+- [0, 18446744073709551615]
+...
+s:update({0}, {{'-', 2, -16}})  -- overflow
+---
+- error: Integer overflow when performing '-' operation on field 2
+...
+s:replace{0, -0x4000000000000000ll}
+---
+- [0, -4611686018427387904]
+...
+s:update({0}, {{'+', 2, -0x4000000000000000ll}})  -- ok
+---
+- [0, -9223372036854775808]
+...
+s:replace{0, -0x4000000000000000ll}
+---
+- [0, -4611686018427387904]
+...
+s:update({0}, {{'+', 2, -0x4000000000000001ll}})  -- overflow
+---
+- error: Integer overflow when performing '+' operation on field 2
+...
+-- some wrong updates --
+s:update({0}, 0)
+---
+- error: Usage index:update(key, ops)
+...
+s:update({0}, {})
+---
+- error: Illegal parameters, no operations for update
+...
+s:update({0}, {'+', 2, 2})
+---
+- error: Illegal parameters, update operations must be an array {{op,..}, {op,..}}
+...
+s:update({0}, {{}})
+---
+- error: Illegal parameters, update operation must be an array {op,..}, got empty
+    array
+...
+s:update({0}, {{'+'}})
+---
+- error: Unknown UPDATE operation
+...
+s:update({0}, {{'+', 0}})
+---
+- error: Unknown UPDATE operation
+...
+s:update({0}, {{'+', '+', '+'}})
+---
+- error: Illegal parameters, field id must be a number
+...
+s:update({0}, {{0, 0, 0}})
+---
+- error: Illegal parameters, update operation name must be a string
+...
+-- test for https://github.com/tarantool/tarantool/issues/1142
+-- broken WAL during upsert
+ops = {}
+---
+...
+for i = 1,10 do table.insert(ops, {'=', 2, '1234567890'}) end
+---
+...
+s:upsert({0}, ops)
+---
+...
+--#stop server default
+--#start server default
+s = box.space.tweedledum
+---
+...
+s:drop()
+---
+...

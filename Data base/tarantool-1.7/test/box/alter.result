@@ -1,0 +1,463 @@
+_space = box.space[box.schema.SPACE_ID]
+---
+...
+_index = box.space[box.schema.INDEX_ID]
+---
+...
+ADMIN = 1
+---
+...
+env = require('test_run')
+---
+...
+test_run = env.new()
+---
+...
+--
+-- Test insertion into a system space - verify that
+-- mandatory fields are required.
+--
+_space:insert{_space.id, ADMIN, 'test', 5 }
+---
+- error: Duplicate key exists in unique index 'primary' in space '_space'
+...
+--
+-- Bad space id
+--
+_space:insert{'hello', 'world', 'test'}
+---
+- error: 'Tuple field 1 type does not match one required by operation: expected NUM'
+...
+--
+-- Can't create a space which has wrong field count - field_count must be NUM
+--
+_space:insert{_space.id, ADMIN, 'test', 'world'}
+---
+- error: Duplicate key exists in unique index 'primary' in space '_space'
+...
+--
+-- There is already a tuple for the system space
+--
+_space:insert{_space.id, ADMIN, '_space', 'memtx', 0}
+---
+- error: Duplicate key exists in unique index 'primary' in space '_space'
+...
+_space:replace{_space.id, ADMIN, '_space', 'memtx', 0}
+---
+- [280, 1, '_space', 'memtx', 0]
+...
+_space:insert{_index.id, ADMIN, '_index', 'memtx', 0}
+---
+- error: Duplicate key exists in unique index 'primary' in space '_space'
+...
+_space:replace{_index.id, ADMIN, '_index', 'memtx', 0}
+---
+- [288, 1, '_index', 'memtx', 0]
+...
+--
+-- Can't change properties of a space
+--
+_space:replace{_space.id, ADMIN, '_space', 'memtx', 0}
+---
+- [280, 1, '_space', 'memtx', 0]
+...
+--
+-- Can't drop a system space
+--
+_space:delete{_space.id}
+---
+- error: 'Can''t drop space ''_space'': the space has indexes'
+...
+_space:delete{_index.id}
+---
+- error: 'Can''t drop space ''_index'': the space has indexes'
+...
+--
+-- Can't change properties of a space
+--
+_space:update({_space.id}, {{'-', 1, 1}})
+---
+- error: Attempt to modify a tuple field which is part of index 'primary' in space
+    '_space'
+...
+_space:update({_space.id}, {{'-', 1, 2}})
+---
+- error: Attempt to modify a tuple field which is part of index 'primary' in space
+    '_space'
+...
+--
+-- Create a space
+--
+t = _space:auto_increment{ADMIN, 'hello', 'memtx', 0}
+---
+...
+-- Check that a space exists
+space = box.space[t[1]]
+---
+...
+space.id
+---
+- 321
+...
+space.field_count
+---
+- 0
+...
+space.index[0]
+---
+- null
+...
+--
+-- check dml - the space has no indexes yet, but must not crash on DML
+--
+space:select{0}
+---
+- error: 'No index #0 is defined in space ''hello'''
+...
+space:insert{0, 0}
+---
+- error: 'No index #0 is defined in space ''hello'''
+...
+space:replace{0, 0}
+---
+- error: 'No index #0 is defined in space ''hello'''
+...
+space:update({0}, {{'+', 1, 1}})
+---
+- error: 'No index #0 is defined in space ''hello'''
+...
+space:delete{0}
+---
+- error: 'No index #0 is defined in space ''hello'''
+...
+t = _space:delete{space.id}
+---
+...
+space_deleted = box.space[t[1]]
+---
+...
+space_deleted
+---
+- null
+...
+space:replace{0}
+---
+- error: Space '321' does not exist
+...
+_index:insert{_space.id, 0, 'primary', 'tree', 1, 1, 0, 'num'}
+---
+- error: Duplicate key exists in unique index 'primary' in space '_index'
+...
+_index:replace{_space.id, 0, 'primary', 'tree', 1, 1, 0, 'num'}
+---
+- [280, 0, 'primary', 'tree', 1, 1, 0, 'num']
+...
+_index:insert{_index.id, 0, 'primary', 'tree', 1, 2, 0, 'num', 1, 'num'}
+---
+- error: Duplicate key exists in unique index 'primary' in space '_index'
+...
+_index:replace{_index.id, 0, 'primary', 'tree', 1, 2, 0, 'num', 1, 'num'}
+---
+- [288, 0, 'primary', 'tree', 1, 2, 0, 'num', 1, 'num']
+...
+_index:select{}
+---
+- - [272, 0, 'primary', 'tree', {'unique': true}, [[0, 'str']]]
+  - [280, 0, 'primary', 'tree', 1, 1, 0, 'num']
+  - [280, 1, 'owner', 'tree', {'unique': false}, [[1, 'num']]]
+  - [280, 2, 'name', 'tree', {'unique': true}, [[2, 'str']]]
+  - [281, 0, 'primary', 'tree', {'unique': true}, [[0, 'num']]]
+  - [281, 1, 'owner', 'tree', {'unique': false}, [[1, 'num']]]
+  - [281, 2, 'name', 'tree', {'unique': true}, [[2, 'str']]]
+  - [288, 0, 'primary', 'tree', 1, 2, 0, 'num', 1, 'num']
+  - [288, 2, 'name', 'tree', {'unique': true}, [[0, 'num'], [2, 'str']]]
+  - [289, 0, 'primary', 'tree', {'unique': true}, [[0, 'num'], [1, 'num']]]
+  - [289, 2, 'name', 'tree', {'unique': true}, [[0, 'num'], [2, 'str']]]
+  - [296, 0, 'primary', 'tree', {'unique': true}, [[0, 'num']]]
+  - [296, 1, 'owner', 'tree', {'unique': false}, [[1, 'num']]]
+  - [296, 2, 'name', 'tree', {'unique': true}, [[2, 'str']]]
+  - [297, 0, 'primary', 'tree', {'unique': true}, [[0, 'num']]]
+  - [297, 1, 'owner', 'tree', {'unique': false}, [[1, 'num']]]
+  - [297, 2, 'name', 'tree', {'unique': true}, [[2, 'str']]]
+  - [304, 0, 'primary', 'tree', {'unique': true}, [[0, 'num']]]
+  - [304, 1, 'owner', 'tree', {'unique': false}, [[1, 'num']]]
+  - [304, 2, 'name', 'tree', {'unique': true}, [[2, 'str']]]
+  - [305, 0, 'primary', 'tree', {'unique': true}, [[0, 'num']]]
+  - [305, 1, 'owner', 'tree', {'unique': false}, [[1, 'num']]]
+  - [305, 2, 'name', 'tree', {'unique': true}, [[2, 'str']]]
+  - [312, 0, 'primary', 'tree', {'unique': true}, [[1, 'num'], [2, 'str'], [3, 'num']]]
+  - [312, 1, 'owner', 'tree', {'unique': false}, [[0, 'num']]]
+  - [312, 2, 'object', 'tree', {'unique': false}, [[2, 'str'], [3, 'num']]]
+  - [313, 0, 'primary', 'tree', {'unique': true}, [[1, 'num'], [2, 'str'], [3, 'num']]]
+  - [313, 1, 'owner', 'tree', {'unique': false}, [[0, 'num']]]
+  - [313, 2, 'object', 'tree', {'unique': false}, [[2, 'str'], [3, 'num']]]
+  - [320, 0, 'primary', 'tree', {'unique': true}, [[0, 'num']]]
+  - [320, 1, 'uuid', 'tree', {'unique': true}, [[1, 'str']]]
+...
+-- modify indexes of a system space
+_index:delete{_index.id, 0}
+---
+- error: Can't drop the primary key in a system space, space '_index'
+...
+_space:insert{1000, ADMIN, 'hello', 'memtx', 0}
+---
+- [1000, 1, 'hello', 'memtx', 0]
+...
+_index:insert{1000, 0, 'primary', 'tree', 1, 1, 0, 'num'}
+---
+- [1000, 0, 'primary', 'tree', 1, 1, 0, 'num']
+...
+box.space[1000]:insert{0, 'hello, world'}
+---
+- [0, 'hello, world']
+...
+box.space[1000]:drop()
+---
+...
+box.space[1000]
+---
+- null
+...
+-- test that after disabling triggers on system spaces we still can
+-- get a correct snapshot
+_index:run_triggers(false)
+---
+...
+_space:run_triggers(false)
+---
+...
+box.snapshot()
+---
+- ok
+...
+test_run:cmd("restart server default")
+ADMIN = 1
+---
+...
+box.space['_space']:insert{1000, ADMIN, 'test', 'memtx', 0}
+---
+- [1000, 1, 'test', 'memtx', 0]
+...
+box.space[1000].id
+---
+- 1000
+...
+box.space['_space']:delete{1000}
+---
+- [1000, 1, 'test', 'memtx', 0]
+...
+box.space[1000]
+---
+- null
+...
+--------------------------------------------------------------------------------
+-- #197: box.space.space0:len() returns an error if there is no index
+--------------------------------------------------------------------------------
+space = box.schema.space.create('gh197')
+---
+...
+space:len()
+---
+- 0
+...
+space:truncate()
+---
+...
+space:pairs():totable()
+---
+- []
+...
+space:drop()
+---
+...
+--------------------------------------------------------------------------------
+-- #198: names like '' and 'x.y' and 5 and 'primary ' are legal
+--------------------------------------------------------------------------------
+-- invalid identifiers
+box.schema.space.create('invalid.identifier')
+---
+- error: Invalid identifier 'invalid.identifier' (expected letters, digits or an underscore)
+...
+box.schema.space.create('invalid identifier')
+---
+- error: Invalid identifier 'invalid identifier' (expected letters, digits or an underscore)
+...
+box.schema.space.create('primary ')
+---
+- error: Invalid identifier 'primary ' (expected letters, digits or an underscore)
+...
+box.schema.space.create('5')
+---
+- error: Invalid identifier '5' (expected letters, digits or an underscore)
+...
+box.schema.space.create('')
+---
+- error: Invalid identifier '' (expected letters, digits or an underscore)
+...
+-- valid identifiers
+box.schema.space.create('_Abcde'):drop()
+---
+...
+box.schema.space.create('_5'):drop()
+---
+...
+box.schema.space.create('valid_identifier'):drop()
+---
+...
+-- some OS-es ship incomplete locales, breaking ID validation
+weird_chars=''
+---
+...
+if jit.os~='OSX' and jit.os~='BSD' then weird_chars='空間' end
+---
+...
+box.schema.space.create('ынтыпрайзный_'..weird_chars):drop() -- unicode
+---
+...
+box.schema.space.create('utf8_наше_Фсё'):drop() -- unicode
+---
+...
+space = box.schema.space.create('test')
+---
+...
+-- invalid identifiers
+space:create_index('invalid.identifier')
+---
+- error: Invalid identifier 'invalid.identifier' (expected letters, digits or an underscore)
+...
+space:create_index('invalid identifier')
+---
+- error: Invalid identifier 'invalid identifier' (expected letters, digits or an underscore)
+...
+space:create_index('primary ')
+---
+- error: Invalid identifier 'primary ' (expected letters, digits or an underscore)
+...
+space:create_index('5')
+---
+- error: Invalid identifier '5' (expected letters, digits or an underscore)
+...
+space:create_index('')
+---
+- error: Invalid identifier '' (expected letters, digits or an underscore)
+...
+space:drop()
+---
+...
+-- gh-57 Confusing error message when trying to create space with a
+-- duplicate id
+auto = box.schema.space.create('auto_original')
+---
+...
+box.schema.space.create('auto', {id = auto.id})
+---
+- error: Duplicate key exists in unique index 'primary' in space '_space'
+...
+box.schema.space.drop('auto')
+---
+- error: Illegal parameters, space_id should be a number
+...
+box.schema.space.create('auto_original', {id = auto.id})
+---
+- error: Space 'auto_original' already exists
+...
+auto:drop()
+---
+...
+-- ------------------------------------------------------------------
+-- gh-281 Crash after rename + replace + delete with multi-part index
+-- ------------------------------------------------------------------
+s = box.schema.space.create('space')
+---
+...
+index = s:create_index('primary', {unique = true, parts = {1, 'NUM', 2, 'STR'}})
+---
+...
+s:insert{1, 'a'}
+---
+- [1, 'a']
+...
+box.space.space.index.primary:rename('secondary')
+---
+...
+box.space.space:replace{1,'The rain in Spain'}
+---
+- [1, 'The rain in Spain']
+...
+box.space.space:delete{1,'The rain in Spain'}
+---
+- [1, 'The rain in Spain']
+...
+box.space.space:select{}
+---
+- - [1, 'a']
+...
+s:drop()
+---
+...
+-- ------------------------------------------------------------------
+-- gh-362 Appropriate error messages in create_index
+-- ------------------------------------------------------------------
+s = box.schema.space.create(42)
+---
+- error: Illegal parameters, name should be a string
+...
+s = box.schema.space.create("test", "bug")
+---
+- error: Illegal parameters, options should be a table
+...
+s = box.schema.space.create("test", {unknown = 'param'})
+---
+- error: 'Wrong space options (field 5): unexpected option ''unknown'''
+...
+s = box.schema.space.create("test")
+---
+...
+index = s:create_index('primary', {unique = true, parts = {0, 'NUM', 1, 'STR'}})
+---
+- error: 'Illegal parameters, invalid index parts: field_no must be one-based'
+...
+index = s:create_index('primary', {unique = true, parts = {'NUM', 1, 'STR', 2}})
+---
+- error: 'Illegal parameters, options.parts: expected field_no (number), type (string)
+    pairs'
+...
+index = s:create_index('primary', {unique = true, parts = 'bug'})
+---
+- error: Illegal parameters, options parameter 'parts' should be of type table
+...
+index = s:create_index('test', {unique = true, parts = {1, 'NUM'}, mmap = true})
+---
+- error: 'Wrong index options (field 4): unexpected option ''mmap'''
+...
+s:drop()
+---
+...
+-- ------------------------------------------------------------------
+-- gh-155 Tarantool failure on simultaneous space:drop()
+-- ------------------------------------------------------------------
+test_run:cmd("setopt delimiter ';'")
+---
+- true
+...
+local fiber = require('fiber')
+local W = 4
+local N = 50
+local ch = fiber.channel(W)
+for i=1,W do
+    fiber.create(function()
+        for k=1,N do
+            local space_id = math.random(2147483647)
+            local space = box.schema.space.create(string.format('space_%d', space_id))
+            space:create_index('pk', { type = 'tree' })
+            space:drop()
+        end
+        ch:put(true)
+    end)
+end
+for i=1,W do
+    ch:get()
+end
+test_run:cmd("setopt delimiter ''");
+---
+...
