@@ -1,5 +1,5 @@
 Module name: Autotrading
-Short name: autd
+Short name: auttrd
 OS: Windows 7 +
 Platform, framework: MQL 5, .NET(?)
 

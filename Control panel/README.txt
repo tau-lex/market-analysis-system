@@ -1,5 +1,5 @@
 Module name: Control panel
-Short name: ctlp
+Short name: ctlpnl
 OS: Windows 7 +
 Platform, framework: C#, .NET
 
