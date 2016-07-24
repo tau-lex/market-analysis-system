@@ -2,7 +2,7 @@
 -- Пример скрипта для инициализации Тарантул
 -- box.cfg{ key = value [, key = value ...]]}
 box.cfg{
-	background,
+	background = false,
 	-- Run the server as a background task. The logger and pid_file parameters must be non-null for this to work.
 	--Type: boolean
 	--Default: false
@@ -13,7 +13,7 @@ box.cfg{
 	--Default: null
 	--Dynamic: yes
 	
-	listen,
+	listen = 3301,
 	-- The read/write data port number or URI (Universal Resource Identifier) string. Has no default value, so must be specified if connections will occur from remote clients that do not use “admin address” (the administrative host and port).
 	--Type: integer or string
 	--Default: null

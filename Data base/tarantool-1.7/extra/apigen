@@ -1,3 +1,0 @@
-#!/bin/sh
-
-sed -n '/^\/\*\* \\cond public \*\/$/,/^\/\*\* \\endcond public \*\/$/P'

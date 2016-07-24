@@ -1,0 +1,16 @@
+
+5.2. URI
+
+Some configuration parameters and some functions depend on a URI, or "Universal Resource Identifier". The URI string format is similar to the generic syntax for a URI schema. So it may contain (in order) a user name for login, a password, a host name or host IP address, and a port number. Only the port number is always mandatory. The password is mandatory if the user name is specified, unless the user name is 'guest'. So, formally, the URI syntax is [host:]port or [username:password@]host:port. If host is omitted, then '0.0.0.0' or '[::]' is assumed, meaning respectively any IPv4 address or any IPv6 address, on the local machine. If username:password is omitted, then 'guest' is assumed. Some examples:
+
+    URI fragment 					Example
+    port 							3301
+    host:port 						127.0.0.1:3301
+    username:password@host:port 	notguest:sesame@mail.ru:3301
+
+
+5.4. Configuration parameters
+
+Configuration parameters have the form:
+
+box.cfg{ key = value [, key = value ...]]
