@@ -1,11 +1,13 @@
--- This is default tarantool initialization file
--- with easy to use configuration examples including
--- replication, sharding and all major features
+#!/usr/bin/env tarantool
+-- tarantool v1.6
+-- Это по умолчанию файл инициализации Tarantool
+-- с простым в использовании примеры конфигурации, 
+-- включая репликацию, сегментирование и всех основных функций
 -- Complete documentation available in:  http://tarantool.org/doc/
 --
--- To start this example just run "sudo tarantoolctl start example" or
--- use init scripts provided by binary packages.
--- To connect to the instance, use "sudo tarantoolctl enter example"
+-- чтобы начать этот пример просто запустите "sudo tarantoolctl start example" 
+-- или использовать сценарии инициализации, предоставляемые бинарными пакетами.
+-- Для того, чтобы подключиться к экземпляру, используйте "sudo tarantoolctl enter example"
 -- Features:
 -- 1. Database configuration
 -- 2. Binary logging and snapshots
@@ -22,75 +24,73 @@ box.cfg {
     -- Basic parameters
     --------------------
 
-    -- An absolute path to directory where write-ahead log (.xlog) files are
-    -- stored. If not specified, defaults to /var/lib/tarantool/INSTANCE
+    -- Абсолютный путь к каталогу, в котором записи сохраняются вперед файла 
+    -- журнала (.xlog). Если не указано, по умолчанию /var/lib/tarantool/INSTANCE
     -- wal_dir = nil;
 
-    -- An absolute path to directory where snapshot (.snap) files are stored.
+    -- Абсолютный путь к каталогу, в котором сохраняются файлы снимков(.snap).
     -- If not specified, defaults to /var/lib/tarantool/INSTANCE
     -- snap_dir = nil;
 
-    -- An absolute path to directory where sophia files are stored.
+    -- Абсолютный путь к каталогу, в котором хранятся файлы Sophia.
     -- If not specified, defaults to /var/lib/tarantool/INSTANCE
     -- sophia_dir = nil;
 
     -- The read/write data port number or URI
-    -- Has no default value, so must be specified if
-    -- connections will occur from remote clients 
-    -- that do not use “admin address”
+    -- не имеет значения по умолчанию, поэтому необходимо указать, если 
+	-- подключение будет происходить от удаленных клиентов, которые 
+	-- не используют "адрес администратора"
     listen = 3301;
 
-    -- Inject the given string into server process title
+    -- Выводит данную строку в названии процесса сервера
     -- custom_proc_title = 'example';
 
     -------------------------
     -- Storage configuration
     -------------------------
 
-    -- How much memory Tarantool allocates
-    -- to actually store tuples, in gigabytes
+    -- Сколько памяти Tarantool выделяет на самом деле для хранения 
+	-- кортежей, в гигабайтах
     slab_alloc_arena = 0.5;
 
-    -- Size of the smallest allocation unit
-    -- It can be tuned up if most of the tuples are not so small
+    -- Размер самого маленького выделенного блока
+    -- Он может быть настроен, если большинство из кортежей не настолько малы
     slab_alloc_minimal = 16;
 
-    -- Size of the largest allocation unit
+    -- Размер самого большого выделенного блока
     -- It can be tuned up if it is necessary to store large tuples
     slab_alloc_maximal = 1048576;
 
-    -- Use slab_alloc_factor as the multiplier for computing
-    -- the sizes of memory chunks that tuples are stored in
+    -- Используйте slab_alloc_factor как множитель для вычисления размеров областей памяти, где хранятся кортежи
     slab_alloc_factor = 1.06;
 
     -------------------
     -- Snapshot daemon
     -------------------
 
-    -- The interval between actions by the snapshot daemon, in seconds
+    -- Интервал между действиями snapshot демона, в секундах
     snapshot_period = 0;
 
-    -- The maximum number of snapshots that the snapshot daemon maintans
+    -- Максимальное количество снимков, которое поддерживает snapshot демон
     snapshot_count = 6;
 
     --------------------------------
     -- Binary logging and snapshots
     --------------------------------
 
-    -- Abort if there is an error while reading
-    -- the snapshot file (at server start)
+    -- Прервать, если есть ошибка при чтении файла снимка (при запуске сервера)
     panic_on_snap_error = true;
 
-    -- Abort if there is an error while reading a write-ahead
-    -- log file (at server start or to relay to a replica)
+    -- Прервать если есть ошибка при чтении файла журнала 
+	-- (при запуске сервера или передаче на реплику)
     panic_on_wal_error = true;
 
-    -- How many log records to store in a single write-ahead log file
+    -- Сколько записей журнала для сохранения одного лог-файла
     rows_per_wal = 5000000;
 
-    -- Reduce the throttling effect of box.snapshot() on
-    -- INSERT/UPDATE/DELETE performance by setting a limit
-    -- on how many megabytes per second it can write to disk
+    -- Уменьшите дроссельный эффект box.snapshot () на 
+	-- INSERT/UPDATE/DELETE производительность, установив ограничение 
+	-- на сколько мегабайт в секунду он может записать на диск
     snap_io_rate_limit = nil;
 
     -- Specify fiber-WAL-disk synchronization mode as:
@@ -99,17 +99,17 @@ box.cfg {
     -- "fsync": fibers wait for their data, fsync follows each write;
     wal_mode = "none";
 
-    -- Number of seconds between periodic scans of the write-ahead-log
-    -- file directory
+    -- Количество секунд между периодическими сканированиями каталога 
+	-- файла журнала
     wal_dir_rescan_delay = 2.0;
 
     ---------------
     -- Replication
     ---------------
 
-    -- The server is considered to be a Tarantool replica
-    -- it will try to connect to the master
-    -- which replication_source specifies with a URI
+    -- Сервер рассматривается в качестве реплики Tarantool. 
+	-- Он будет пытаться подключиться к мастеру, который в качестве 
+	-- replication_source определяет URI
     -- for example konstantin:secret_password@tarantool.org:3301
     -- by default username is "guest"
     -- replication_source="127.0.0.1:3102";
@@ -154,8 +154,7 @@ box.cfg {
 local function bootstrap()
     local space = box.schema.create_space('example')
     space:create_index('primary')
-    -- Comment this if you need fine grained access control (without it, guest
-    -- will have access to everything)
+    -- Закомментируйте это, если вам нужно разграниченный контроль доступа (без него, гость будет иметь доступ ко всему)
     box.schema.user.grant('guest', 'read,write,execute', 'universe')
 
     -- Keep things safe by default
@@ -164,13 +163,14 @@ local function bootstrap()
     --  box.schema.user.grant('example', 'read,write,execute', 'space', 'example')
 end
 
--- for first run create a space and add set up grants
+-- для первого запуска создать пространство и добавить установленные гранты
 box.once('example-1.0', bootstrap)
 
 -----------------------
 -- Automatinc sharding
 -----------------------
--- N.B. you need install tarantool-shard package to use shadring
+-- Обрати особое внимание вам необходимо установить пакет tarantool-shard 
+-- чтобы использовать shadring
 -- Docs: https://github.com/tarantool/shard/blob/master/README.md
 -- Example:
 --local shard = require('shard')
@@ -190,7 +190,7 @@ box.once('example-1.0', bootstrap)
 -----------------
 -- Message queue
 -----------------
--- N.B. you need to install tarantool-queue package to use queue
+-- Обрати особое внимание вам необходимо установить пакет tarantool-queue чтобы использовать очереди
 -- Docs: https://github.com/tarantool/queue/blob/master/README.md
 -- Example:
 --queue = require('queue')

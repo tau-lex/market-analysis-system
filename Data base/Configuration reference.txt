@@ -1,16 +1,314 @@
 
 5.2. URI
 
-Some configuration parameters and some functions depend on a URI, or "Universal Resource Identifier". The URI string format is similar to the generic syntax for a URI schema. So it may contain (in order) a user name for login, a password, a host name or host IP address, and a port number. Only the port number is always mandatory. The password is mandatory if the user name is specified, unless the user name is 'guest'. So, formally, the URI syntax is [host:]port or [username:password@]host:port. If host is omitted, then '0.0.0.0' or '[::]' is assumed, meaning respectively any IPv4 address or any IPv6 address, on the local machine. If username:password is omitted, then 'guest' is assumed. Some examples:
+	Some configuration parameters and some functions depend on a URI, or "Universal Resource Identifier". The URI string format is similar to the generic syntax for a URI schema. So it may contain (in order) a user name for login, a password, a host name or host IP address, and a port number. Only the port number is always mandatory. The password is mandatory if the user name is specified, unless the user name is 'guest'. So, formally, the URI syntax is [host:]port or [username:password@]host:port. If host is omitted, then '0.0.0.0' or '[::]' is assumed, meaning respectively any IPv4 address or any IPv6 address, on the local machine. If username:password is omitted, then 'guest' is assumed. Some examples:
 
     URI fragment 					Example
     port 							3301
     host:port 						127.0.0.1:3301
     username:password@host:port 	notguest:sesame@mail.ru:3301
 
+5.3. Initialization file
+
+lua>
+	#!/usr/bin/env tarantool
+	-- Пример стартового скрипта для запуска Таратул
+	-- Скрипт использует функции ОС и параметр
+	box.cfg{
+		listen				= os.getenv("LISTEN_URI"),
+		slab_alloc_arena	= 0.1,
+		pid_file			= "tarantool.pid",
+		rows_per_wal		= 50
+	}
+	print('Starting ', arg[1])
+
+	--		$ export LISTEN_URI=3301
+	--		$ ~/tarantool/src/tarantool script.lua ARG
+	--		... ...
+	--		Starting  ARG
+	--		... ...
 
 5.4. Configuration parameters
 
-Configuration parameters have the form:
+	Configuration parameters have the form:
 
-box.cfg{ key = value [, key = value ...]]
+	box.cfg{ key = value [, key = value ...]]
+
+5.4.1. Basic parameters
+
+background
+    Run the server as a background task. The logger and pid_file parameters must be non-null for this to work.
+    Type: boolean
+    Default: false
+    Dynamic: no
+
+coredump
+    Deprecated. Do not use.
+    Type: boolean
+    Default: false
+    Dynamic: no
+
+custom_proc_title
+    Add the given string to the server's Process title (what’s shown in the COMMAND column for ps -ef and top -c commands).
+    For example, ordinarily ps -ef shows the Tarantool server process thus:
+    $ ps -ef | grep tarantool
+    1000     14939 14188  1 10:53 pts/2    00:00:13 tarantool <running>
+    But if the configuration parameters include custom_proc_title='sessions' then the output looks like:
+    $ ps -ef | grep tarantool
+    1000     14939 14188  1 10:53 pts/2    00:00:16 tarantool <running>: sessions
+    Type: string
+    Default: null
+    Dynamic: yes
+
+listen
+    The read/write data port number or URI (Universal Resource Identifier) string. Has no default value, so must be specified if connections will occur from remote clients that do not use the “admin port”. Connections made with listen=URI are sometimes called "binary protocol" or "primary port" connections.
+    A typical value is 3301. The listen parameter may also be set for local hot standby.
+    NOTE: A replica also binds to this port, and accepts connections, but these connections can only serve reads until the replica becomes a master.
+    Type: integer or string
+    Default: null
+    Dynamic: yes
+
+pid_file
+    Store the process id in this file. Can be relative to work_dir. A typical value is “tarantool.pid”.
+    Type: string
+    Default: null
+    Dynamic: no
+
+read_only
+    Put the server in read-only mode. After this, any requests that try to change data will fail with error ER_READONLY.
+    Type: boolean
+    Default: false
+    Dynamic: yes
+
+snap_dir
+    A directory where snapshot (.snap) files will be stored. Can be relative to work_dir. If not specified, defaults to work_dir. See also wal_dir.
+    Type: string
+    Default: "."
+    Dynamic: no
+
+vinyl_dir
+    A directory where vinyl files or sub-directories will be stored. Can be relative to work_dir. If not specified, defaults to work_dir.
+    Type: string
+    Default: "."
+    Dynamic: no
+
+username
+    UNIX user name to switch to after start.
+    Type: string
+    Default: null
+    Dynamic: no
+
+wal_dir
+    A directory where write-ahead log (.xlog) files are stored. Can be relative to work_dir. Sometimes wal_dir and snap_dir are specified with different values, so that write-ahead log files and snapshot files can be stored on different disks. If not specified, defaults to work_dir.
+    Type: string
+    Default: "."
+    Dynamic: no
+
+work_dir
+    A directory where database working files will be stored. The server switches to work_dir with chdir(2) after start. Can be relative to the current directory. If not specified, defaults to the current directory. Other directory parameters may be relative to work_dir, for example
+    box.cfg{work_dir='/home/user/A',wal_dir='B',snap_dir='C'}
+    will put xlog files in /home/user/A/B, snapshot files in /home/user/A/C, and all other files or sub-directories in /home/user/A.
+    Type: string
+    Default: null
+    Dynamic: no
+
+5.4.2. Configuring the storage
+
+slab_alloc_arena
+    How much memory Tarantool allocates to actually store tuples, in gigabytes. When the limit is reached, INSERT or UPDATE requests begin failing with error ER_MEMORY_ISSUE. While the server does not go beyond the defined limit to allocate tuples, there is additional memory used to store indexes and connection information. Depending on actual configuration and workload, Tarantool can consume up to 20% more than the limit set here.
+    Type: float
+    Default: 1.0
+    Dynamic: no
+
+slab_alloc_factor
+    Use slab_alloc_factor as the multiplier for computing the sizes of memory chunks that tuples are stored in. A lower value may result in less wasted memory depending on the total amount of memory available and the distribution of item sizes.
+    Type: float
+    Default: 1.1
+    Dynamic: no
+
+slab_alloc_maximal
+    Size of the largest allocation unit. It can be increased if it is necessary to store large tuples.
+    Type: integer
+    Default: 1048576
+    Dynamic: no
+
+slab_alloc_minimal
+    Size of the smallest allocation unit. It can be decreased if most of the tuples are very small. The value must be between 8 and 1048280 inclusive.
+    Type: integer
+    Default: 16
+    Dynamic: no
+
+vinyl
+    The default vinyl configuration can be changed with
+    vinyl = {
+      branch_age_wm = number,
+      branch_age_period = number of seconds,
+      memory_limit = number of gigabytes,
+      compact_wm = number,
+      threads = number,
+      branch_prio = number,
+      branch_age = number,
+    }
+    This method may change in the future.
+    Default values are:
+    vinyl = {
+      branch_age_wm = 0,
+      branch_age_period = 0,
+      memory_limit = 1,
+      compact_wm = 2,
+      threads = 5,
+      branch_prio = 2,
+      branch_age = 0,
+    }
+
+5.4.3. Snapshot daemon
+
+    The snapshot daemon is a fiber which is constantly running. At intervals, it may make new snapshot (.snap) files and then may remove old snapshot files. If the snapshot daemon removes an old snapshot file, it will also remove any write-ahead log (.xlog) files that are older than the snapshot file and contain information that is present in the snapshot file.
+    The snapshot_period and snapshot_count configuration settings determine how long the intervals are, and how many snapshots should exist before removals occur.
+
+snapshot_period
+    The interval between actions by the snapshot daemon, in seconds. If snapshot_period is set to a value greater than zero, and there is activity which causes change to a database, then the snapshot daemon will call box.snapshot every snapshot_period seconds, creating a new snapshot file each time.
+    For example: box.cfg{snapshot_period=3600} will cause the snapshot daemon to create a new database snapshot once per hour.
+    Type: integer
+    Default: 0
+    Dynamic: yes
+
+snapshot_count
+    The maximum number of snapshots that may exist on the snap_dir directory before the snapshot daemon will remove old snapshots. If snapshot_count equals zero, then the snapshot daemon does not remove old snapshots. For example:
+    box.cfg{
+        snapshot_period = 3600,
+        snapshot_count  = 10
+    }
+    will cause the snapshot daemon to create a new snapshot each hour until it has created ten snapshots. After that, it will remove the oldest snapshot (and any associated write-ahead-log files) after creating a new one.
+    Type: integer
+    Default: 6
+    Dynamic: yes
+
+5.4.4. Binary logging and snapshots
+    panic_on_snap_error,
+    panic_on_wal_error,
+    rows_per_wal,
+    snap_io_rate_limit,
+    wal_mode,
+    wal_dir_rescan_delay
+
+panic_on_snap_error
+    If there is an error while reading the snapshot file (at server start), abort.
+    Type: boolean
+    Default: true
+    Dynamic: no
+
+panic_on_wal_error
+    If there is an error while reading a write-ahead log file (at server start or to relay to a replica), abort.
+    Type: boolean
+    Default: true
+    Dynamic: yes
+
+rows_per_wal
+    How many log records to store in a single write-ahead log file. When this limit is reached, Tarantool creates another WAL file named <first-lsn-in-wal>.xlog. This can be useful for simple rsync-based backups.
+    Type: integer
+    Default: 500000
+    Dynamic: no
+
+snap_io_rate_limit
+    Reduce the throttling effect of box.snapshot on INSERT/UPDATE/DELETE performance by setting a limit on how many megabytes per second it can write to disk. The same can be achieved by splitting wal_dir and snap_dir locations and moving snapshots to a separate disk.
+
+    Type: float
+    Default: null
+    Dynamic: yes
+
+wal_mode
+    Specify fiber-WAL-disk synchronization mode as:
+        none: write-ahead log is not maintained;
+        write: fibers wait for their data to be written to the write-ahead log (no fsync(2));
+        fsync: fibers wait for their data, fsync(2) follows each write(2);
+    Type: string
+    Default: "write"
+    Dynamic: yes
+
+wal_dir_rescan_delay
+    Number of seconds between periodic scans of the write-ahead-log file directory, when checking for changes to write-ahead-log files for the sake of replication or local hot standby.
+    Type: float
+    Default: 2
+    Dynamic: no
+
+5.4.5. Replication
+
+replication_source
+    If replication_source is not an empty string, the server is considered to be a Tarantool replica. The replica server will try to connect to the master which replication_source specifies with a URI (Universal Resource Identifier), for example konstantin:secret_password@tarantool.org:3301.
+    If there is more than one replication source in a cluster, specify an array of URIs, for example
+    box.cfg{replication_source = {uri#1,uri#2}}
+    If one of the URIs is "self" that is, if one of the URIs is for the same server that box.cfg{} is being executed on then it is ignored. Thus it is possible to use the same replication_source specification on multiple servers.
+    The default user name is ‘guest’. A replica server does not accept data-change requests on the listen port. The replication_source parameter is dynamic, that is, to enter master mode, simply set replication_source to an empty string and issue box.cfg{replication_source=new-value}.
+    Type: string
+    Default: null
+    Dynamic: yes
+
+5.4.6. Networking
+    io_collect_interval,
+    readahead
+
+io_collect_interval
+    The server will sleep for io_collect_interval seconds between iterations of the event loop. Can be used to reduce CPU load in deployments in which the number of client connections is large, but requests are not so frequent (for example, each connection issues just a handful of requests per second).
+    Type: float
+    Default: null
+    Dynamic: yes
+
+readahead
+    The size of the read-ahead buffer associated with a client connection. The larger the buffer, the more memory an active connection consumes and the more requests can be read from the operating system buffer in a single system call. The rule of thumb is to make sure the buffer can contain at least a few dozen requests. Therefore, if a typical tuple in a request is large, e.g. a few kilobytes or even megabytes, the read-ahead buffer size should be increased. If batched request processing is not used, it’s prudent to leave this setting at its default.
+    Type: integer
+    Default: 16320
+    Dynamic: yes
+
+5.4.7. Logging
+
+log_level
+    How verbose the logging is. There are six log verbosity classes:
+        1 – SYSERROR
+        2 – ERROR
+        3 – CRITICAL
+        4 – WARNING
+        5 – INFO
+        6 – DEBUG
+    By setting log_level, one can enable logging of all classes below or equal to the given level. Tarantool prints its logs to the standard error stream by default, but this can be changed with the logger configuration parameter.
+    Type: integer
+    Default: 5
+    Dynamic: yes
+
+logger
+    By default, the log is sent to the standard error stream (stderr). If logger is specified, the log is sent to a file, or to a pipe, or to the system logger.
+    Example setting:
+    box.cfg{logger = 'tarantool.log'}
+    or
+    box.cfg{logger = 'file: tarantool.log'}
+    This will open the file tarantool.log for output on the server’s default directory. If the logger string has no prefix or has the prefix "file:", then the string is interpreted as a file path.
+    Example setting:
+    box.cfg{logger = '| cronolog tarantool.log'}
+    or
+    box.cfg{logger = 'pipe: cronolog tarantool.log'}'
+    This will start the program cronolog when the server starts, and will send all log messages to the standard input (stdin) of cronolog. If the logger string begins with '|' or has the prefix "pipe:", then the string is interpreted as a Unix pipeline.
+    Example setting:
+    box.cfg{logger = 'syslog:identity=tarantool'}
+    or
+    box.cfg{logger = 'syslog:facility=user'}
+    or
+    box.cfg{logger = 'syslog:identity=tarantool,facility=user'}
+    If the logger string has the prefix "syslog:", then the string is interpreted as a message for the syslogd program which normally is running in the background of any Unix-like platform. One can optionally specify an identity, a facility, or both. The identity is an arbitrary string, default value = tarantool, which will be placed at the beginning of all messages. The facility is an abbreviation for the name of one of the syslog facilities, default value = user, which tell syslogd where the message should go.
+    Possible values for facility are: auth, authpriv, cron, daemon, ftp, kern, lpr, mail, news, security, syslog, user, uucp, local0, local1, local2, local3, local4, local5, local6, local7.
+    The facility setting is currently ignored but will be used in the future.
+    When logging to a file, tarantool reopens the log on SIGHUP. When log is a program, its pid is saved in the log.logger_pid variable. You need to send it a signal to rotate logs.
+    Type: string
+    Default: null
+    Dynamic: no
+
+logger_nonblock
+    If logger_nonblock equals true, Tarantool does not block on the log file descriptor when it’s not ready for write, and drops the message instead. If log_level is high, and a lot of messages go to the log file, setting logger_nonblock to true may improve logging performance at the cost of some log messages getting lost.
+    Type: boolean
+    Default: true
+    Dynamic: no
+
+too_long_threshold
+    If processing a request takes longer than the given value (in seconds), warn about it in the log. Has effect only if log_level is more than or equal to 4 (WARNING).
+    Type: float
+    Default: 0.5
+    Dynamic: yes
