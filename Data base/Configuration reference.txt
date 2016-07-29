@@ -1,7 +1,7 @@
 
 5.2. URI
 
-	Some configuration parameters and some functions depend on a URI, or "Universal Resource Identifier". The URI string format is similar to the generic syntax for a URI schema. So it may contain (in order) a user name for login, a password, a host name or host IP address, and a port number. Only the port number is always mandatory. The password is mandatory if the user name is specified, unless the user name is 'guest'. So, formally, the URI syntax is [host:]port or [username:password@]host:port. If host is omitted, then '0.0.0.0' or '[::]' is assumed, meaning respectively any IPv4 address or any IPv6 address, on the local machine. If username:password is omitted, then 'guest' is assumed. Some examples:
+	Некоторые параметры конфигурации и некоторые функции зависят от URI, или "Универсальный идентификатор ресурса". Формат URI, строка аналогична обобщенному синтаксису для схемы URI. Таким образом, она может содержать (в порядке убывания) имя пользователя для входа в систему, пароль, IP-адрес хоста или имя хоста и номер порта. Только номер порта всегда является обязательным. Пароль является обязательным, если указано имя пользователя, если имя пользователя, не является "гостем". Таким образом, формально, синтаксис URI является [host:]port или [username:password@]host:port. Если узел не указан, то '0.0.0.0' или '[::] предполагается, что означает, соответственно, любой IPv4-адрес или любой IPv6-адрес, на локальной машине. Если username:password отсутствует, тогда предполагается пользователь 'гость'. Некоторые примеры:
 
     URI fragment 					Example
     port 							3301
@@ -30,84 +30,87 @@ lua>
 
 5.4. Configuration parameters
 
-	Configuration parameters have the form:
+	Параметры конфигурации имеют вид:
 
 	box.cfg{ key = value [, key = value ...]]
 
 5.4.1. Basic parameters
 
 background
-    Run the server as a background task. The logger and pid_file parameters must be non-null for this to work.
+    Запуск сервера в качестве фоновой задачи. Параметры logger и PID_FILE должны быть ненулевыми для этой работы.
     Type: boolean
     Default: false
     Dynamic: no
 
 coredump
-    Deprecated. Do not use.
+    Устаревшее. Do not use.
     Type: boolean
     Default: false
     Dynamic: no
 
 custom_proc_title
-    Add the given string to the server's Process title (what’s shown in the COMMAND column for ps -ef and top -c commands).
-    For example, ordinarily ps -ef shows the Tarantool server process thus:
+    Добавьте данную строку в названии процесса сервера (что показано в колонке COMMAND для комманд ps -ef и top -c).
+    Например, обычно ps -ef показывает серверный процесс Tarantool следующим образом:
     $ ps -ef | grep tarantool
     1000     14939 14188  1 10:53 pts/2    00:00:13 tarantool <running>
-    But if the configuration parameters include custom_proc_title='sessions' then the output looks like:
+	
+    Но если параметры конфигурации включают пользовательский заголовок custom_proc_title='sessions', то выход выглядит следующим образом:
     $ ps -ef | grep tarantool
     1000     14939 14188  1 10:53 pts/2    00:00:16 tarantool <running>: sessions
+	
     Type: string
     Default: null
     Dynamic: yes
 
 listen
-    The read/write data port number or URI (Universal Resource Identifier) string. Has no default value, so must be specified if connections will occur from remote clients that do not use the “admin port”. Connections made with listen=URI are sometimes called "binary protocol" or "primary port" connections.
-    A typical value is 3301. The listen parameter may also be set for local hot standby.
-    NOTE: A replica also binds to this port, and accepts connections, but these connections can only serve reads until the replica becomes a master.
+    Номер порта данных для чтения/записи или URI (универсальный идентификатор ресурса) строка.
+	Не имеет значения по умолчанию, поэтому необходимо указать, если подключение будет происходить от удаленных клиентов, которые не используют "администратора порта". Соединения, сделанные с listen=URI иногда называют "двоичный протокол" или соединения "первичный порт".
+    Типичное значение 3301. Параметр listen также может быть установлен для локального горячего резерва.
+    Примечание: Точная копия (replica) также связывается с этим портом, и принимает соединения, но эти соединения могут служить только для чтения, пока реплика не станет мастером.
     Type: integer or string
     Default: null
     Dynamic: yes
 
 pid_file
-    Store the process id in this file. Can be relative to work_dir. A typical value is “tarantool.pid”.
+    Храните идентификатор процесса в этом файле. Может указываться относительно work_dir. Типичное значение "tarantool.pid".
     Type: string
     Default: null
     Dynamic: no
 
 read_only
-    Put the server in read-only mode. After this, any requests that try to change data will fail with error ER_READONLY.
+    Поместите сервер в режиме только для чтения. После этого, любые запросы, которые пытаются изменить данные потерпит неудачу с ошибкой ER_READONLY.
     Type: boolean
     Default: false
     Dynamic: yes
 
 snap_dir
-    A directory where snapshot (.snap) files will be stored. Can be relative to work_dir. If not specified, defaults to work_dir. See also wal_dir.
+    Каталог, в котором будут храниться файлы снимков (.snap). Может указываться относительно work_dir. Если не указано, по умолчанию work_dir. Смотрите также wal_dir.
     Type: string
     Default: "."
     Dynamic: no
 
 vinyl_dir
-    A directory where vinyl files or sub-directories will be stored. Can be relative to work_dir. If not specified, defaults to work_dir.
+    Каталог, в котором будут храниться винил файлы или подкаталоги. Может указываться относительно work_dir. Если не указано, по умолчанию work_dir.
     Type: string
     Default: "."
     Dynamic: no
 
 username
-    UNIX user name to switch to after start.
+    UNIX имя пользователя для переключения после запуска.
     Type: string
     Default: null
     Dynamic: no
 
 wal_dir
-    A directory where write-ahead log (.xlog) files are stored. Can be relative to work_dir. Sometimes wal_dir and snap_dir are specified with different values, so that write-ahead log files and snapshot files can be stored on different disks. If not specified, defaults to work_dir.
+    Каталог, в котором сохраняются файлы записи журнала (.xlog). Может указываться относительно work_dir. Иногда wal_dir и snap_dir указаны с различными значениями, так что файлы записи журналов и файлы моментальных снимков могут храниться на разных дисках. Если не указано, по умолчанию work_dir.
     Type: string
     Default: "."
     Dynamic: no
 
 work_dir
-    A directory where database working files will be stored. The server switches to work_dir with chdir(2) after start. Can be relative to the current directory. If not specified, defaults to the current directory. Other directory parameters may be relative to work_dir, for example
+    Каталог, в котором хранятся файлы во время работы базы данных. Сервер переходит на work_dir с chdir(2) после старта. Может быть относительно текущего каталога. Если не указано, по умолчанию в текущем каталоге. Другие параметры каталогов могут указываться относительно work_dir, например:
     box.cfg{work_dir='/home/user/A',wal_dir='B',snap_dir='C'}
-    will put xlog files in /home/user/A/B, snapshot files in /home/user/A/C, and all other files or sub-directories in /home/user/A.
+    поместит файлы журналов /home/user/A/B, файлы снимков в /home/user/A/C, и все другие файлы или папки в /home/user/A.
     Type: string
     Default: null
     Dynamic: no
@@ -115,31 +118,31 @@ work_dir
 5.4.2. Configuring the storage
 
 slab_alloc_arena
-    How much memory Tarantool allocates to actually store tuples, in gigabytes. When the limit is reached, INSERT or UPDATE requests begin failing with error ER_MEMORY_ISSUE. While the server does not go beyond the defined limit to allocate tuples, there is additional memory used to store indexes and connection information. Depending on actual configuration and workload, Tarantool can consume up to 20% more than the limit set here.
+    Сколько памяти выделяет Tarantool на самом деле для хранения кортежей, в гигабайтах. Когда предел достигнут, INSERT или UPDATE запросы начинают давать сбой с ошибкой ER_MEMORY_ISSUE. Пока сервер не выходит за установленные пределы выделенные для кортежей, дополнительная память используется для хранения индексов и информации о подключении. В зависимости от конфигурации и загруженности, Tarantool может потреблять до 20% больше, чем предел, установленный здесь.
     Type: float
     Default: 1.0
     Dynamic: no
 
 slab_alloc_factor
-    Use slab_alloc_factor as the multiplier for computing the sizes of memory chunks that tuples are stored in. A lower value may result in less wasted memory depending on the total amount of memory available and the distribution of item sizes.
+    Используйте slab_alloc_factor как множитель для вычисления размеров кусков памяти, в которых хранятся кортежи. Более низкое значение может привести к уменьшению потрачены впустую памяти зависимости от общего объема памяти и распределения размеров элементов.
     Type: float
     Default: 1.1
     Dynamic: no
 
 slab_alloc_maximal
-    Size of the largest allocation unit. It can be increased if it is necessary to store large tuples.
+    Размер самого большого блока распределения. Он может быть увеличен, если необходимо хранить большие кортежи.
     Type: integer
-    Default: 1048576
+    Default: 1048576 (= 1 Mb; прим. переводчика)
     Dynamic: no
 
 slab_alloc_minimal
-    Size of the smallest allocation unit. It can be decreased if most of the tuples are very small. The value must be between 8 and 1048280 inclusive.
+    Размер самого маленького блока распределения. Он может быть уменьшен, если большинство кортежей очень малы. Значение должно быть от 8 до 1048280 включительно.
     Type: integer
     Default: 16
     Dynamic: no
 
 vinyl
-    The default vinyl configuration can be changed with
+    Конфигурация по умолчанию винила может быть изменена
     vinyl = {
       branch_age_wm = number,
       branch_age_period = number of seconds,
@@ -149,7 +152,7 @@ vinyl
       branch_prio = number,
       branch_age = number,
     }
-    This method may change in the future.
+    Этот метод может измениться в будущем.
     Default values are:
     vinyl = {
       branch_age_wm = 0,
@@ -162,24 +165,23 @@ vinyl
     }
 
 5.4.3. Snapshot daemon
-
-    The snapshot daemon is a fiber which is constantly running. At intervals, it may make new snapshot (.snap) files and then may remove old snapshot files. If the snapshot daemon removes an old snapshot file, it will also remove any write-ahead log (.xlog) files that are older than the snapshot file and contain information that is present in the snapshot file.
-    The snapshot_period and snapshot_count configuration settings determine how long the intervals are, and how many snapshots should exist before removals occur.
+    Снимок демон представляет собой поток, который постоянно работает. Через определенные интервалы, он может сделать новый снимок файлов (.snap), а затем, возможно, удалить старые файлы снимков. Если снимок демон удаляет старый файл снимка, он будет также удалить любой журнал записи вперед (.xlog) файлы, которые старше, чем файл снимка и содержат информацию, которая присутствует в файле снимка.
+    Настройки период снимка и количество снимок конфигурации определяют, как долго интервалы, и сколько снимков должно существовать до возникновения абсорбция.
 
 snapshot_period
-    The interval between actions by the snapshot daemon, in seconds. If snapshot_period is set to a value greater than zero, and there is activity which causes change to a database, then the snapshot daemon will call box.snapshot every snapshot_period seconds, creating a new snapshot file each time.
-    For example: box.cfg{snapshot_period=3600} will cause the snapshot daemon to create a new database snapshot once per hour.
+    Интервал между действиями моментального снимка демона, в секундах. Если snapshot_period устанавливается на значение больше нуля, и есть деятельность, которая вызывает изменение в базу данных, а затем снимок демон будет вызывать box.snapshot каждые snapshot_period секунд, создавая новый файл снимка каждый раз.
+    For example: box.cfg{snapshot_period=3600} вызовет снимок демона, чтобы создать новый снимок базы данных один раз в час.
     Type: integer
     Default: 0
     Dynamic: yes
 
 snapshot_count
-    The maximum number of snapshots that may exist on the snap_dir directory before the snapshot daemon will remove old snapshots. If snapshot_count equals zero, then the snapshot daemon does not remove old snapshots. For example:
+    Максимальное количество снимков, которые могут существовать на директории snap_dir перед моментальной демон удалит старые снимки. Если snapshot_count равен нулю, то снимок демон не удаляет старые снимки. Например:
     box.cfg{
         snapshot_period = 3600,
         snapshot_count  = 10
     }
-    will cause the snapshot daemon to create a new snapshot each hour until it has created ten snapshots. After that, it will remove the oldest snapshot (and any associated write-ahead-log files) after creating a new one.
+    вызовет снимок демона создать новый снимок каждый час, пока не будет создано десять снимков. После этого он удалит самый старый снимок (и любые связанные с ним файлы с упреждением-лог) после создания нового.
     Type: integer
     Default: 6
     Dynamic: yes
@@ -193,41 +195,40 @@ snapshot_count
     wal_dir_rescan_delay
 
 panic_on_snap_error
-    If there is an error while reading the snapshot file (at server start), abort.
+    Если есть ошибка при чтении файла снимка (при запуске сервера), прервать.
     Type: boolean
     Default: true
     Dynamic: no
 
 panic_on_wal_error
-    If there is an error while reading a write-ahead log file (at server start or to relay to a replica), abort.
+    Если есть ошибка при чтении файла журнала записи вперед (при запуске сервера или передать на реплику), прервать операцию.
     Type: boolean
     Default: true
     Dynamic: yes
 
 rows_per_wal
-    How many log records to store in a single write-ahead log file. When this limit is reached, Tarantool creates another WAL file named <first-lsn-in-wal>.xlog. This can be useful for simple rsync-based backups.
+    Сколько записей журнала для хранения в одном файле записи журнала. Когда этот предел достигнут, Tarantool создает еще один файл с именем <first-lsn-in-wal>.xlog. Это может быть полезно для простых RSYNC на основе резервных копий.
     Type: integer
     Default: 500000
     Dynamic: no
 
 snap_io_rate_limit
-    Reduce the throttling effect of box.snapshot on INSERT/UPDATE/DELETE performance by setting a limit on how many megabytes per second it can write to disk. The same can be achieved by splitting wal_dir and snap_dir locations and moving snapshots to a separate disk.
-
+    Уменьшите дроссельный эффект box.snapshot на INSERT / UPDATE / DELETE производительность, установив ограничение на количество мегабайт в секунду которые он может записать на диск. То же самое может быть достигнуто путем разделения wal_dir и snap_dir местоположения и перемещения моментальных снимков на отдельный диск.
     Type: float
     Default: null
     Dynamic: yes
 
 wal_mode
-    Specify fiber-WAL-disk synchronization mode as:
-        none: write-ahead log is not maintained;
-        write: fibers wait for their data to be written to the write-ahead log (no fsync(2));
-        fsync: fibers wait for their data, fsync(2) follows each write(2);
+    Укажите режим синхронизации fiber-WAL-disk как:
+        none: Журнал записи вперед не поддерживается;
+        write: потоки ожидают пока их данные должны быть записаны в журнал записи вперед (не fsync(2));
+        fsync: потоки ждут своих данных, fsync(2) следует каждый write(2);
     Type: string
     Default: "write"
     Dynamic: yes
 
 wal_dir_rescan_delay
-    Number of seconds between periodic scans of the write-ahead-log file directory, when checking for changes to write-ahead-log files for the sake of replication or local hot standby.
+    Количество секунд периодических сканирований каталога с лог файлами, когда проверяются изменения лог-файлов для репликации или локального горячего резерва.
     Type: float
     Default: 2
     Dynamic: no
@@ -235,11 +236,11 @@ wal_dir_rescan_delay
 5.4.5. Replication
 
 replication_source
-    If replication_source is not an empty string, the server is considered to be a Tarantool replica. The replica server will try to connect to the master which replication_source specifies with a URI (Universal Resource Identifier), for example konstantin:secret_password@tarantool.org:3301.
-    If there is more than one replication source in a cluster, specify an array of URIs, for example
+    Если replication_source не пустая строка, сервер считается точной копией Tarantool. Сервер реплики попытается подключиться к мастеру, который replication_source определяет с URI, например konstantin:secret_password@tarantool.org:3301.
+    Если существует более одного источника репликации в кластере, указать массив URIs, например
     box.cfg{replication_source = {uri#1,uri#2}}
-    If one of the URIs is "self" that is, if one of the URIs is for the same server that box.cfg{} is being executed on then it is ignored. Thus it is possible to use the same replication_source specification on multiple servers.
-    The default user name is ‘guest’. A replica server does not accept data-change requests on the listen port. The replication_source parameter is dynamic, that is, to enter master mode, simply set replication_source to an empty string and issue box.cfg{replication_source=new-value}.
+    Если один из URIs является "self", то есть, если один из URI для того же сервера на котором box.cfg {} в настоящее время выполняется, то он игнорируется. Таким образом, можно использовать ту же спецификацию replication_source на нескольких серверах.
+    Имя пользователя по умолчанию ‘guest’. Сервер реплики не принимает data-change  запросы на слушаемом порту. Параметр replication_source является динамическим, то есть, чтобы войти в режим мастер, просто установите replication_source в пустую строку и издайте box.cfg{replication_source=new-value}.
     Type: string
     Default: null
     Dynamic: yes
@@ -249,13 +250,13 @@ replication_source
     readahead
 
 io_collect_interval
-    The server will sleep for io_collect_interval seconds between iterations of the event loop. Can be used to reduce CPU load in deployments in which the number of client connections is large, but requests are not so frequent (for example, each connection issues just a handful of requests per second).
+    Сервер будет спать в течение io_collect_interval секунд между итераций цикла событий. Может использоваться для снижения нагрузки на процессор при развертывании, в котором число клиентских подключений велико, но запросы не так часто (например, каждое соединение вопросов лишь несколько запросов в секунду).
     Type: float
     Default: null
     Dynamic: yes
 
 readahead
-    The size of the read-ahead buffer associated with a client connection. The larger the buffer, the more memory an active connection consumes and the more requests can be read from the operating system buffer in a single system call. The rule of thumb is to make sure the buffer can contain at least a few dozen requests. Therefore, if a typical tuple in a request is large, e.g. a few kilobytes or even megabytes, the read-ahead buffer size should be increased. If batched request processing is not used, it’s prudent to leave this setting at its default.
+    Размер буфера упреждающего чтения, связанного с подключением клиента. Чем больше буфер, тем больше памяти активное соединение и потребляет больше запросов можно прочитать из операционной системы буфера в один системный вызов.  Правило заключается в том, чтобы убедиться, что буфер может содержать, по крайней мере, несколько десятков запросов. Поэтому, если типичный кортеж в запросе велико, например несколько килобайт или даже мегабайты, упреждающее чтение размер буфера должен быть увеличен. Если обработка запроса порционный не используется, это разумно, чтобы оставить эту установку в состояние по умолчанию.
     Type: integer
     Default: 16320
     Dynamic: yes
@@ -263,52 +264,54 @@ readahead
 5.4.7. Logging
 
 log_level
-    How verbose the logging is. There are six log verbosity classes:
+    На сколько многословным будет журналирование. Есть шесть классов многословности журнала:
         1 – SYSERROR
         2 – ERROR
         3 – CRITICAL
         4 – WARNING
         5 – INFO
         6 – DEBUG
-    By setting log_level, one can enable logging of all classes below or equal to the given level. Tarantool prints its logs to the standard error stream by default, but this can be changed with the logger configuration parameter.
+    Установив LOG_LEVEL, можно включить ведение журнала всех классов ниже или равно заданному уровню. Tarantool печатает свои журналы на стандартный поток ошибок по умолчанию, но это может быть изменено с помощью параметра конфигурации регистратора.
     Type: integer
     Default: 5
     Dynamic: yes
 
 logger
-    By default, the log is sent to the standard error stream (stderr). If logger is specified, the log is sent to a file, or to a pipe, or to the system logger.
+    По умолчанию, посылается журнал на стандартный поток ошибок (STDERR). Если указанный регистратор, журнал отправляется в файл, или к каналу, или системный журнал.
     Example setting:
     box.cfg{logger = 'tarantool.log'}
     or
     box.cfg{logger = 'file: tarantool.log'}
-    This will open the file tarantool.log for output on the server’s default directory. If the logger string has no prefix or has the prefix "file:", then the string is interpreted as a file path.
+    Это позволит открыть файл tarantool.log для вывода на каталог по умолчанию сервера. Если строка регистратор не имеет префикса или имеет "file:" префикс, то строка интерпретируется как путь к файлу.
+	
     Example setting:
     box.cfg{logger = '| cronolog tarantool.log'}
     or
     box.cfg{logger = 'pipe: cronolog tarantool.log'}'
-    This will start the program cronolog when the server starts, and will send all log messages to the standard input (stdin) of cronolog. If the logger string begins with '|' or has the prefix "pipe:", then the string is interpreted as a Unix pipeline.
+    Это запустит программу cronolog при запуске сервера, и будет посылать все сообщения журнала на стандартный ввод (stdin) из cronolog. Если строка регистратор начинается с '|' или имеет приставку "pipe:", то строка интерпретируется как трубопровод Unix.
+	
     Example setting:
     box.cfg{logger = 'syslog:identity=tarantool'}
     or
     box.cfg{logger = 'syslog:facility=user'}
     or
     box.cfg{logger = 'syslog:identity=tarantool,facility=user'}
-    If the logger string has the prefix "syslog:", then the string is interpreted as a message for the syslogd program which normally is running in the background of any Unix-like platform. One can optionally specify an identity, a facility, or both. The identity is an arbitrary string, default value = tarantool, which will be placed at the beginning of all messages. The facility is an abbreviation for the name of one of the syslog facilities, default value = user, which tell syslogd where the message should go.
-    Possible values for facility are: auth, authpriv, cron, daemon, ftp, kern, lpr, mail, news, security, syslog, user, uucp, local0, local1, local2, local3, local4, local5, local6, local7.
-    The facility setting is currently ignored but will be used in the future.
-    When logging to a file, tarantool reopens the log on SIGHUP. When log is a program, its pid is saved in the log.logger_pid variable. You need to send it a signal to rotate logs.
+    Если строка регистратор имеет префикс "syslog:", то строка интерпретируется как сообщение для программы Syslogd, которая обычно работает в фоновом режиме любой Unix-подобной платформе. Можно дополнительно указать тождество, средство, или обоих. Идентичность произвольная строка, значение по умолчанию = Tarantool, который будет размещен в начале всех сообщений. Объект представляет собой сокращение от имени одного из системного журнала объектов, значение по умолчанию = пользователя, которые говорят Syslogd, где сообщение должно идти.
+    Возможные значения для объекта являются: auth, authpriv, cron, daemon, ftp, kern, lpr, mail, news, security, syslog, user, uucp, local0, local1, local2, local3, local4, local5, local6, local7.
+    Установка объекта в настоящее время игнорируется, но будет использоваться в будущем.
+    При входе в файл, Tarantool вновь открывает журнал на SIGHUP. Когда журнал представляет собой программу, идентификатор процесса сохраняется в переменной log.logger_pid. Вы должны послать ему сигнал поворота журнала.
     Type: string
     Default: null
     Dynamic: no
 
 logger_nonblock
-    If logger_nonblock equals true, Tarantool does not block on the log file descriptor when it’s not ready for write, and drops the message instead. If log_level is high, and a lot of messages go to the log file, setting logger_nonblock to true may improve logging performance at the cost of some log messages getting lost.
+    Если logger_nonblock равно правда, Tarantool не блокирует на дескриптор файла журнала, когда он не готов к записи, и сбрасывает сообщение вместо этого. Если log_level высока, и много сообщений идут в лог-файл, установив logger_nonblock истина может повысить производительность протоколирования за счет некоторых сообщений журнала теряться.
     Type: boolean
     Default: true
     Dynamic: no
 
 too_long_threshold
-    If processing a request takes longer than the given value (in seconds), warn about it in the log. Has effect only if log_level is more than or equal to 4 (WARNING).
+    При обработке запроса занимает больше времени, чем заданное значение (в секундах), предупредить об этом в журнале. Имеет эффект, только если log_level больше или равно 4 (ВНИМАНИЕ).
     Type: float
     Default: 0.5
     Dynamic: yes
