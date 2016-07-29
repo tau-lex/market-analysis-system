@@ -125,9 +125,9 @@ box.cfg {
     -- The size of the read-ahead buffer associated with a client connection
     readahead = 16320;
 
-    ----------
+    -----------
     -- Logging
-    ----------
+    -----------
 
     -- How verbose the logging is. There are six log verbosity classes:
     -- 1 – SYSERROR
