@@ -38,31 +38,23 @@ box.cfg{
 --	wal_dir_rescan_delay
 }
 
-if masdb ~= nil then
-	--  од гор€чего перезапуска с помощью tarantoolctl или dofile()
-
-	-- ¬ыгрузить старое приложение
-	masdb.stop()
-	-- ќчистить кэш дл€ загруженных модулей и зависимостей
-	package.loaded['masdb'] = nil
-	--package.loaded['somedep'] = nil; -- зависимости 'masdb'
-end
-
--- «агрузить новую версию приложени€ и все зависимости
-masdb = require('masdb').start()
-
 -- Ќачальна€ загрузка()
 local function bootstrap()
-    local space = box.schema.create_space('test')
-    space:create_index('primary')
+    local test = box.schema.create_space('test')
+    test:create_index('primary')
+	
+	box.schema.user.create('utest', { password = 'pass' })
+	box.schema.user.grant('utest', 'read,write,execute', 'space', 'test')
+	box.schema.user.grant('guest','read,write','space','test')
+	
     -- «акомментируйте это, если вам нужно разграниченный контроль доступа (без него, гость будет иметь доступ ко всему)
-    box.schema.user.grant('guest', 'read,write,execute', 'universe')
-
+    --box.schema.user.grant('guest', 'read,write,execute', 'universe')
+	
     -- ƒержите вещи безопасными по умолчанию
-    --  box.schema.user.create('example', { password = 'secret' })
-    --  box.schema.user.grant('example', 'replication')
-    --  box.schema.user.grant('example', 'read,write,execute', 'space', 'example')
+    --  box.schema.user.create('utest', { password = 'pass' })
+    --  box.schema.user.grant('utest', 'replication')
+    --  box.schema.user.grant('utest', 'read,write,execute', 'space', 'test')
 end
 
--- дл€ первого запуска создать пространство и добавить установленные гранты
+-- дл€ первого запуска создать пространство и добавить права пользователей
 box.once('testrun-1.0', bootstrap)
