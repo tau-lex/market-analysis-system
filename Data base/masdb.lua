@@ -4,7 +4,8 @@ box.cfg{
     -- Basic parameters
     --------------------
 	work_dir = "/home/mint/tarantool_masdb";
-	wal_dir = "/var/log/tarantool";
+--	wal_dir = "/var/log/tarantool";
+	wal_dir = "wal";
 	snap_dir = "snap";
 	sophia_dir = "sophia";
 	listen = 3313;
