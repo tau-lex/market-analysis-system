@@ -1,0 +1,53 @@
+version: 0.0.{build}
+skip_tags: true
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+
+configuration:
+  - Release
+
+clone_depth: 1
+
+nuget:
+  disable_publish_on_pr: true
+
+# build cache to preserve files/folders between builds
+cache:
+  - packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+  - '%LocalAppData%\NuGet\Cache'
+
+matrix:
+  fast_finish: false
+
+init:
+  - git config --global core.autocrlf true
+
+install:
+  - ps: nuget sources add -Name api.nuget.org -Source https://api.nuget.org/v3/index.json
+  - scripts\install\vagrant.cmd
+  - set PATH=C:\HashiCorp\Vagrant\bin;%PATH%
+#  - vagrant up # Tests are temporary disabled.
+
+test: off
+
+before_build:
+  - nuget restore
+
+build:
+  parallel: true
+  project: TarantoolClient.sln
+  verbosity: minimal
+  publish_nuget: true    
+
+deploy: off
+
+artifacts:
+  - path: artifacts\bin\tarantool.client\Release\*.nupkg
+
+# Uncomment to debug via RDP
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
