@@ -39,7 +39,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -g3 -ggdb3")
 endif()
 
-add_custom_target (doc COMMAND doxygen ${PROJECT_SOURCE_DIR}/Doxyfile)
+# add_custom_target (doc COMMAND doxygen ${PROJECT_SOURCE_DIR}/Doxyfile)
 
 option(ENABLE_BUNDLED_MSGPUCK "Enable building of the bundled MsgPuck" ON)
 if (ENABLE_BUNDLED_MSGPUCK)
@@ -54,7 +54,7 @@ include_directories("${MSGPUCK_INCLUDE_DIRS}")
 include_directories("${PROJECT_SOURCE_DIR}/third_party")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
-add_subdirectory(doc)
+# add_subdirectory(doc)
 
 message(STATUS "------------------------------------------------")
 message(STATUS "        Tarantool library configuration:        ")

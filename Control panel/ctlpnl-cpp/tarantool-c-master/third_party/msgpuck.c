@@ -1,5 +1,7 @@
-
 /*
+ * Copyright (c) 2013 MsgPuck Authors
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or
  * without modification, are permitted provided that the following
  * conditions are met:
@@ -28,41 +30,5 @@
  * SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-
-#include <unistd.h>
-#include <sys/uio.h>
-
-#include <tarantool/tnt_mem.h>
-#include <tarantool/tnt_iob.h>
-
-int
-tnt_iob_init(struct tnt_iob *iob, size_t size,
-	     tnt_iob_tx_t tx,
-	     tnt_iob_txv_t txv, void *ptr)
-{
-	iob->tx = tx;
-	iob->txv = txv;
-	iob->ptr = ptr;
-	iob->size = size;
-	iob->off = 0;
-	iob->top = 0;
-	iob->buf = NULL;
-	if (size > 0) {
-		iob->buf = tnt_mem_alloc(size);
-		if (iob->buf == NULL)
-			return -1;
-		memset(iob->buf, 0, size);
-	}
-	return 0;
-}
-
-void
-tnt_iob_free(struct tnt_iob *iob)
-{
-	if (iob->buf)
-		tnt_mem_free(iob->buf);
-}
+#define MP_SOURCE 1
+#include "msgpuck/msgpuck.h"
