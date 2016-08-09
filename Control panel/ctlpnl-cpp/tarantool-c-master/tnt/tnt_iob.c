@@ -34,6 +34,7 @@
 #include <stdbool.h>
 
 #include <unistd.h>
+
 #include <sys/uio.h>
 
 #include <tarantool/tnt_mem.h>

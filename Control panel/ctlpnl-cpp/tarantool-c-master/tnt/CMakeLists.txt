@@ -43,7 +43,16 @@ set (TNT_SOURCES
      ${CMAKE_SOURCE_DIR}/third_party/base64.c
      ${CMAKE_SOURCE_DIR}/third_party/PMurHash.c
      ${CMAKE_SOURCE_DIR}/third_party/msgpuck.c
-)
+        ../include/winheaders.h
+        ../include/sys/un.h
+        ../include/sys/uio.h
+        ../include/sys/socket.h
+        ../include/netinet/in.h
+        ../include/netinet/tcp.h
+        ../include/netdb.h
+        ../include/limits.h
+        #../test/test_my.c
+        )
 
 #----------------------------------------------------------------------------#
 # Builds
