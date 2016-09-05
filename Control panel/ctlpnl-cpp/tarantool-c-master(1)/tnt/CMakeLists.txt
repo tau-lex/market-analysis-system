@@ -42,8 +42,7 @@ set (TNT_SOURCES
      ${CMAKE_SOURCE_DIR}/third_party/sha1.c
      ${CMAKE_SOURCE_DIR}/third_party/base64.c
      ${CMAKE_SOURCE_DIR}/third_party/PMurHash.c
-     ${CMAKE_SOURCE_DIR}/third_party/msgpuck.c
-        ../include/sys/types.h)
+     ${CMAKE_SOURCE_DIR}/third_party/msgpuck.c)
 
 #----------------------------------------------------------------------------#
 # Builds

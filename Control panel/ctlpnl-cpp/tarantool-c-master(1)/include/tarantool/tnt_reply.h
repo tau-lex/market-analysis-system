@@ -45,7 +45,7 @@
  * \returns size of bytes written
  * \retval  -1 error
  */
-typedef size_t ssize_t;
+typedef ptrdiff_t ssize_t;
 typedef ssize_t (*tnt_reply_t)(void *ptr, char *dst, ssize_t size);
 
 /*!

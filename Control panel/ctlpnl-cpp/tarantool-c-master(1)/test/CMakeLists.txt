@@ -16,6 +16,13 @@ add_executable(tarantool-test-unix
 set_target_properties(tarantool-test-unix PROPERTIES OUTPUT_NAME "tarantool-unix")
 target_link_libraries(tarantool-test-unix tnt)
 
+project(tarantool-test-cpp)
+add_executable(tarantool-test-cpp
+        test_cpp.c
+        ${common_files})
+set_target_properties(tarantool-test-cpp PROPERTIES OUTPUT_NAME "tarantool-cpp")
+target_link_libraries(tarantool-test-cpp tnt)
+
 add_custom_target(test
     COMMAND ${PROJECT_SOURCE_DIR}/test-run.py --builddir=${PROJECT_BINARY_DIR}
             --vardir=${PROJECT_BINARY_DIR}/test/var)
