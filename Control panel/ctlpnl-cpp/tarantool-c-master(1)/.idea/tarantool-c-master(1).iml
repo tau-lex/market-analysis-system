@@ -14,7 +14,7 @@
       <sourceFolder url="file://$MODULE_DIR$/test/common.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test/tarantool_unix.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test/common.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/test/test_cpp.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test_cpp.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test/tarantool_tcp.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test/tnt_assoc.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test/tnt_assoc.c" isTestSource="false" />
