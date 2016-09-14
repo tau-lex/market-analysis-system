@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_net.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_iob.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_delete.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_auth.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_reply.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_opt.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_object.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_ping.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_buf.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_request.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_assoc.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_update.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_stream.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_io.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_schema.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_iter.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_insert.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_mem.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_call.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_assoc.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tnt/tnt_select.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/common.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/tarantool_unix.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/common.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/tarantool_disconnect.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/tnt_assoc.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/tarantool_tcp.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/test.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/tnt_assoc.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/test.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/tarantool_call.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/doc/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/PMurHash.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/sha1.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/uri.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/base64.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/msgpuck.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/base64.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/PMurHash.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/sha1.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third_party/uri.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/cmake/FindSphinx.cmake" isTestSource="false" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.5.1 (E:\Anaconda3\python.exe)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Header Search Paths">
+        <CLASSES>
+          <root url="file://E:/cygwin64/lib/gcc/x86_64-pc-cygwin/5.4.0/include" />
+          <root url="file://E:/cygwin64/usr/include" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file://E:/cygwin64/lib/gcc/x86_64-pc-cygwin/5.4.0/include" />
+          <root url="file://E:/cygwin64/usr/include" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>

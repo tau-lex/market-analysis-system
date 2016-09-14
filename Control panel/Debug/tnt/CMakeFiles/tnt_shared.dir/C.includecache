@@ -1,0 +1,692 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_auth.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_buf.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_call.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_delete.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_insert.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_io.h
+sys/uio.h
+-
+tarantool/tnt_net.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_iob.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_iter.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_mem.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_net.h
+stdint.h
+-
+stdarg.h
+-
+sys/types.h
+-
+sys/time.h
+-
+tarantool/tnt_opt.h
+-
+tarantool/tnt_iob.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_object.h
+stdarg.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_opt.h
+sys/time.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_ping.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_proto.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_reply.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_request.h
+tarantool/tnt_proto.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_schema.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_select.h
+tarantool/tnt_stream.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_stream.h
+sys/types.h
+-
+sys/uio.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_request.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/tarantool/tnt_update.h
+tarantool/tnt_stream.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/PMurHash.c
+PMurHash.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/PMurHash.h
+stdlib.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/PMurHash.h
+stdint.h
+-
+limits.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/base64.c
+base64.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/base64.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/base64.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/mhash.h
+stdlib.h
+-
+stdint.h
+-
+math.h
+-
+string.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck.c
+msgpuck/msgpuck.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck/msgpuck.h
+stdlib.h
+-
+stdint.h
+-
+stddef.h
+-
+stdbool.h
+-
+string.h
+-
+assert.h
+-
+stdarg.h
+-
+stdio.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/sha1.c
+stdio.h
+-
+string.h
+-
+sys/types.h
+-
+sha1.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/sha1.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/sha1.h
+stdint.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/uri.c
+uri.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/uri.h
+string.h
+-
+stdio.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/uri.h
+stddef.h
+-
+netdb.h
+-
+limits.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/pmatomic.h
+stddef.h
+-
+stdint.h
+-
+stdbool.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_assoc.c
+stdint.h
+-
+string.h
+-
+stdio.h
+-
+tarantool/tnt_mem.h
+-
+tnt_assoc.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_assoc.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_assoc.h
+PMurHash.h
+-
+mhash.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_auth.c
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+sys/types.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_ping.h
+-
+tarantool/tnt_net.h
+-
+sha1.h
+-
+base64.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_buf.c
+stdlib.h
+-
+stdint.h
+-
+string.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_proto.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_call.c
+assert.h
+-
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+sys/types.h
+-
+msgpuck.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_call.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_delete.c
+assert.h
+-
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+msgpuck.h
+-
+sys/types.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_delete.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_insert.c
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+msgpuck.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_insert.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_io.c
+limits.h
+-
+stdlib.h
+-
+stdio.h
+-
+stdarg.h
+-
+string.h
+-
+stdbool.h
+-
+sys/time.h
+-
+sys/types.h
+-
+sys/socket.h
+-
+sys/uio.h
+-
+netinet/in.h
+-
+sys/un.h
+-
+netinet/tcp.h
+-
+netdb.h
+-
+unistd.h
+-
+fcntl.h
+-
+errno.h
+-
+tarantool/tnt_net.h
+-
+tarantool/tnt_io.h
+-
+uri.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_iob.c
+stdlib.h
+-
+stdio.h
+-
+string.h
+-
+stdbool.h
+-
+unistd.h
+-
+sys/uio.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_iob.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_iter.c
+stdlib.h
+-
+stdint.h
+-
+string.h
+-
+msgpuck.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_proto.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_iter.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_mem.c
+stdlib.h
+-
+stdio.h
+-
+string.h
+-
+tarantool/tnt_mem.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_net.c
+stdio.h
+-
+stdlib.h
+-
+stdarg.h
+-
+string.h
+-
+stdint.h
+-
+stdbool.h
+-
+sys/uio.h
+-
+uri.h
+-
+tarantool/tnt_proto.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_schema.h
+-
+tarantool/tnt_select.h
+-
+tarantool/tnt_iter.h
+-
+tarantool/tnt_auth.h
+-
+tarantool/tnt_net.h
+-
+tarantool/tnt_io.h
+-
+pmatomic.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/pmatomic.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_object.c
+stddef.h
+-
+stdint.h
+-
+string.h
+-
+stdbool.h
+-
+msgpuck.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_mem.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_opt.c
+stdlib.h
+-
+stdarg.h
+-
+stdio.h
+-
+string.h
+-
+stdbool.h
+-
+sys/uio.h
+-
+sys/types.h
+-
+sys/time.h
+-
+uri.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_net.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_ping.c
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+sys/types.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_ping.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+msgpuck.h
+-
+tarantool/tnt_proto.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_reply.c
+stddef.h
+-
+stdint.h
+-
+string.h
+-
+sys/types.h
+-
+msgpuck.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_proto.h
+-
+tarantool/tnt_reply.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_request.c
+assert.h
+-
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+sys/types.h
+-
+msgpuck.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_net.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_proto.h
+-
+tarantool/tnt_schema.h
+-
+tarantool/tnt_request.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_schema.c
+stdio.h
+-
+string.h
+-
+stddef.h
+-
+inttypes.h
+-
+assert.h
+-
+stdint.h
+-
+msgpuck.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_proto.h
+-
+tarantool/tnt_schema.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_select.h
+-
+tnt_assoc.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_assoc.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_select.c
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+sys/types.h
+-
+msgpuck.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_select.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_stream.c
+stdlib.h
+-
+stdint.h
+-
+string.h
+-
+sys/types.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_proto.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_update.c
+stddef.h
+-
+stdint.h
+-
+limits.h
+-
+string.h
+-
+stdbool.h
+-
+sys/types.h
+-
+tarantool/tnt_mem.h
+-
+tarantool/tnt_reply.h
+-
+tarantool/tnt_stream.h
+-
+tarantool/tnt_buf.h
+-
+tarantool/tnt_object.h
+-
+tarantool/tnt_update.h
+-
+tnt_proto_internal.h
+/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_proto_internal.h
+

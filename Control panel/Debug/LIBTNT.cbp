@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="LIBTNT"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\doc\;CMake Files\cmake\;CMake Files\include\;CMake Files\tnt\;CMake Files\test\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="list_install_components">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 list_install_components"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 install"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install/local">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 install/local"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install/strip">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 install/strip"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="doc">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 doc"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="sphinx-html">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/doc"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/doc/Makefile&quot;  VERBOSE=1 sphinx-html"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/doc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/doc/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/doc/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tnt_shared">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/cygtarantool-2.0.dll" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt"/>
+				<Option object_output="./"/>
+				<Option type="3"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 tnt_shared"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tnt_shared/fast">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/cygtarantool-2.0.dll" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt"/>
+				<Option object_output="./"/>
+				<Option type="3"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 tnt_shared/fast"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tnt">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/libtarantool.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 tnt"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tnt/fast">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/libtarantool.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 tnt/fast"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/tnt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-tcp">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-tcp.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-tcp"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-tcp/fast">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-tcp.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-tcp/fast"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-unix">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-unix.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-unix"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-unix/fast">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-unix.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-unix/fast"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-call">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-call.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-call"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-call/fast">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-call.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-call/fast"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-disconnect">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-disconnect.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-disconnect"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="tarantool-test-disconnect/fast">
+				<Option output="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/tarantool-disconnect.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party"/>
+					<Add directory="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 tarantool-test-disconnect/fast"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test">
+				<Option working_dir="/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 test"/>
+					<CompileFile command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make.exe -f &quot;/cygdrive/c/Users/aleksey/.CLion2016.2/system/cmake/generated/tarantool-c-master-3e71f3dc/3e71f3dc/Debug/test/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/common.c">
+			<Option target="tarantool-test-tcp"/>
+			<Option target="tarantool-test-unix"/>
+			<Option target="tarantool-test-call"/>
+			<Option target="tarantool-test-disconnect"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/common.h">
+			<Option target="tarantool-test-tcp"/>
+			<Option target="tarantool-test-unix"/>
+			<Option target="tarantool-test-call"/>
+			<Option target="tarantool-test-disconnect"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/tarantool_call.c">
+			<Option target="tarantool-test-call"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/tarantool_disconnect.c">
+			<Option target="tarantool-test-disconnect"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/tarantool_tcp.c">
+			<Option target="tarantool-test-tcp"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/tarantool_unix.c">
+			<Option target="tarantool-test-unix"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/test.c">
+			<Option target="tarantool-test-tcp"/>
+			<Option target="tarantool-test-unix"/>
+			<Option target="tarantool-test-call"/>
+			<Option target="tarantool-test-disconnect"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/test.h">
+			<Option target="tarantool-test-tcp"/>
+			<Option target="tarantool-test-unix"/>
+			<Option target="tarantool-test-call"/>
+			<Option target="tarantool-test-disconnect"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/tnt_assoc.c">
+			<Option target="tarantool-test-tcp"/>
+			<Option target="tarantool-test-unix"/>
+			<Option target="tarantool-test-call"/>
+			<Option target="tarantool-test-disconnect"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/tnt_assoc.h">
+			<Option target="tarantool-test-tcp"/>
+			<Option target="tarantool-test-unix"/>
+			<Option target="tarantool-test-call"/>
+			<Option target="tarantool-test-disconnect"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/PMurHash.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/PMurHash.h">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/base64.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/base64.h">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/msgpuck.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/sha1.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/sha1.h">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/uri.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/third_party/uri.h">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_assoc.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_assoc.h">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_auth.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_buf.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_call.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_delete.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_insert.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_io.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_iob.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_iter.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_mem.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_net.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_object.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_opt.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_ping.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_reply.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_request.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_schema.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_select.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_stream.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/tnt_update.c">
+			<Option target="tnt_shared"/>
+			<Option target="tnt"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/doc/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\doc\"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/cmake/FindSphinx.cmake">
+			<Option virtualFolder="CMake Files\cmake\"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/include/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\include\"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\tnt\"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/tnt/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\tnt\"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\test\"/>
+		</Unit>
+		<Unit filename="/cygdrive/e/Projects/Market analysis system/Control panel/tarantool-c-master/test/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\test\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
