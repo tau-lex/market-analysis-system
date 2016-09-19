@@ -39,23 +39,38 @@ box.cfg{
 --	wal_dir_rescan_delay
 }
 
--- Начальная загрузка()
+-- Ќачальная загрузка()
 local function bootstrap()
-    local test = box.schema.create_space('test')
+	-- test tarantool-c connector
+	box.schema.space.create('examples',{id=999})
+	box.space.examples:create_index('primary', {type = 'hash', parts = {1, 'unsigned'}})
+	box.schema.user.grant('guest','read,write','space','examples')
+	box.schema.user.grant('guest','read','space','_space')
+	
+    local test = box.schema.space.create('test', {id = 1999, temporary = false})
     test:create_index('primary')
 	
-	box.schema.user.create('utest', { password = 'pass' })
+	box.schema.user.create('utest', {password = 'password', if_not_exists = false})
 	box.schema.user.grant('utest', 'read,write,execute', 'space', 'test')
-	box.schema.user.grant('guest','read,write','space','test')
+	box.schema.user.grant('guest', 'read,write,execute', 'space', 'test')
+--	box.schema.user.drop('utest')
 	
-    -- Закомментируйте это, если вам нужно разграниченный контроль доступа (без него, гость будет иметь доступ ко всему)
-    --box.schema.user.grant('guest', 'read,write,execute', 'universe')
+	local config = box.schema.space.create('config', {id = 1000})
+    config:create_index('primary')
 	
-    -- Держите вещи безопасными по умолчанию
-    --  box.schema.user.create('utest', { password = 'pass' })
-    --  box.schema.user.grant('utest', 'replication')
-    --  box.schema.user.grant('utest', 'read,write,execute', 'space', 'test')
+	local history = box.schema.space.create('history', {id = 1100})
+    history:create_index('primary')
+	
+	local brocker = box.schema.space.create('brocker', {id = 1200})
+    brocker:create_index('primary')
+	
+	local forecast = box.schema.space.create('forecast', {id = 1300})
+    forecast:create_index('primary')
+	
+	box.schema.user.create('masapp', {password = 'fH4^gG^5c&e34g*%FS24@hDa'})
+	box.schema.user.grant('masapp', 'read,write,execute', 'universe')
+	
 end
 
 -- для первого запуска создать пространство и добавить права пользователей
-box.once('testrun-1.0', bootstrap)
+box.once('run-1.0', bootstrap)

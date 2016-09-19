@@ -38,7 +38,7 @@ box.cfg{
 --	wal_mode;
 --	wal_dir_rescan_delay
 }
--- Начальная загрузка()
+-- Ќачальная загрузка()
 local function bootstrap()
     local test = box.schema.create_space('test')
     test:create_index('primary')
@@ -47,10 +47,10 @@ local function bootstrap()
 	box.schema.user.grant('utest', 'read,write,execute', 'space', 'test')
 	box.schema.user.grant('guest','read,write','space','test')
 	
-    -- Закомментируйте это, если вам нужно разграниченный контроль доступа (без него, гость будет иметь доступ ко всему)
+    -- ‡акомментируйте это, если вам нужно разграниченный контроль доступа (без него, гость будет иметь доступ ко всему)
     --box.schema.user.grant('guest', 'read,write,execute', 'universe')
 	
-    -- Держите вещи безопасными по умолчанию
+    -- „ержите вещи безопасными по умолчанию
     --  box.schema.user.create('utest', { password = 'pass' })
     --  box.schema.user.grant('utest', 'replication')
     --  box.schema.user.grant('utest', 'read,write,execute', 'space', 'test')
