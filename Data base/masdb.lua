@@ -5,9 +5,9 @@ box.cfg{
     --------------------
 	work_dir = "/home/mint/tarantool_masdb";
 --	wal_dir = "/var/log/tarantool";
-	wal_dir = "wal";
-	snap_dir = "snap";
-	sophia_dir = "sophia";
+	wal_dir = "/home/mint/tarantool_masdb/wal";
+	snap_dir = "/home/mint/tarantool_masdb/snap";
+	sophia_dir = "/home/mint/tarantool_masdb/sophia";
 	listen = 3313;
 	custom_proc_title = 'masdb';
 	pid_file = "masdb.pid";
