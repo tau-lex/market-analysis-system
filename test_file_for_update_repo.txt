@@ -1,3 +1,0 @@
-# File for normal repository update
-
-/check
