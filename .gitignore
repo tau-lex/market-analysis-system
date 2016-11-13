@@ -1,2 +1,4 @@
 build-hst-reader-MSVC2015_64bit-Release/
 build-hst-reader-MSVC2015_64bit-Debug/
+build-hst-reader-MinGW_32bit-Debug/
+Market-Analysis/_read bytes.txt
