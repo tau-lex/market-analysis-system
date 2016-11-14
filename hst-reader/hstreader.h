@@ -15,17 +15,17 @@
 #include <QObject>
 #include <QVector>
 
-#pragma pack(push,1)        // Выравнивание структуры в памяти по 1 байту.
+//#pragma pack(push,1)        // Выравнивание структуры в памяти.
 typedef struct HeaderBytes     // Total 148 bytes
 {
-    quint32  Version;        // database version - 400 or 401 = 4 bytes
+    qint32  Version;        // database version - 400 or 401 = 4 bytes
     QChar Copyright[64];    // copyright info = 64 bytes
     QChar Symbol[12];       // symbol name = 12 bytes
-    quint32  Period;         // symbol timeframe	= 4 bytes
-    quint32  Digits;         // the amount of digits after decimal point	= 4 bytes
-    quint32  TimeSign;       // timesign of the database creation = 4 bytes
-    quint32  LastSync;       // the last synchronization time = 4 bytes
-    quint32  Unused[13];     // to be used in future	= 52 bytes
+    qint32  Period;         // symbol timeframe	= 4 bytes
+    qint32  Digits;         // the amount of digits after decimal point	= 4 bytes
+    qint32  TimeSign;       // timesign of the database creation = 4 bytes
+    qint32  LastSync;       // the last synchronization time = 4 bytes
+    quint32 Unused[13];     // to be used in future	= 52 bytes
 } HeaderBytes;
 
 typedef struct HistoryBytes    // Total 60 bytes (version 401)
@@ -49,7 +49,7 @@ typedef struct     // Total 44 bytes (version 400)
     double Close;           // close price = 8 bytes
     double Volume;          // tick count = 8 bytes
 } HistoryBytes400;*/
-#pragma pack(pop)
+//#pragma pack(pop)
 
 class HstReader : public QObject
 {
@@ -62,37 +62,39 @@ public:
 
 private:
     HeaderBytes header;
+#ifndef OPENNN
     QVector<HistoryBytes*> historyVector;
+#else
+    Open_Vector<HistoryBytes*> historyVector;
+#endif
     //QVector<HistoryBytes400> history400Vector;
 
     uint historySize;
     int historyVersion;
 
     QString fileName;
-
-    uint *positionHst;
-
+    bool fileExists;
 
 signals:
 
 public slots:
-    bool readFromFile();
-    //bool readFromFile(int histSize);
-    //bool readFromFile(QString fName);
-    //bool readFromFile(uint startPosition, uint stopPosition);
-
     void setFileName(QString fName);
     QString getFileName() const;
+    uint getHistorySize() const;
+    int getHistoryVersion() const;
+
+    bool readFromFile();
+    //bool readFromFile(QString fName);
+    //bool readFromFile(uint histSize);
+    //bool readFromFile(uint startPosition, uint stopPosition);
 
     //bool readHeader();
     //bool readHistory(uint *pos);
-    uint getHistorySize() const;
     HeaderBytes *getHeaderStruct();
     QString getHeaderString() const;
 
     QVector<HistoryBytes*> getHistoryVector() const;
     QString getHistoryString(int numberPosition) const;
-    // getHistoryOpenNNVector
 };
 
 #endif // HSTREADER_H

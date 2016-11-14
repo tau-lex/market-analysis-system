@@ -20,7 +20,7 @@ void MainWindow::on_findFileButton_clicked()
 {
     filePath = QFileDialog::getOpenFileName(this, tr("Open .hst file:"), "D:\\Projects\\MQL5 History", tr("History file (*.hst)"));
     ui->filePathEdit->setText(filePath);
-    ui->textBrowser->insertPlainText(filePath);
+    ui->textBrowser->insertPlainText(filePath + "\n");
     qDebug() << filePath;
 }
 
@@ -28,6 +28,8 @@ void MainWindow::on_pushButton_clicked()
 {
     historyReader = new HstReader(filePath);
     historyReader->readFromFile();
-    ui->textBrowser->insertPlainText(historyReader->getHeaderString());
-    qDebug() << "MW: File read to text browser.";
+    ui->textBrowser->insertPlainText(historyReader->getHeaderString() + "\n");
+    QString tempMsg = QString("MW: File readed. History size - %1\n").arg(historyReader->getHistorySize());
+    ui->textBrowser->insertPlainText(tempMsg);
+    qDebug() << tempMsg;
 }
