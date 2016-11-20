@@ -28,8 +28,17 @@ void MainWindow::on_pushButton_clicked()
 {
     historyReader = new HstReader(filePath);
     historyReader->readFromFile();
-    ui->textBrowser->insertPlainText(historyReader->getHeaderString() + "\n");
-    QString tempMsg = QString("MW: File readed. History size - %1\n").arg(historyReader->getHistorySize());
+    ui->textBrowser->insertPlainText(historyReader->getHeaderString() + "\n\n");
+
+    for(uint i = 0; i < historyReader->getHistorySize(); i++)
+    {
+        ui->textBrowser->insertPlainText(historyReader->getHistoryString(i) + "\n");
+        qDebug() << historyReader->getHistoryString(i) << "\n";
+    }
+
+    QString tempMsg = QString("MW: File readed. History size - %1\n\n").arg(historyReader->getHistorySize());
     ui->textBrowser->insertPlainText(tempMsg);
     qDebug() << tempMsg;
+
+    delete historyReader;
 }

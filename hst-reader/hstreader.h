@@ -62,11 +62,8 @@ public:
 
 private:
     HeaderBytes header;
-#ifndef OPENNN
+
     QVector<HistoryBytes*> historyVector;
-#else
-    Open_Vector<HistoryBytes*> historyVector;
-#endif
     //QVector<HistoryBytes400> history400Vector;
 
     uint historySize;
@@ -94,7 +91,7 @@ public slots:
     QString getHeaderString() const;
 
     QVector<HistoryBytes*> getHistoryVector() const;
-    QString getHistoryString(int numberPosition) const;
+    QString getHistoryString(uint numberPosition) const;
 };
 
 #endif // HSTREADER_H

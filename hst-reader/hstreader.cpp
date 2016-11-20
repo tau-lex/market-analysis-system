@@ -53,10 +53,10 @@ QDataStream& operator >>(QDataStream &out, HistoryBytes400 &history)
     return out;
 } */
 
-HstReader::HstReader(QObject *parent) : QObject(parent)
+HstReader::HstReader(QObject *parent) : QObject(parent), historySize(0)
 { }
 
-HstReader::HstReader(QString fName) : fileName(fName)
+HstReader::HstReader(QString fName) : fileName(fName), historySize(0)
 { }
 
 HstReader::~HstReader()
@@ -126,7 +126,7 @@ HeaderBytes *HstReader::getHeaderStruct()
 QString HstReader::getHeaderString() const
 {
     if(fileExists)
-        return QString("v%1,%2,%3,%4,%5,%6,%7")
+        return QString("%1, %2, %3, %4, %5, %6, %7")
                 .arg(header.Version)
                 .arg(QString(header.Copyright))
                 .arg(QString(header.Symbol))
@@ -142,11 +142,11 @@ QVector<HistoryBytes*> HstReader::getHistoryVector() const
     return historyVector;
 }
 
-QString HstReader::getHistoryString(int numberPosition) const
+QString HstReader::getHistoryString(uint numberPosition) const
 {
     if(fileExists)
-        return QString("%1,%2,%3,%4,%5,%6,%7,%8")
-                .arg(QDateTime::fromTime_t(historyVector.at(numberPosition)->Time).toString("yyyy.MM.dd hh:mm:ss"))
+        return QString("%1, %2, %3, %4, %5, %6, %7, %8")
+                .arg(QDateTime::fromTime_t(historyVector.at(numberPosition)->Time/1000).toString("yyyy.MM.dd hh:mm:ss"))
                 .arg(historyVector.at(numberPosition)->Open)
                 .arg(historyVector.at(numberPosition)->High)
                 .arg(historyVector.at(numberPosition)->Low)
