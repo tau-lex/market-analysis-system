@@ -15,17 +15,17 @@
 #include <QObject>
 #include <QVector>
 
-//#pragma pack(push,1)        // Выравнивание структуры в памяти.
+//#pragma pack(push,4)        // Выравнивание структуры в памяти.
 typedef struct HeaderBytes     // Total 148 bytes
 {
     qint32  Version;        // database version - 400 or 401 = 4 bytes
     QChar Copyright[64];    // copyright info = 64 bytes
     QChar Symbol[12];       // symbol name = 12 bytes
-    qint32  Period;         // symbol timeframe	= 4 bytes
-    qint32  Digits;         // the amount of digits after decimal point	= 4 bytes
-    qint32  TimeSign;       // timesign of the database creation = 4 bytes
-    qint32  LastSync;       // the last synchronization time = 4 bytes
-    quint32 Unused[13];     // to be used in future	= 52 bytes
+    qint32 Period;          // symbol timeframe	= 4 bytes
+    qint32 Digits;          // the amount of digits after decimal point	= 4 bytes
+    qint32 TimeSign;        // timesign of the database creation = 4 bytes
+    qint32 LastSync;        // the last synchronization time = 4 bytes
+    QChar  Unused[52];      // to be used in future	= 52 bytes
 } HeaderBytes;
 
 typedef struct HistoryBytes    // Total 60 bytes (version 401)
@@ -39,8 +39,8 @@ typedef struct HistoryBytes    // Total 60 bytes (version 401)
     qint32 Spread;          // spread = 4 bytes
     qint64 RealVolume;      // real volume = 8 bytes
 } HistoryBytes;
-/*
-typedef struct     // Total 44 bytes (version 400)
+
+typedef struct HistoryBytes400  // Total 44 bytes (version 400)
 {
     qint32 Time;            // bar start time = 4 bytes
     double Open;            // open price = 8 bytes
@@ -48,7 +48,7 @@ typedef struct     // Total 44 bytes (version 400)
     double High;            // highest price = 8 bytes
     double Close;           // close price = 8 bytes
     double Volume;          // tick count = 8 bytes
-} HistoryBytes400;*/
+} HistoryBytes400;
 //#pragma pack(pop)
 
 class HstReader : public QObject
@@ -63,8 +63,8 @@ public:
 private:
     HeaderBytes header;
 
-    QVector<HistoryBytes*> historyVector;
-    //QVector<HistoryBytes400> history400Vector;
+    std::vector<HistoryBytes*> historyVector;
+    std::vector<HistoryBytes400*> historyVector400;
 
     uint historySize;
     int historyVersion;
@@ -90,7 +90,7 @@ public slots:
     HeaderBytes *getHeaderStruct();
     QString getHeaderString() const;
 
-    QVector<HistoryBytes*> getHistoryVector() const;
+    std::vector<HistoryBytes*> *getHistoryVector();
     QString getHistoryString(uint numberPosition) const;
 };
 
