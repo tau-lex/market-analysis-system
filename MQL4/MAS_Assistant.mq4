@@ -45,45 +45,64 @@ double            Real_OpenBuffer[];
 double            Real_CloseBuffer[];
 
 //-----------------Global variables----------------------------------+
-// File names
+// File parameters
 string configFile;
-string outDataPath;
 string fileName;
+string pathToSaveFile;
+
 // Status MAS modules
 bool assistState;
 bool autotraderState;
-//
-string lastWritedString;
-bool endFile;
+
+// Configuration
+bool onePeriod;
+int periods[3];
+bool mainTimeSeries;
+bool pivotTimeSeries;
+bool murrayTimeSeries;
+bool fiboPivotTimeSeries;
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
 int OnInit()
 {
-//--- indicator buffers mapping
+    // Indicator buffers mapping
     SetIndexBuffer( 0, Forecast_OpenBuffer );
     SetIndexBuffer( 1, Forecast_CloseBuffer );
     SetIndexBuffer( 2, Real_OpenBuffer );
     SetIndexBuffer( 3, Real_CloseBuffer );
     
-//---
+    // Set File parameters
     configFile = StringConcatenate( "MarketData", "/", "config.ini" );
-    outDataPath = StringConcatenate( "MarketData", "/", _Symbol, "/", _Period, "/" );
-    fileName = StringConcatenate( outDataPath, TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()), ".csv" );
+    fileName = StringConcatenate( TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()), ".csv" );
+    //pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, "/", _Period, "/" , fileName );
     
-    endFile = false;
+    // Set Configuration
+    onePeriod = false;
+    periods[0] = 60;
+    periods[1] = 240;
+    periods[2] = 1440;
     
-//---
+    mainTimeSeries = true;
+    pivotTimeSeries = false;
+    murrayTimeSeries = false;
+    fiboPivotTimeSeries = false;
+
+    
+    // Set status MAS modules
     assistState = true;
     autotraderState = false;
     
-//---
+    // 
     return(INIT_SUCCEEDED);
 }
+//+------------------------------------------------------------------+
+
+
   
 //+------------------------------------------------------------------+
-//| Custom indicator iteration function                              |
+//| Main function. Called with tick                                  |
 //+------------------------------------------------------------------+
 int OnCalculate( const int rates_total,
                      const int prev_calculated,
@@ -97,44 +116,113 @@ int OnCalculate( const int rates_total,
                      const int &spread[] )
 {
     ReadConfigFile();
-    WriteFile();
+    
+    ulong msec = GetMicrosecondCount(); // debug: write time
+    WriteFiles();
+    Print( "Files writed. mksec = ", (GetMicrosecondCount() - msec) ); // debug: write time
+    
+    ReadForecastFile();
     IndicatorsUpdate();
     
     return(rates_total);
 }
+//+------------------------------------------------------------------+
+
+
 
 //+------------------------------------------------------------------+
 //| Functions                                                        |
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-void WriteFile()
+void WriteFiles()
 {
-    int limit,i;
-    ulong msec = GetMicrosecondCount(); // debug: write time
+    // Main
+    if( onePeriod )
+        WriteMain( _Period );
+    else
+        for(int i = 0; i < 3; i++)
+            WriteMain( periods[i] );
+    // Pivot points
+    if( pivotTimeSeries )
+    {
+        if( onePeriod )
+            WritePivot( _Period );
+        else
+            for(int i = 0; i < 3; i++)
+                WritePivot( periods[i] );
+    }
+    // Indicator Murray
+    if( murrayTimeSeries )
+    {
+        if( onePeriod )
+            WriteMurray( _Period );
+        else
+            for(int i = 0; i < 3; i++)
+                WriteMurray( periods[i] );
+    }
+    // Fibo-Pivot points
+    if( fiboPivotTimeSeries )
+    {
+        if( onePeriod )
+            WriteFiboPivot( _Period );
+        else
+            for(int i = 0; i < 3; i++)
+                WriteFiboPivot( periods[i] );
+    }
+    
+    return;
+}
+
+//+------------------------------------------------------------------+
+void WriteMain(int timeframe)
+{
+    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName );
     /*
     int counted_bars = IndicatorCounted();
     if( counted_bars > 0 ) counted_bars--;
     limit = Bars - counted_bars - 1; 
     */
-    limit = GetFirstBarMonth();
+    int limit = GetFirstBarMonth( timeframe );
     
     // Create and Open file (FILE_WRITE | FILE_READ - дозапись. FILE_WRITE - перезапись.)
-    int handle = FileOpen(fileName, FILE_WRITE | FILE_CSV, ",");
+    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, ",");
     // Name column headers
     FileWrite(handle, "Open Time", " Open", " High", " Low", " Close", " Volume");
     
-    for( i = limit; i >= 0; i-- ) 
+    for( int i = limit - 1; i >= 0; i-- ) 
     {
         // Go to end of file
         FileSeek(handle, 0, SEEK_END);
         
-        FileWrite(handle, Time[i], Format(Open[i]), Format(High[i]), Format(Low[i]), Format(Close[i]), Volume[i]);
+        FileWrite(handle, iTime(_Symbol, timeframe, i), 
+                            Format( iOpen(_Symbol, timeframe, i) ), 
+                            Format( iHigh(_Symbol, timeframe, i) ), 
+                            Format( iLow(_Symbol, timeframe, i) ), 
+                            Format( iClose(_Symbol, timeframe, i) ), 
+                            iVolume(_Symbol, timeframe, i) );
     }
-    // Close file
     FileClose(handle);
+    return;
+}
+
+//+------------------------------------------------------------------+
+void WritePivot(int timeframe)
+{
     
-    Print("File writed. MSec = ", (GetMicrosecondCount() - msec));
+    return;
+}
+
+//+------------------------------------------------------------------+
+void WriteMurray(int timeframe)
+{
+    
+    return;
+}
+
+//+------------------------------------------------------------------+
+void WriteFiboPivot(int timeframe)
+{
     
     return;
 }
@@ -144,6 +232,13 @@ void ReadConfigFile()
 {
     // FileOpen + FILE_SHARE_READ
     
+    return;
+}
+
+//+------------------------------------------------------------------+
+void ReadForecastFile()
+{
+    // FileOpen + FILE_SHARE_READ
     
     return;
 }
@@ -172,12 +267,12 @@ string Format(double v)
 
 //+------------------------------------------------------------------+
 // Get the index of the first bar of the month
-int GetFirstBarMonth()
+int GetFirstBarMonth(int timeframe)
 {
     int firstBar = 0;
     while( true )
     {
-        if( TimeMonth(Time[firstBar]) != Month() )
+        if( TimeMonth( iTime(_Symbol, timeframe, firstBar) ) != Month() )
             break;
         firstBar++;
     }
