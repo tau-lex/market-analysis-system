@@ -3,9 +3,10 @@
 //|                                 Copyright 2016, Terentew Aleksey |
 //|                        https://www.mql5.com/ru/users/terentjew23 |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2016, Terentew Aleksey"
-#property link      "https://www.mql5.com/ru/users/terentjew23"
-#property version   "0.1"
+#property copyright     "Copyright 2016, Terentew Aleksey"
+#property link          "https://www.mql5.com/ru/users/terentjew23"
+#property description   ""
+#property version       "1.2"
 #property strict
 
 //---------------------Indicators------------------------------------+
@@ -38,11 +39,22 @@
 #property indicator_style4  STYLE_DASH
 #property indicator_width4  1
 //--- indicator buffers
-double         Forecast_OpenBuffer[];
-double         Forecast_CloseBuffer[];
-double         Real_OpenBuffer[];
-double         Real_CloseBuffer[];
+double            Forecast_OpenBuffer[];
+double            Forecast_CloseBuffer[];
+double            Real_OpenBuffer[];
+double            Real_CloseBuffer[];
 
+//-----------------Global variables----------------------------------+
+// File names
+string configFile;
+string outDataPath;
+string fileName;
+// Status MAS modules
+bool assistState;
+bool autotraderState;
+//
+string lastWritedString;
+bool endFile;
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
@@ -50,35 +62,45 @@ double         Real_CloseBuffer[];
 int OnInit()
 {
 //--- indicator buffers mapping
-   SetIndexBuffer(0,Forecast_OpenBuffer);
-   SetIndexBuffer(1,Forecast_CloseBuffer);
-   SetIndexBuffer(2,Real_OpenBuffer);
-   SetIndexBuffer(3,Real_CloseBuffer);
-   
+    SetIndexBuffer( 0, Forecast_OpenBuffer );
+    SetIndexBuffer( 1, Forecast_CloseBuffer );
+    SetIndexBuffer( 2, Real_OpenBuffer );
+    SetIndexBuffer( 3, Real_CloseBuffer );
+    
 //---
-   return(INIT_SUCCEEDED);
+    configFile = StringConcatenate( "MarketData", "/", "config.ini" );
+    outDataPath = StringConcatenate( "MarketData", "/", _Symbol, "/", _Period, "/" );
+    fileName = StringConcatenate( outDataPath, TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()), ".csv" );
+    
+    endFile = false;
+    
+//---
+    assistState = true;
+    autotraderState = false;
+    
+//---
+    return(INIT_SUCCEEDED);
 }
   
 //+------------------------------------------------------------------+
 //| Custom indicator iteration function                              |
 //+------------------------------------------------------------------+
-int OnCalculate(const int rates_total,
-                const int prev_calculated,
-                const datetime &time[],
-                const double &open[],
-                const double &high[],
-                const double &low[],
-                const double &close[],
-                const long &tick_volume[],
-                const long &volume[],
-                const int &spread[])
+int OnCalculate( const int rates_total,
+                     const int prev_calculated,
+                     const datetime &time[],
+                     const double &open[],
+                     const double &high[],
+                     const double &low[],
+                     const double &close[],
+                     const long &tick_volume[],
+                     const long &volume[],
+                     const int &spread[] )
 {
-   WriteFile();
-   ReadFile();
-   IndicatorsUpdate();
-   
-//--- return value of prev_calculated for next call
-   return(rates_total);
+    ReadConfigFile();
+    WriteFile();
+    IndicatorsUpdate();
+    
+    return(rates_total);
 }
 
 //+------------------------------------------------------------------+
@@ -88,17 +110,76 @@ int OnCalculate(const int rates_total,
 //+------------------------------------------------------------------+
 void WriteFile()
 {
-
+    int limit,i;
+    ulong msec = GetMicrosecondCount(); // debug: write time
+    /*
+    int counted_bars = IndicatorCounted();
+    if( counted_bars > 0 ) counted_bars--;
+    limit = Bars - counted_bars - 1; 
+    */
+    limit = GetFirstBarMonth();
+    
+    // Create and Open file (FILE_WRITE | FILE_READ - дозапись. FILE_WRITE - перезапись.)
+    int handle = FileOpen(fileName, FILE_WRITE | FILE_CSV, ",");
+    // Name column headers
+    FileWrite(handle, "Open Time", " Open", " High", " Low", " Close", " Volume");
+    
+    for( i = limit; i >= 0; i-- ) 
+    {
+        // Go to end of file
+        FileSeek(handle, 0, SEEK_END);
+        
+        FileWrite(handle, Time[i], Format(Open[i]), Format(High[i]), Format(Low[i]), Format(Close[i]), Volume[i]);
+    }
+    // Close file
+    FileClose(handle);
+    
+    Print("File writed. MSec = ", (GetMicrosecondCount() - msec));
+    
+    return;
 }
 
 //+------------------------------------------------------------------+
-void ReadFile()
+void ReadConfigFile()
 {
-
+    // FileOpen + FILE_SHARE_READ
+    
+    
+    return;
 }
 
 //+------------------------------------------------------------------+
+// Reload a graphical representation
 void IndicatorsUpdate()
 {
+    Comment( "Status MAS_Assistant(", _Symbol, _Period, ") = ", assistState, "\n",
+                "Status MAS_Autotrading(", _Symbol, _Period, ") = ", autotraderState );
+    
+    return;
+}
 
+//+------------------------------------------------------------------+
+// Get the string length of double precision
+string Format(double v)
+{
+    string s = DoubleToStr( v, _Digits );
+    int len = StringLen(s);
+    for(int i=0; i<=len-1; i++)
+        if( StringGetCharacter(s, i) == 46 ) 
+            StringSetCharacter(s, i, 44);
+    return s;
+}
+
+//+------------------------------------------------------------------+
+// Get the index of the first bar of the month
+int GetFirstBarMonth()
+{
+    int firstBar = 0;
+    while( true )
+    {
+        if( TimeMonth(Time[firstBar]) != Month() )
+            break;
+        firstBar++;
+    }
+    return firstBar;
 }
