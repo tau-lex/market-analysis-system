@@ -18,7 +18,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_findFileButton_clicked()
 {
-    filePath = QFileDialog::getOpenFileName( this, tr("Open .csv file:"), "C:\\Progam Files (x86)\\STForex MetaTrader 4", tr("History file (*.csv)") );
+    filePath = QFileDialog::getOpenFileName( this, tr("Open .csv file:"), "D:\\Projects\\MQL5 History", tr("History file (*.csv)") );
     ui->filePathEdit->setText( filePath );
     ui->textBrowser->insertPlainText( filePath + "\n\n" );
     qDebug() << filePath;
