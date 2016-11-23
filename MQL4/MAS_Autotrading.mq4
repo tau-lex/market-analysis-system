@@ -5,6 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2016, Terentew Aleksey"
 #property link      "https://www.mql5.com/ru/users/terentjew23"
+#property description ""
 #property version   "0.1"
 #property strict
 
@@ -49,5 +50,5 @@ double OnTester()
 
 //---
    return(ret);
- n }
+}
 //+------------------------------------------------------------------+

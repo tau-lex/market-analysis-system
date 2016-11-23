@@ -45,9 +45,15 @@ double            Real_OpenBuffer[];
 double            Real_CloseBuffer[];
 
 //-----------------Global variables----------------------------------+
+const string Copyright = "Copyright 2016, Terentew Aleksey";
+const char csvChar = ';';
 // File parameters
 string configFile;
 string fileName;
+string pivot = ".pvt";
+string murray = ".mry";
+string fibo = ".fb";
+string csv = ".csv";
 string pathToSaveFile;
 
 // Status MAS modules
@@ -61,6 +67,9 @@ bool mainTimeSeries;
 bool pivotTimeSeries;
 bool murrayTimeSeries;
 bool fiboPivotTimeSeries;
+//+------------------------------------------------------------------+
+
+
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
@@ -74,11 +83,12 @@ int OnInit()
     SetIndexBuffer( 3, Real_CloseBuffer );
     
     // Set File parameters
-    configFile = StringConcatenate( "MarketData", "/", "config.ini" );
-    fileName = StringConcatenate( TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()), ".csv" );
-    //pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, "/", _Period, "/" , fileName );
+    configFile = StringConcatenate( "MarketData", "/", "mas.conf" );
+    fileName = StringConcatenate( TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()) );
+    //pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, _Period, "/" , fileName );
     
     // Set Configuration
+    //ReadConfigFile();
     onePeriod = false;
     periods[0] = 60;
     periods[1] = 240;
@@ -88,7 +98,6 @@ int OnInit()
     pivotTimeSeries = false;
     murrayTimeSeries = false;
     fiboPivotTimeSeries = false;
-
     
     // Set status MAS modules
     assistState = true;
@@ -115,11 +124,9 @@ int OnCalculate( const int rates_total,
                      const long &volume[],
                      const int &spread[] )
 {
-    ReadConfigFile();
-    
-    ulong msec = GetMicrosecondCount(); // debug: write time
+    //ulong msec = GetMicrosecondCount(); // debug: write time
     WriteFiles();
-    Print( "Files writed. mksec = ", (GetMicrosecondCount() - msec) ); // debug: write time
+    //Print( "Files writed. mksec = ", (GetMicrosecondCount() - msec) ); // debug: write time
     
     ReadForecastFile();
     IndicatorsUpdate();
@@ -177,7 +184,7 @@ void WriteFiles()
 //+------------------------------------------------------------------+
 void WriteMain(int timeframe)
 {
-    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName );
+    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, csv );
     /*
     int counted_bars = IndicatorCounted();
     if( counted_bars > 0 ) counted_bars--;
@@ -186,9 +193,9 @@ void WriteMain(int timeframe)
     int limit = GetFirstBarMonth( timeframe );
     
     // Create and Open file (FILE_WRITE | FILE_READ - дозапись. FILE_WRITE - перезапись.)
-    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, ",");
+    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
     // Name column headers
-    FileWrite(handle, "Open Time", " Open", " High", " Low", " Close", " Volume");
+    FileWrite(handle, 401, Copyright, _Symbol, timeframe, _Digits, iTime(_Symbol, timeframe, limit - 1), Time[0] );
     
     for( int i = limit - 1; i >= 0; i-- ) 
     {
@@ -196,10 +203,10 @@ void WriteMain(int timeframe)
         FileSeek(handle, 0, SEEK_END);
         
         FileWrite(handle, iTime(_Symbol, timeframe, i), 
-                            Format( iOpen(_Symbol, timeframe, i) ), 
-                            Format( iHigh(_Symbol, timeframe, i) ), 
-                            Format( iLow(_Symbol, timeframe, i) ), 
-                            Format( iClose(_Symbol, timeframe, i) ), 
+                            DoubleToStr( iOpen(_Symbol, timeframe, i), _Digits ), 
+                            DoubleToStr( iHigh(_Symbol, timeframe, i), _Digits ), 
+                            DoubleToStr( iLow(_Symbol, timeframe, i), _Digits ), 
+                            DoubleToStr( iClose(_Symbol, timeframe, i), _Digits ), 
                             iVolume(_Symbol, timeframe, i) );
     }
     FileClose(handle);
@@ -209,21 +216,60 @@ void WriteMain(int timeframe)
 //+------------------------------------------------------------------+
 void WritePivot(int timeframe)
 {
+    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, pivot, csv );
+    int limit = GetFirstBarMonth( timeframe );
     
+    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
+    FileWrite(handle, "Open Time"/*, pivot points */);
+    
+    for( int i = limit - 1; i >= 0; i-- ) 
+    {
+        FileSeek(handle, 0, SEEK_END);
+        FileWrite(handle, iTime(_Symbol, timeframe, i)/*, 
+                            pivot points 
+                            */ );
+    }
+    FileClose(handle);
     return;
 }
 
 //+------------------------------------------------------------------+
 void WriteMurray(int timeframe)
 {
+    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, murray, csv );
+    int limit = GetFirstBarMonth( timeframe );
     
+    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
+    FileWrite(handle, "Open Time"/*, Murray points */);
+    
+    for( int i = limit - 1; i >= 0; i-- ) 
+    {
+        FileSeek(handle, 0, SEEK_END);
+        FileWrite(handle, iTime(_Symbol, timeframe, i)/*, 
+                            Murray points 
+                            */ );
+    }
+    FileClose(handle);
     return;
 }
 
 //+------------------------------------------------------------------+
 void WriteFiboPivot(int timeframe)
 {
+    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, fibo, csv );
+    int limit = GetFirstBarMonth( timeframe );
     
+    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
+    FileWrite(handle, "Open Time"/*, Fibo points */);
+    
+    for( int i = limit - 1; i >= 0; i-- ) 
+    {
+        FileSeek(handle, 0, SEEK_END);
+        FileWrite(handle, iTime(_Symbol, timeframe, i)/*, 
+                            Fibo points 
+                            */ );
+    }
+    FileClose(handle);
     return;
 }
 
