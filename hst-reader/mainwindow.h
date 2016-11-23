@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QLineEdit>
 #include "hstreader.h"
+#include "csvreader.h"
 
 namespace Ui {
 class MainWindow;
@@ -27,7 +28,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    HstReader *historyReader;
+    //HstReader *historyReader;
+    CsvReader *historyReader;
 
     QString filePath;
 };

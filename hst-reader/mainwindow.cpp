@@ -18,7 +18,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_findFileButton_clicked()
 {
-    filePath = QFileDialog::getOpenFileName( this, tr("Open .hst file:"), "D:\\Projects\\MQL5 History", tr("History file (*.hst)") );
+    filePath = QFileDialog::getOpenFileName( this, tr("Open .csv file:"), "C:\\Progam Files (x86)\\STForex MetaTrader 4", tr("History file (*.csv)") );
     ui->filePathEdit->setText( filePath );
     ui->textBrowser->insertPlainText( filePath + "\n\n" );
     qDebug() << filePath;
@@ -26,6 +26,22 @@ void MainWindow::on_findFileButton_clicked()
 
 void MainWindow::on_pushButton_clicked()
 {
+    historyReader = new CsvReader( filePath );
+    historyReader->readFromFile();
+    ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n\n" );
+
+    for(uint i = 0; i < historyReader->getHistorySize(); i++)
+    {
+        ui->textBrowser->insertPlainText( historyReader->getHistoryString( i ) + "\n" );
+    }
+
+    QString tempMsg = QString( "\nMW: File readed. History size - %1\n" ).arg( historyReader->getHistorySize() );
+    ui->textBrowser->insertPlainText( tempMsg );
+    qDebug() << tempMsg;
+
+    delete historyReader;
+
+    /*
     historyReader = new HstReader( filePath );
     historyReader->readFromFile();
     ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n\n" );
@@ -40,6 +56,7 @@ void MainWindow::on_pushButton_clicked()
     qDebug() << tempMsg;
 
     delete historyReader;
+    */
 }
 
 void MainWindow::on_action_triggered()
