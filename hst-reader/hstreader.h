@@ -1,21 +1,9 @@
-/*
- * Класс реализующий чтение .hst файлов, использование массивов данных.
- *
- * Hst файлы хранят в себе данные в бинарном виде.
- * При прочтении образуют следующую структуру данных:
- *
- * "2015-05-16T08:50:00Z09:00","119.405000","119.425000","119.403000","119.424000","37"
- * "2015-05-16T08:51:00Z09:00","119.423000","119.448000","119.411000","119.446000","36"
- * ...
- */
-
 #ifndef HSTREADER_H
 #define HSTREADER_H
 
 #include <QObject>
 #include <QVector>
 
-//#pragma pack(push,4)        // Выравнивание структуры в памяти.
 typedef struct HeaderBytes     // Total 148 bytes
 {
     qint32  Version;        // database version - 400 or 401 = 4 bytes
@@ -27,7 +15,6 @@ typedef struct HeaderBytes     // Total 148 bytes
     qint32 LastSync;        // the last synchronization time = 4 bytes
     QChar  Unused[52];      // to be used in future	= 52 bytes
 } HeaderBytes;
-
 typedef struct HistoryBytes    // Total 60 bytes (version 401)
 {
     qint64 Time;            // bar start time = 8 bytes
@@ -39,7 +26,6 @@ typedef struct HistoryBytes    // Total 60 bytes (version 401)
     qint32 Spread;          // spread = 4 bytes
     qint64 RealVolume;      // real volume = 8 bytes
 } HistoryBytes;
-
 typedef struct HistoryBytes400  // Total 44 bytes (version 400)
 {
     qint32 Time;            // bar start time = 4 bytes
@@ -49,12 +35,10 @@ typedef struct HistoryBytes400  // Total 44 bytes (version 400)
     double Close;           // close price = 8 bytes
     double Volume;          // tick count = 8 bytes
 } HistoryBytes400;
-//#pragma pack(pop)
 
 class HstReader : public QObject
 {
     Q_OBJECT
-
 public:
     explicit HstReader(QObject *parent = 0);
     HstReader(QString fName);
@@ -62,7 +46,6 @@ public:
 
 private:
     HeaderBytes header;
-
     std::vector<HistoryBytes*> historyVector;
     std::vector<HistoryBytes400*> historyVector400;
 
@@ -71,8 +54,6 @@ private:
 
     QString fileName;
     bool fileExists;
-
-signals:
 
 public slots:
     void setFileName(QString fName);

@@ -5,7 +5,8 @@
 #include <QDataStream>
 #include <QDebug>
 
-QDataStream& operator >>(QDataStream &out, HeaderBytes &header)
+//+---------------------------------------------------------------------------+
+QDataStream& operator>>( QDataStream &out, HeaderBytes &header )
 {
     char buffer64[64];
 
@@ -24,8 +25,7 @@ QDataStream& operator >>(QDataStream &out, HeaderBytes &header)
 
     return out;
 }
-
-QDataStream& operator >>(QDataStream &out, HistoryBytes &history)
+QDataStream& operator>>( QDataStream &out, HistoryBytes &history )
 {
     out.setFloatingPointPrecision( QDataStream::DoublePrecision );
 
@@ -41,8 +41,7 @@ QDataStream& operator >>(QDataStream &out, HistoryBytes &history)
 
     return out;
 }
-
-QDataStream& operator >>(QDataStream &out, HistoryBytes400 &history)
+QDataStream& operator>>( QDataStream &out, HistoryBytes400 &history )
 {
     out.setFloatingPointPrecision( QDataStream::DoublePrecision );
 
@@ -56,6 +55,7 @@ QDataStream& operator >>(QDataStream &out, HistoryBytes400 &history)
     return out;
 }
 
+//+---------------------------------------------------------------------------+
 HstReader::HstReader(QObject *parent) : QObject(parent), historySize(0)
 { }
 
