@@ -25,7 +25,7 @@ QTextStream& operator>>( QTextStream &out, Header &header )
 QTextStream& operator>>( QTextStream &out, History &history )
 {
     QString buffer = out.readLine();
-
+    qDebug() << buffer;
     history.Time = QDateTime::fromString( buffer.section( ';', 0, 0 ), "yyyy.MM.dd hh:mm:ss" ).toMSecsSinceEpoch()/1000;
     history.Open =  buffer.section( ';', 1, 1 ).toDouble();
     history.High =  buffer.section( ';', 2, 2 ).toDouble();
@@ -85,14 +85,22 @@ bool CsvReader::readFromFile()
 
         input >> header;
 
-        //historySize = 0;
-        while ( !file.atEnd() )
+        qDebug() << "Header Done!";
+
+        QString line = in.readLine();
+        while (!line.isNull())
+        {
+            process_line(line);
+            line = in.readLine();
+        }
+        /*while ( !file.atEnd() )
         {
             History *historyLine = new History;
             input >> *historyLine;
             historyVector->push_back(historyLine);
             historySize++;
-        }
+        }*/
+        qDebug() << "History Done!";
         file.close();
         return fileExists;
     }
