@@ -15,10 +15,12 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     hstreader.cpp \
-    csvreader.cpp
+    csvreader.cpp #\
+    #imt4reader.cpp
 
 HEADERS  += mainwindow.h \
     hstreader.h \
-    csvreader.h
+    csvreader.h #\
+    #imt4reader.h
 
 FORMS    += mainwindow.ui

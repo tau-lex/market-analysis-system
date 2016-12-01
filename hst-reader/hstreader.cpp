@@ -59,16 +59,16 @@ QDataStream& operator>>( QDataStream &out, HistoryBytes400 &history )
 HstReader::HstReader(QObject *parent) : QObject(parent), historySize(0)
 { }
 
-HstReader::HstReader(QString fName) : historySize(0), fileName(fName)
+HstReader::HstReader(QString fName) : fileName(fName), historySize(0)
 { }
 
 HstReader::~HstReader()
 {
     if( !historyVector.empty() )
-        for(uint i = 0; i < historySize; i++)
+        for(int i = 0; i < historySize; i++)
             delete historyVector[i];
     if( !historyVector400.empty() )
-        for(uint i = 0; i < historySize; i++)
+        for(int i = 0; i < historySize; i++)
             delete historyVector400[i];
 }
 
@@ -82,7 +82,7 @@ QString HstReader::getFileName() const
     return fileName;
 }
 
-uint HstReader::getHistorySize() const
+int HstReader::getHistorySize() const
 {
     return historySize;
 }
@@ -160,18 +160,18 @@ std::vector<HistoryBytes*> *HstReader::getHistoryVector()
     return &historyVector;
 }
 
-QString HstReader::getHistoryString(uint numberPosition) const
+QString HstReader::getHistoryString(int numberPosition) const
 {
     if(fileExists)
-        return QString("%1, %2, %3, %4, %5, %6, %7, %8")
+        return QString("%1, %2, %3, %4, %5, %6")
                 .arg( QDateTime::fromTime_t( historyVector[numberPosition]->Time )
                       .toString("yyyy.MM.dd hh:mm:ss") )
-                .arg( historyVector[numberPosition]->Open  /*, header.Digits, 'f'*/ )
-                .arg( historyVector[numberPosition]->High  /*, header.Digits, 'f'*/ )
-                .arg( historyVector[numberPosition]->Low   /*, header.Digits, 'f'*/ )
-                .arg( historyVector[numberPosition]->Close /*, header.Digits, 'f'*/ )
-                .arg( historyVector[numberPosition]->Volume )
-                .arg( historyVector[numberPosition]->Spread )
-                .arg( historyVector[numberPosition]->RealVolume );
+                .arg( historyVector[numberPosition]->Open , header.Digits, 'f' )
+                .arg( historyVector[numberPosition]->High , header.Digits, 'f' )
+                .arg( historyVector[numberPosition]->Low  , header.Digits, 'f' )
+                .arg( historyVector[numberPosition]->Close, header.Digits, 'f' )
+                .arg( historyVector[numberPosition]->Volume );
+                //.arg( historyVector[numberPosition]->Spread )
+                //.arg( historyVector[numberPosition]->RealVolume );
     return "File not exists.";
 }

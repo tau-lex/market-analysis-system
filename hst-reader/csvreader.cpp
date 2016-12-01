@@ -4,7 +4,6 @@
 #include <QString>
 #include <QByteArray>
 //#include <QTextStream>
-#include <QDebug>
 
 //+---------------------------------------------------------------------------+
 /*
@@ -45,7 +44,7 @@ CsvReader::CsvReader(QObject *parent) : QObject(parent), historySize(0)
     historyVector = new std::vector<History*>;
 }
 
-CsvReader::CsvReader(QString fName) : historySize(0), fileName(fName)
+CsvReader::CsvReader(QString fName) : fileName(fName), historySize(0)
 {
     header = new Header;
     historyVector = new std::vector<History*>;
@@ -57,7 +56,7 @@ CsvReader::~CsvReader()
         delete header;
     if( (historyVector != nullptr) && !historyVector->empty() )
     {
-        for(uint i = 0; i < historySize; i++)
+        for(int i = 0; i < historySize; i++)
             delete (*historyVector)[i];
         delete historyVector;
     }
@@ -112,9 +111,14 @@ QString CsvReader::getFileName() const
     return fileName;
 }
 
-uint CsvReader::getHistorySize() const
+int CsvReader::getHistorySize() const
 {
     return historySize;
+}
+
+int CsvReader::getHistoryVersion() const
+{
+    return historyVersion;
 }
 
 bool CsvReader::readFromFile()
@@ -125,11 +129,8 @@ bool CsvReader::readFromFile()
     {
         fileExists = true;
 
-        //QTextStream input( &file );
-        //input.setAutoDetectUnicode( true );
-        //input >> header;
-
         header = readHeader( file );
+        historyVersion = header->Version;
 
         History *historyLine = readHistory( file );
         while( historyLine != nullptr )
@@ -139,6 +140,10 @@ bool CsvReader::readFromFile()
             historyLine = readHistory( file );
         }
         /*
+        QTextStream input( &file );
+        input.setAutoDetectUnicode( true );
+        input >> header;
+        historyVersion = header->Version;
         while( !file.atEnd() )
         {
             History *historyLine = new History;
@@ -146,7 +151,6 @@ bool CsvReader::readFromFile()
             historyVector->push_back(historyLine);
             historySize++;
         } */
-
         file.close();
         return fileExists;
     }
@@ -183,7 +187,7 @@ std::vector<History*> *CsvReader::getHistoryVector()
     return historyVector;
 }
 
-QString CsvReader::getHistoryString(uint numberPosition) const
+QString CsvReader::getHistoryString(int numberPosition) const
 {
     if( fileExists )
         return QString("%1, %2, %3, %4, %5, %6")

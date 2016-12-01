@@ -34,13 +34,13 @@ public:
     ~CsvReader();
 
 private:
-    Header *header;
-    std::vector<History*> *historyVector;
-
-    uint historySize;
-
     QString fileName;
     bool fileExists;
+    int historySize;
+    int historyVersion;
+
+    Header *header;
+    std::vector<History*> *historyVector;
 
 private:
     Header* readHeader(QFile &f);
@@ -49,15 +49,14 @@ private:
 public slots:
     void setFileName(QString fName);
     QString getFileName() const;
-    uint getHistorySize() const;
+    int getHistorySize() const;
+    int getHistoryVersion() const;
 
     bool readFromFile();
-
     Header *getHeaderStruct();
     QString getHeaderString() const;
-
     std::vector<History*> *getHistoryVector();
-    QString getHistoryString(uint numberPosition) const;
+    QString getHistoryString(int numberPosition) const;
 };
 
 #endif // CSVREADER_H
