@@ -18,30 +18,28 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_findFileButton_clicked()
 {
-    filePath = QFileDialog::getOpenFileName( this, tr("Open .csv file:"), "D:\\Projects\\MQL5 History", tr("History file (*.csv)") );
+    filePath = QFileDialog::getOpenFileName( this, tr("Open file:"), "D:\\Projects\\MQL5 History", tr("History file (*.hst *.csv)") );
     ui->filePathEdit->setText( filePath );
     ui->textBrowser->insertPlainText( filePath + "\n\n" );
-    qDebug() << filePath;
 }
 
 void MainWindow::on_pushButton_clicked()
 {
-    historyReader = new CsvReader( filePath );
-    historyReader->readFromFile();
-    ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n\n" );
+    if( filePath.contains(".hst") )
+        readHistory();
+    else if( filePath.contains(".csv") )
+        readNewHistory();
+    else
+        ui->textBrowser->insertPlainText("Sorry, file not found!\n\n");
+}
 
-    for(uint i = 0; i < historyReader->getHistorySize(); i++)
-    {
-        ui->textBrowser->insertPlainText( historyReader->getHistoryString( i ) + "\n" );
-    }
+void MainWindow::on_action_triggered()
+{
+    ui->textBrowser->clear();
+}
 
-    QString tempMsg = QString( "\nMW: File readed. History size - %1\n" ).arg( historyReader->getHistorySize() );
-    ui->textBrowser->insertPlainText( tempMsg );
-    qDebug() << tempMsg;
-
-    delete historyReader;
-
-    /*
+void MainWindow::readHistory()
+{
     historyReader = new HstReader( filePath );
     historyReader->readFromFile();
     ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n\n" );
@@ -53,13 +51,25 @@ void MainWindow::on_pushButton_clicked()
 
     QString tempMsg = QString( "\nMW: File readed. History size - %1\n" ).arg( historyReader->getHistorySize() );
     ui->textBrowser->insertPlainText( tempMsg );
-    qDebug() << tempMsg;
+    //qDebug() << tempMsg;
 
     delete historyReader;
-    */
 }
 
-void MainWindow::on_action_triggered()
+void MainWindow::readNewHistory()
 {
-    ui->textBrowser->clear();
+    historyCReader = new CsvReader( filePath );
+    historyCReader->readFromFile();
+    ui->textBrowser->insertPlainText( historyCReader->getHeaderString() + "\n\n" );
+
+    for(uint i = 0; i < historyCReader->getHistorySize(); i++)
+    {
+        ui->textBrowser->insertPlainText( historyCReader->getHistoryString( i ) + "\n" );
+    }
+
+    QString tempMsg = QString( "\nMW: File readed. History size - %1\n" ).arg( historyCReader->getHistorySize() );
+    ui->textBrowser->insertPlainText( tempMsg );
+    //qDebug() << tempMsg;
+
+    delete historyCReader;
 }

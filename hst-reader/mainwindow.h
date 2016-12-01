@@ -21,15 +21,16 @@ public:
 
 private slots:
     void on_findFileButton_clicked();
-
     void on_pushButton_clicked();
-
     void on_action_triggered();
+
+    void readHistory();
+    void readNewHistory();
 
 private:
     Ui::MainWindow *ui;
-    //HstReader *historyReader;
-    CsvReader *historyReader;
+    HstReader *historyReader;
+    CsvReader *historyCReader;
 
     QString filePath;
 };

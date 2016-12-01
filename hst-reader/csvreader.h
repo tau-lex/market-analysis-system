@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVector>
+#include <QFile>
 
 typedef struct Header       // Total 148 bytes
 {
@@ -33,13 +34,17 @@ public:
     ~CsvReader();
 
 private:
-    Header header;
+    Header *header;
     std::vector<History*> *historyVector;
 
     uint historySize;
 
     QString fileName;
     bool fileExists;
+
+private:
+    Header* readHeader(QFile &f);
+    History* readHistory(QFile &f);
 
 public slots:
     void setFileName(QString fName);
