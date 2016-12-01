@@ -45,34 +45,26 @@ public:
     ~HstReader();
 
 private:
+    QString fileName;
+    bool fileExists;
+    int historySize;
+    int historyVersion;
+
     HeaderBytes header;
     std::vector<HistoryBytes*> historyVector;
     std::vector<HistoryBytes400*> historyVector400;
 
-    uint historySize;
-    int historyVersion;
-
-    QString fileName;
-    bool fileExists;
-
 public slots:
     void setFileName(QString fName);
     QString getFileName() const;
-    uint getHistorySize() const;
+    int getHistorySize() const;
     int getHistoryVersion() const;
 
     bool readFromFile();
-    //bool readFromFile(QString fName);
-    //bool readFromFile(uint histSize);
-    //bool readFromFile(uint startPosition, uint stopPosition);
-
-    //bool readHeader();
-    //bool readHistory(uint *pos);
     HeaderBytes *getHeaderStruct();
     QString getHeaderString() const;
-
     std::vector<HistoryBytes*> *getHistoryVector();
-    QString getHistoryString(uint numberPosition) const;
+    QString getHistoryString(int numberPosition) const;
 };
 
 #endif // HSTREADER_H

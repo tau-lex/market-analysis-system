@@ -44,7 +44,7 @@ void MainWindow::readHistory()
     historyReader->readFromFile();
     ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n\n" );
 
-    for(uint i = 0; i < historyReader->getHistorySize(); i++)
+    for(int i = 0; i < historyReader->getHistorySize(); i++)
     {
         ui->textBrowser->insertPlainText( historyReader->getHistoryString( i ) + "\n" );
     }
@@ -62,7 +62,7 @@ void MainWindow::readNewHistory()
     historyCReader->readFromFile();
     ui->textBrowser->insertPlainText( historyCReader->getHeaderString() + "\n\n" );
 
-    for(uint i = 0; i < historyCReader->getHistorySize(); i++)
+    for(int i = 0; i < historyCReader->getHistorySize(); i++)
     {
         ui->textBrowser->insertPlainText( historyCReader->getHistoryString( i ) + "\n" );
     }
