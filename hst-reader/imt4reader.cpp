@@ -24,7 +24,7 @@ IMt4Reader::~IMt4Reader()
 {
     if( header != nullptr )
         delete header;
-    if( (historyVector != nullptr) && !historyVector->empty() )
+    if( historyVector != nullptr )
     {
         for(int i = 0; i < historySize; i++)
             delete (*historyVector)[i];
@@ -42,12 +42,12 @@ QString IMt4Reader::getFileName() const
     return fileName;
 }
 
-int IMt4Reader::getHistorySize() const
+qint32 IMt4Reader::getHistorySize() const
 {
     return historySize;
 }
 
-int IMt4Reader::getHistoryVersion() const
+qint32 IMt4Reader::getHistoryVersion() const
 {
     return historyVersion;
 }
@@ -78,7 +78,7 @@ std::vector<History *> *IMt4Reader::getHistoryVector()
     return historyVector;
 }
 
-QString IMt4Reader::getHistoryString(int position) const
+QString IMt4Reader::getHistoryString(qint32 position) const
 {
     if( fileExists )
         return QString("%1, %2, %3, %4, %5, %6")
