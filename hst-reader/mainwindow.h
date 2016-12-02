@@ -14,7 +14,6 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -22,15 +21,14 @@ public:
 private slots:
     void on_findFileButton_clicked();
     void on_pushButton_clicked();
+    void on_saveCsvButton_clicked();
     void on_action_triggered();
 
-    void readHistory();
-    void readNewHistory();
+    void readHistory(FileType type);
 
 private:
     Ui::MainWindow *ui;
-    HstReader *historyReader;
-    CsvReader *historyCReader;
+    QPointer<IMt4Reader> historyReader;
 
     QString filePath;
 };
