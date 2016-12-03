@@ -2,10 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QFileDialog>
-#include <QLineEdit>
-#include "hstreader.h"
-#include "csvreader.h"
+#include <QPointer>
+#include "imt4reader.h"
+#include "csvwriter.h"
 
 namespace Ui {
 class MainWindow;
@@ -29,6 +28,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QPointer<IMt4Reader> historyReader;
+    QPointer<CsvWriter> forecastWriter;
 
     QString filePath;
 };

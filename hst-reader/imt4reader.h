@@ -59,8 +59,8 @@ protected:
     qint32 historySize;
     qint32 historyVersion;
 
-    Header *header;
-    std::vector<History*> *historyVector;
+    Header *header = 0;
+    std::vector<History *> *historyVector = 0;
 
 protected:
 
@@ -71,7 +71,7 @@ public slots:
     qint32 getHistoryVersion() const;
 
     virtual bool readFromFile() = 0;
-    Header *getHeaderStruct();
+    Header *getHeader();
     QString getHeaderString() const;
     std::vector<History*> *getHistoryVector();
     QString getHistoryString(qint32 position) const;

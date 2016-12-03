@@ -2,19 +2,17 @@
 #define CSVWRITER_H
 
 #include <QObject>
-#include <QDateTime>
-#include "imt4reader.h"
 
 //+----------------TimeSeries Structures--------------------------------------+
 typedef struct HeaderWr
 {
     qint32      Version = 411;
-    QString     Copyright[64] = {"Copyright 2016, Terentew Aleksey"};
-    QString     Symbol[12];
+    QString     Copyright = {"Copyright 2016, Terentew Aleksey"};
+    QString     Symbol;
     qint32      Period;
     qint32      Digits;
-    qint32      ForecastTimeSign;
-    qint32      ForecastLastSync;
+    qint32      TimeSign;
+    qint32      LastSync;
     qint32      Depth;      // forecast timeseries length [0 - 10]
 } HeaderWr;
 typedef struct Forecast
@@ -36,21 +34,22 @@ public:
 
 private:
     QString fileName;
-    qint32 forcastSize;
-    qint32 forcastDepth; // trancelate?
+    qint32 forecastSize;
+    qint32 forecastDepth;
 
     HeaderWr *header;
-    std::vector<Forecast*> *forecast;
+    std::vector<Forecast *> *forecastVector;
 
 public slots:
     void setFileName(QString fName);
     QString getFileName() const;
-    qint32 getForecastSize() const;
-    void setDepth(qint32 n); // trancelate?
-    qint32 getForecastDepth() const; // trancelate?
+    void setSize(qint32 size);
+    qint32 getSize() const;
+    void setDepth(qint32 depth);
+    qint32 getDepth() const;
 
-    HeaderWr *getHeader;
-    std::vector<Forecast*> *getForcastVector();
+    HeaderWr *getHeader();
+    std::vector<Forecast *> *getForecastVector();
     void writeFile();
     void writeFile(QString fName);
 };
