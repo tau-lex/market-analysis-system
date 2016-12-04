@@ -6,16 +6,14 @@
 
 CsvWriter::CsvWriter(QObject *parent) : QObject(parent),
                                         fileName(""),
-                                        forecastSize(0),
-                                        forecastDepth(0)
+                                        forecastSize(0)
 {
     header = new HeaderWr;
     forecastVector = new std::vector<Forecast *>;
 }
 
 CsvWriter::CsvWriter(QString fName) : fileName(fName),
-                                        forecastSize(0),
-                                        forecastDepth(0)
+                                        forecastSize(0)
 {
     header = new HeaderWr;
     forecastVector = new std::vector<Forecast *>;
