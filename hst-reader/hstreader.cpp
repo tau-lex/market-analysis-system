@@ -1,13 +1,11 @@
 #include "hstreader.h"
 #include <QFile>
-#include <QDateTime>
 #include <QString>
 #include <QDataStream>
-#include <QDebug>
 
-QDataStream& operator >>(QDataStream &out, HeaderBytes &header)
+//+---------------------------------------------------------------------------+
+QDataStream& operator>>( QDataStream &out, Header &header )
 {
-    out.setByteOrder(QDataStream::LittleEndian);
     char buffer64[64];
 
     out >> header.Version;
@@ -23,26 +21,26 @@ QDataStream& operator >>(QDataStream &out, HeaderBytes &header)
 
     return out;
 }
-
-QDataStream& operator >>(QDataStream &out, HistoryBytes &history)
+QDataStream& operator>>( QDataStream &out, History &history )
 {
-    out.setByteOrder(QDataStream::LittleEndian);
+    out.setFloatingPointPrecision( QDataStream::DoublePrecision );
+
     out >> history.Time;
     out >> history.Open;
     out >> history.High;
     out >> history.Low;
     out >> history.Close;
     out >> history.Volume;
-    out >> history.Spread;
-    out >> history.RealVolume;
+    //out >> history.Spread;
+    //out >> history.RealVolume;
+    out.skipRawData(12);        // Skip 12 bytes struct History
 
     return out;
 }
-
-/* // Read struct HistoryBytes400 from Stream object
-QDataStream& operator >>(QDataStream &out, HistoryBytes400 &history)
+QDataStream& operator>>( QDataStream &out, History400 &history )
 {
-    out.setByteOrder(QDataStream::LittleEndian);
+    out.setFloatingPointPrecision( QDataStream::DoublePrecision );
+
     out >> history.Time;
     out >> history.Open;
     out >> history.Low;
@@ -51,61 +49,40 @@ QDataStream& operator >>(QDataStream &out, HistoryBytes400 &history)
     out >> history.Volume;
 
     return out;
-} */
+}
 
-HstReader::HstReader(QObject *parent) : QObject(parent)
+//+---------------------------------------------------------------------------+
+HstReader::HstReader(QString fName) : IMt4Reader(fName)
 { }
-
-HstReader::HstReader(QString fName) : fileName(fName)
-{ }
-
-HstReader::~HstReader()
-{
-    //if(!historyVector.empty())
-    //    delete[] historyVector;
-}
-
-void HstReader::setFileName(QString fName)
-{
-    fileName = fName;
-}
-
-QString HstReader::getFileName() const
-{
-    return fileName;
-}
-
-uint HstReader::getHistorySize() const
-{
-    return historySize;
-}
-
-int HstReader::getHistoryVersion() const
-{
-    return historyVersion;
-}
 
 bool HstReader::readFromFile()
 {
     QFile file(fileName, this);
 
-    if(file.open(QIODevice::ReadOnly))
+    if( file.open(QIODevice::ReadOnly) )
     {
         fileExists = true;
 
         QDataStream input(&file);
+        input.setByteOrder(QDataStream::LittleEndian);
 
-        input >> header;
-        historyVersion = header.Version;
+        input >> *header;
+        historyVersion = header->Version;
 
-        while (!file.atEnd())
+        while( !file.atEnd() )
         {
-            //if(historyVersion == 401)
-                HistoryBytes historyLine;
-            //else
-            //    HistoryBytes400 historyLine;
-            input >> historyLine;
-            historyVector.append(&historyLine);
+            if( historyVersion == 401 )
+            {
+                History *historyLine = new History;
+                input >> *historyLine;
+                historyVector->push_back( historyLine );
+            }
+            else if( historyVersion == 400 )
+            {
+                History400 *historyLine = new History400;
+                input >> *historyLine;
+                historyVector400->push_back( historyLine );
+            }
             historySize++;
         }
         file.close();
@@ -116,43 +93,4 @@ bool HstReader::readFromFile()
         fileExists = false;
         return fileExists;
     }
-}
-
-HeaderBytes *HstReader::getHeaderStruct()
-{
-    return &header;
-}
-
-QString HstReader::getHeaderString() const
-{
-    if(fileExists)
-        return QString("v%1,%2,%3,%4,%5,%6,%7")
-                .arg(header.Version)
-                .arg(QString(header.Copyright))
-                .arg(QString(header.Symbol))
-                .arg(header.Period)
-                .arg(header.Digits)
-                .arg(header.TimeSign)
-                .arg(header.LastSync);
-    return "File not exists.";
-}
-
-QVector<HistoryBytes*> HstReader::getHistoryVector() const
-{
-    return historyVector;
-}
-
-QString HstReader::getHistoryString(int numberPosition) const
-{
-    if(fileExists)
-        return QString("%1,%2,%3,%4,%5,%6,%7,%8")
-                .arg(QDateTime::fromTime_t(historyVector.at(numberPosition)->Time).toString("yyyy.MM.dd hh:mm:ss"))
-                .arg(historyVector.at(numberPosition)->Open)
-                .arg(historyVector.at(numberPosition)->High)
-                .arg(historyVector.at(numberPosition)->Low)
-                .arg(historyVector.at(numberPosition)->Close)
-                .arg(historyVector.at(numberPosition)->Volume)
-                .arg(historyVector.at(numberPosition)->Spread)
-                .arg(historyVector.at(numberPosition)->RealVolume);
-    return "File not exists.";
 }
