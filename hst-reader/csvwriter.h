@@ -35,7 +35,6 @@ public:
 private:
     QString fileName;
     qint32 forecastSize;
-    qint32 forecastDepth;
 
     HeaderWr *header;
     std::vector<Forecast *> *forecastVector;
@@ -45,7 +44,6 @@ public slots:
     QString getFileName() const;
     void setSize(qint32 size);
     qint32 getSize() const;
-    void setDepth(qint32 depth);
     qint32 getDepth() const;
 
     HeaderWr *getHeader();
