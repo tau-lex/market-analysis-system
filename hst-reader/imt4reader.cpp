@@ -84,10 +84,10 @@ QString IMt4Reader::getHistoryString(qint32 position) const
         return QString("%1, %2, %3, %4, %5, %6")
                 .arg( QDateTime::fromTime_t( (*historyVector)[position]->Time )
                         .toString("yyyy.MM.dd hh:mm:ss") )
-                .arg( (*historyVector)[position]->Open , header->Digits, 'f' )
-                .arg( (*historyVector)[position]->High , header->Digits, 'f' )
-                .arg( (*historyVector)[position]->Low  , header->Digits, 'f' )
-                .arg( (*historyVector)[position]->Close, header->Digits, 'f' )
+                .arg( (*historyVector)[position]->Open , 0, 'f', header->Digits )
+                .arg( (*historyVector)[position]->High , 0, 'f', header->Digits )
+                .arg( (*historyVector)[position]->Low  , 0, 'f', header->Digits )
+                .arg( (*historyVector)[position]->Close, 0, 'f', header->Digits )
                 .arg( (*historyVector)[position]->Volume );
     return "File not exists.";
 }
