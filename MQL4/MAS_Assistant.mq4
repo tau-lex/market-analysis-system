@@ -11,49 +11,41 @@
 
 //---------------------Indicators------------------------------------+
 #property indicator_chart_window
-#property indicator_buffers 4
-#property indicator_plots   4
-//--- plot Forecast_Open
-#property indicator_label1  "Forecast_Open"
+#property indicator_buffers 3
+#property indicator_plots   3
+//--- plot Forecast_High
+#property indicator_label1  "Forecast_High"
 #property indicator_type1   DRAW_LINE
 #property indicator_color1  clrOrangeRed
-#property indicator_style1  STYLE_SOLID
+#property indicator_style1  STYLE_DOT
 #property indicator_width1  1
-//--- plot Forecast_Close
-#property indicator_label2  "Forecast_Close"
+//--- plot Forecast_Low
+#property indicator_label2  "Forecast_Low"
 #property indicator_type2   DRAW_LINE
 #property indicator_color2  clrFireBrick
-#property indicator_style2  STYLE_SOLID
+#property indicator_style2  STYLE_DOT
 #property indicator_width2  1
-//--- plot Real_Open
-#property indicator_label3  "Real_Open"
+//--- plot Forecast_Close
+#property indicator_label3  "Forecast_Close"
 #property indicator_type3   DRAW_LINE
 #property indicator_color3  clrMediumSpringGreen
 #property indicator_style3  STYLE_DASH
-//#property indicator_style3  STYLE_DOT
 #property indicator_width3  1
-//--- plot Real_Close
-#property indicator_label4  "Real_Close"
-#property indicator_type4   DRAW_LINE
-#property indicator_color4  clrMediumSeaGreen
-#property indicator_style4  STYLE_DASH
-#property indicator_width4  1
+//#property indicator_style3  STYLE_DOT | STYLE_DASH
+
 //--- indicator buffers
-double            Forecast_OpenBuffer[];
-double            Forecast_CloseBuffer[];
-double            Real_OpenBuffer[];
-double            Real_CloseBuffer[];
+double  fHigh_Buffer[];
+double  fLow_Buffer[];
+double  fClose_Buffer[];
 
 //-----------------Global variables----------------------------------+
 const string Copyright = "Copyright 2016, Terentew Aleksey";
 const char csvChar = ';';
 // File parameters
+string mainSavePath;
+string mainReadPath;
 string configFile;
 string fileName;
-string pivot = ".pvt";
-string murray = ".mry";
-string fibo = ".fb";
-string csv = ".csv";
 string pathToSaveFile;
 
 // Status MAS modules
@@ -62,11 +54,8 @@ bool autotraderState;
 
 // Configuration
 bool onePeriod;
-int periods[3];
-bool mainTimeSeries;
-bool pivotTimeSeries;
-bool murrayTimeSeries;
-bool fiboPivotTimeSeries;
+int  periods[3];
+
 //+------------------------------------------------------------------+
 
 
@@ -77,39 +66,30 @@ bool fiboPivotTimeSeries;
 int OnInit()
 {
     // Indicator buffers mapping
-    SetIndexBuffer( 0, Forecast_OpenBuffer );
-    SetIndexBuffer( 1, Forecast_CloseBuffer );
-    SetIndexBuffer( 2, Real_OpenBuffer );
-    SetIndexBuffer( 3, Real_CloseBuffer );
+    SetIndexBuffer( 0, fHigh_Buffer );
+    SetIndexBuffer( 1, fLow_Buffer );
+    SetIndexBuffer( 2, fClose_Buffer );
     
     // Set File parameters
-    configFile = StringConcatenate( "MarketData", "/", "mas.conf" );
-    fileName = StringConcatenate( TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()) );
-    //pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, _Period, "/" , fileName );
+    configFile = "mas_mt4.conf";
+    mainSavePath = "MAS_MarketData";
+    mainReadPath = "MAS_Prediction"
+    currentYM = StringConcatenate( TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()) );
+    //pathToSaveFile = StringConcatenate( mainSavePath, '/', _Symbol, '/', currentYM, '-', _Period );
     
     // Set Configuration
-    //ReadConfigFile();
-    onePeriod = false;
-    periods[0] = 60;
-    periods[1] = 240;
-    periods[2] = 1440;
-    
-    mainTimeSeries = true;
-    pivotTimeSeries = false;
-    murrayTimeSeries = false;
-    fiboPivotTimeSeries = false;
+    SetConfigs();
     
     // Set status MAS modules
     assistState = true;
     autotraderState = false;
     
-    // 
     return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
 
 
-  
+
 //+------------------------------------------------------------------+
 //| Main function. Called with tick                                  |
 //+------------------------------------------------------------------+
@@ -124,11 +104,11 @@ int OnCalculate( const int rates_total,
                      const long &volume[],
                      const int &spread[] )
 {
-    //ulong msec = GetMicrosecondCount(); // debug: write time
-    WriteFiles();
-    //Print( "Files writed. mksec = ", (GetMicrosecondCount() - msec) ); // debug: write time
-    
+    // Record new historical data to a file
+    WriteHistoryCsvFiles();
+    // Read the new forecast data
     ReadForecastFile();
+    // Update on the graph indicator
     IndicatorsUpdate();
     
     return(rates_total);
@@ -142,41 +122,26 @@ int OnCalculate( const int rates_total,
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-void WriteFiles()
+void SetConfigs()
 {
-    // Main
+    onePeriod = false;
+    periods[0] = 60;
+    periods[1] = 240;
+    periods[2] = 1440;
+    
+    // FileOpen + FILE_SHARE_READ
+    
+    return;
+}
+
+//+------------------------------------------------------------------+
+void WriteHistoryCsvFiles()
+{
     if( onePeriod )
         WriteMain( _Period );
     else
         for(int i = 0; i < 3; i++)
             WriteMain( periods[i] );
-    // Pivot points
-    if( pivotTimeSeries )
-    {
-        if( onePeriod )
-            WritePivot( _Period );
-        else
-            for(int i = 0; i < 3; i++)
-                WritePivot( periods[i] );
-    }
-    // Indicator Murray
-    if( murrayTimeSeries )
-    {
-        if( onePeriod )
-            WriteMurray( _Period );
-        else
-            for(int i = 0; i < 3; i++)
-                WriteMurray( periods[i] );
-    }
-    // Fibo-Pivot points
-    if( fiboPivotTimeSeries )
-    {
-        if( onePeriod )
-            WriteFiboPivot( _Period );
-        else
-            for(int i = 0; i < 3; i++)
-                WriteFiboPivot( periods[i] );
-    }
     
     return;
 }
@@ -184,24 +149,18 @@ void WriteFiles()
 //+------------------------------------------------------------------+
 void WriteMain(int timeframe)
 {
-    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, csv );
-    /*
-    int counted_bars = IndicatorCounted();
-    if( counted_bars > 0 ) counted_bars--;
-    limit = Bars - counted_bars - 1; 
-    */
+    // Path to save file
+    pathToSaveFile = StringConcatenate( mainSavePath, '/', _Symbol, '/', currentYM, '-', timeframe, ".csv" );
+    // Find first bar in current month
     int limit = GetFirstBarMonth( timeframe );
-    
-    // Create and Open file (FILE_WRITE | FILE_READ - дозапись. FILE_WRITE - перезапись.)
-    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
+    // Create and Open file (FILE_WRITE | FILE_READ - add. FILE_WRITE - rewrite.)
+    int handle = FileOpen( pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar );
     // Name column headers
-    FileWrite(handle, 401, Copyright, _Symbol, timeframe, _Digits, iTime(_Symbol, timeframe, limit - 1), Time[0] );
-    
+    FileWrite( handle, 401, Copyright, _Symbol, timeframe, _Digits, iTime(_Symbol, timeframe, limit - 1), Time[0] );
     for( int i = limit - 1; i >= 0; i-- ) 
     {
         // Go to end of file
         FileSeek(handle, 0, SEEK_END);
-        
         FileWrite(handle, iTime(_Symbol, timeframe, i), 
                             DoubleToStr( iOpen(_Symbol, timeframe, i), _Digits ), 
                             DoubleToStr( iHigh(_Symbol, timeframe, i), _Digits ), 
@@ -210,74 +169,6 @@ void WriteMain(int timeframe)
                             iVolume(_Symbol, timeframe, i) );
     }
     FileClose(handle);
-    return;
-}
-
-//+------------------------------------------------------------------+
-void WritePivot(int timeframe)
-{
-    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, pivot, csv );
-    int limit = GetFirstBarMonth( timeframe );
-    
-    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
-    FileWrite(handle, "Open Time"/*, pivot points */);
-    
-    for( int i = limit - 1; i >= 0; i-- ) 
-    {
-        FileSeek(handle, 0, SEEK_END);
-        FileWrite(handle, iTime(_Symbol, timeframe, i)/*, 
-                            pivot points 
-                            */ );
-    }
-    FileClose(handle);
-    return;
-}
-
-//+------------------------------------------------------------------+
-void WriteMurray(int timeframe)
-{
-    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, murray, csv );
-    int limit = GetFirstBarMonth( timeframe );
-    
-    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
-    FileWrite(handle, "Open Time"/*, Murray points */);
-    
-    for( int i = limit - 1; i >= 0; i-- ) 
-    {
-        FileSeek(handle, 0, SEEK_END);
-        FileWrite(handle, iTime(_Symbol, timeframe, i)/*, 
-                            Murray points 
-                            */ );
-    }
-    FileClose(handle);
-    return;
-}
-
-//+------------------------------------------------------------------+
-void WriteFiboPivot(int timeframe)
-{
-    pathToSaveFile = StringConcatenate( "MarketData", "/", _Symbol, timeframe, "/" , fileName, fibo, csv );
-    int limit = GetFirstBarMonth( timeframe );
-    
-    int handle = FileOpen(pathToSaveFile, FILE_WRITE | FILE_CSV, csvChar);
-    FileWrite(handle, "Open Time"/*, Fibo points */);
-    
-    for( int i = limit - 1; i >= 0; i-- ) 
-    {
-        FileSeek(handle, 0, SEEK_END);
-        FileWrite(handle, iTime(_Symbol, timeframe, i)/*, 
-                            Fibo points 
-                            */ );
-    }
-    FileClose(handle);
-    return;
-}
-
-//+------------------------------------------------------------------+
-void ReadConfigFile()
-{
-    // FileOpen + FILE_SHARE_READ
-    
     return;
 }
 
@@ -297,18 +188,6 @@ void IndicatorsUpdate()
                 "Status MAS_Autotrading(", _Symbol, _Period, ") = ", autotraderState );
     
     return;
-}
-
-//+------------------------------------------------------------------+
-// Get the string length of double precision
-string Format(double v)
-{
-    string s = DoubleToStr( v, _Digits );
-    int len = StringLen(s);
-    for(int i=0; i<=len-1; i++)
-        if( StringGetCharacter(s, i) == 46 ) 
-            StringSetCharacter(s, i, 44);
-    return s;
 }
 
 //+------------------------------------------------------------------+
