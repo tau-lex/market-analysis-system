@@ -22,9 +22,9 @@ IMt4Reader::IMt4Reader(QString fName) : fileName(fName), historySize(0)
 
 IMt4Reader::~IMt4Reader()
 {
-    if( header != nullptr )
+    if( header )
         delete header;
-    if( historyVector != nullptr )
+    if( historyVector )
     {
         for(int i = 0; i < historySize; i++)
             delete (*historyVector)[i];
@@ -52,7 +52,7 @@ qint32 IMt4Reader::getHistoryVersion() const
     return historyVersion;
 }
 
-Header *IMt4Reader::getHeaderStruct()
+Header *IMt4Reader::getHeader()
 {
     return header;
 }
@@ -67,9 +67,9 @@ QString IMt4Reader::getHeaderString() const
                 .arg( header->Period )
                 .arg( header->Digits )
                 .arg( QDateTime::fromTime_t( header->TimeSign )
-                      .toString("yyyy.MM.dd hh:mm:ss") )
+                        .toString("yyyy.MM.dd hh:mm:ss") )
                 .arg( QDateTime::fromTime_t( header->LastSync )
-                      .toString("yyyy.MM.dd hh:mm:ss") );
+                        .toString("yyyy.MM.dd hh:mm:ss") );
     return "File not exists.";
 }
 
@@ -83,11 +83,11 @@ QString IMt4Reader::getHistoryString(qint32 position) const
     if( fileExists )
         return QString("%1, %2, %3, %4, %5, %6")
                 .arg( QDateTime::fromTime_t( (*historyVector)[position]->Time )
-                      .toString("yyyy.MM.dd hh:mm:ss") )
-                .arg( (*historyVector)[position]->Open , header->Digits, 'f' )
-                .arg( (*historyVector)[position]->High , header->Digits, 'f' )
-                .arg( (*historyVector)[position]->Low  , header->Digits, 'f' )
-                .arg( (*historyVector)[position]->Close, header->Digits, 'f' )
+                        .toString("yyyy.MM.dd hh:mm:ss") )
+                .arg( (*historyVector)[position]->Open , 0, 'f', header->Digits )
+                .arg( (*historyVector)[position]->High , 0, 'f', header->Digits )
+                .arg( (*historyVector)[position]->Low  , 0, 'f', header->Digits )
+                .arg( (*historyVector)[position]->Close, 0, 'f', header->Digits )
                 .arg( (*historyVector)[position]->Volume );
     return "File not exists.";
 }

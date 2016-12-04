@@ -16,11 +16,13 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     imt4reader.cpp \
     hstreader.cpp \
-    csvreader.cpp
+    csvreader.cpp \
+    csvwriter.cpp
 
 HEADERS  += mainwindow.h \
     imt4reader.h \
     hstreader.h \
-    csvreader.h
+    csvreader.h \
+    csvwriter.h
 
 FORMS    += mainwindow.ui
