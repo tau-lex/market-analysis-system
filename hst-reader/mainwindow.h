@@ -25,6 +25,8 @@ private slots:
 
     void readHistory(FileType type);
 
+    void on_runOpenNNButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QPointer<IMt4Reader> historyReader;
