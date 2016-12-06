@@ -6,7 +6,7 @@
 #property copyright     "Copyright 2016, Terentew Aleksey"
 #property link          "https://www.mql5.com/ru/users/terentjew23"
 #property description   ""
-#property version       "1.23"
+#property version       "1.6"
 #property strict
 
 //---------------------Indicators------------------------------------+
@@ -41,6 +41,7 @@ double  fClose_Buffer[];
 //-----------------Global variables----------------------------------+
 const string Copyright = "Copyright 2016, Terentew Aleksey";
 const char csvChar = ';';
+
 // File parameters
 string mainSavePath;
 string mainReadPath;
@@ -67,8 +68,6 @@ bool autotraderState;
 bool onePeriod;
 int  periods[3];
 
-//+------------------------------------------------------------------+
-
 
 
 //+------------------------------------------------------------------+
@@ -77,9 +76,12 @@ int  periods[3];
 int OnInit()
 {
     // Indicator buffers mapping
-    SetIndexBuffer( 0, fHigh_Buffer );
-    SetIndexBuffer( 1, fLow_Buffer );
-    SetIndexBuffer( 2, fClose_Buffer );
+    SetIndexBuffer(0, fHigh_Buffer);
+    SetIndexShift(0, 0);
+    SetIndexBuffer( 1, fLow_Buffer);
+    SetIndexShift(1, 0);
+    SetIndexBuffer( 2, fClose_Buffer);
+    SetIndexShift(2, 0);
     
     // Set File parameters
     configFile = "mas_mt4.conf";
@@ -98,7 +100,6 @@ int OnInit()
     
     return(INIT_SUCCEEDED);
 }
-//+------------------------------------------------------------------+
 
 
 
@@ -118,14 +119,15 @@ int OnCalculate( const int rates_total,
 {
     // Record new historical data to a file
     WriteHistoryFile();
+    
     // Read the new forecast data
     ReadForecastFile();
+    
     // Update on the graph indicator
     IndicatorsUpdate();
     
     return(rates_total);
 }
-//+------------------------------------------------------------------+
 
 
 
@@ -140,7 +142,6 @@ void SetConfigs()
     periods[0] = 60;
     periods[1] = 240;
     periods[2] = 1440;
-    
     // FileOpen + FILE_SHARE_READ
     
     return;
@@ -163,10 +164,13 @@ void WriteMain(int timeframe)
 {
     // Path to save file
     saveFileName = StringConcatenate( mainSavePath, "/", _Symbol, "/", currentYM, "-", timeframe, ".csv" );
+    
     // Find first bar in current month
-    int limit = GetFirstBarMonth( timeframe );
+    int limit = GetIndexFirstBarMonth( timeframe );
+    
     // Create and Open file (FILE_WRITE | FILE_READ - add. FILE_WRITE - rewrite.)
     int csvFile = FileOpen( saveFileName, FILE_WRITE | FILE_CSV, csvChar );
+    
     // Name column headers
     FileWrite( csvFile, 401, Copyright, _Symbol, timeframe, _Digits, iTime(_Symbol, timeframe, limit - 1), Time[0] );
     for( int i = limit - 1; i >= 0; i-- ) 
@@ -181,21 +185,8 @@ void WriteMain(int timeframe)
                             iVolume(_Symbol, timeframe, i) );
     }
     FileClose( csvFile );
+    
     return;
-}
-
-//+------------------------------------------------------------------+
-// Get the index of the first bar of the month
-int GetFirstBarMonth(int timeframe)
-{
-    int firstBar = 0;
-    while( true )
-    {
-        if( TimeMonth( iTime(_Symbol, timeframe, firstBar) ) != Month() )
-            break;
-        firstBar++;
-    }
-    return firstBar;
 }
 
 //+------------------------------------------------------------------+
@@ -203,6 +194,7 @@ void ReadForecastFile()
 {
     // Path to read file
     readFileName = StringConcatenate( mainReadPath, "/", _Symbol, "/", currentYM, "-", _Period, ".csv" );
+    
     // Open file new data prediction (FILE_SHARE_READ - file may be rewrited.)
     int forecastFile = FileOpen( readFileName, FILE_READ | FILE_SHARE_READ | FILE_CSV, csvChar );
     if( forecastFile != INVALID_HANDLE ) 
@@ -215,9 +207,11 @@ void ReadForecastFile()
             }
         }
         else Print("Wrong type of header file! Reading is stopped.");
+        
         FileClose(forecastFile);
     }
     else Print("File not open! - ", readFileName, "; ", GetLastError());
+    
     return;
 }
 
@@ -226,6 +220,7 @@ void ReadForecastFile()
 bool ReadHeader(int handle)
 {
     bool ready = true;
+    
     versionForecast =   StringToInteger( FileReadString(handle) );
     copyrightForecast = FileReadString(handle);
     symbolForecast =    FileReadString(handle);
@@ -234,7 +229,7 @@ bool ReadHeader(int handle)
     startTimeseries =   StringToTime( FileReadString(handle) );
     endTimeseries =     StringToTime( FileReadString(handle) );
     depthForecast =     StringToInteger( FileReadString(handle) );
-    
+    /*
     Print( versionForecast, ";",
             copyrightForecast, ";",
             symbolForecast, ";",
@@ -242,8 +237,9 @@ bool ReadHeader(int handle)
             digitsForecast, ";",
             startTimeseries, ";",
             endTimeseries, ";",
-            depthForecast );
+            depthForecast );*/
     if( symbolForecast != _Symbol ) ready = false;
+    
     return ready;
 }
 
@@ -251,13 +247,58 @@ bool ReadHeader(int handle)
 // 
 void ReadForecast(int handle)
 {
-    datetime time = StringToTime( FileReadString(handle) );
+    datetime time;
     double buffer[11];
+    
+    // Read the High array
+    ArraySetAsSeries( fHigh_Buffer, true );
+    time = StringToTime( FileReadString(handle) );
+    for( int i = 0; i < depthForecast; i++ )
+        buffer[i] = StringToDouble( FileReadString(handle) );
+        
+    fHigh_Buffer[GetIndexFromTime(time)] = buffer[0];
+    ArraySetAsSeries( fHigh_Buffer, false );
+    
+    // Read the Low array
+    ArraySetAsSeries( fLow_Buffer, true );
+    time = StringToTime( FileReadString(handle) );
     for( int i = 0; i < depthForecast; i++ )
         buffer[i] = StringToDouble( FileReadString(handle) );
     
-    Print( time, ";", buffer[0], ";", buffer[1] );
+    fLow_Buffer[GetIndexFromTime(time)] = buffer[0];
+    ArraySetAsSeries( fLow_Buffer, false );
+    
+    // Read the Close array
+    ArraySetAsSeries( fClose_Buffer, true );
+    time = StringToTime( FileReadString(handle) );
+    for( int i = 0; i < depthForecast; i++ )
+        buffer[i] = StringToDouble( FileReadString(handle) );
+    
+    fClose_Buffer[GetIndexFromTime(time)] = buffer[0];
+    ArraySetAsSeries( fClose_Buffer, false );
+    
     return;
+}
+
+//+------------------------------------------------------------------+
+// Get the index of the first bar of the month
+int GetIndexFirstBarMonth(int timeframe)
+{
+    int firstBarMonth = 0;
+    while( TimeMonth( iTime(_Symbol, timeframe, firstBarMonth) ) == Month() )
+        firstBarMonth++;
+        
+    return firstBarMonth;
+}
+
+//+------------------------------------------------------------------+
+// Get the index of time
+int GetIndexFromTime(datetime time)
+{
+    int index = 0;
+    while( Time[index] >= time ) index++;
+    
+    return index;
 }
 
 //+------------------------------------------------------------------+
