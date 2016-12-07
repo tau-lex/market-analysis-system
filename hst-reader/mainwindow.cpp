@@ -6,10 +6,6 @@
 #include "csvreader.h"
 //#include <QDebug>
 
-// OpenNN includes
-#include "../opennn/opennn.h"
-using namespace OpenNN;
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -97,14 +93,14 @@ void MainWindow::readHistory(FileType type)
         historyReader = new CsvReader( filePath );
 
     historyReader->readFromFile();
-    ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n\n" );
+    ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n" );
 
-    for(int i = 0; i < historyReader->getHistorySize(); i++)
+    /*for(int i = 0; i < historyReader->getHistorySize(); i++)
     {
         ui->textBrowser->insertPlainText( historyReader->getHistoryString( i ) + "\n" );
-    }
+    }*/
 
-    QString tempMsg = QString( "\nMW: File readed. History size - %1\n" ).arg( historyReader->getHistorySize() );
+    QString tempMsg = QString( "MW: File readed. History size - %1\n\n" ).arg( historyReader->getHistorySize() );
     ui->textBrowser->insertPlainText( tempMsg );
 }
 
@@ -112,138 +108,129 @@ void MainWindow::on_runOpenNNButton_clicked()
 {
     try
     {
-        std::cout << "OpenNN. Iris Plant Application." << std::endl;
+        ui->textBrowser->insertPlainText( "OpenNN. Simple Test Time Series Application.\n\n" );
 
         srand((unsigned)time(NULL));
 
-        // Data set
-
+        ui->textBrowser->insertPlainText( "DataSet... " );
+        // Data set ( Набор данных )
         DataSet data_set;
+        data_set.set_data( *getMatrixFromReader(historyReader) );
 
-        data_set.set_data_file_name("../data/iris_plant.dat");
-
-        data_set.set_separator("Space");
-
-        data_set.load_data();
-
-        // Variables
-
+        // Variables ( Информация по входным и выходным данным )
         Variables* variables_pointer = data_set.get_variables_pointer();
+        Vector< Variables::Item > variables_items(9);
 
-        variables_pointer->set_name(0, "sepal_length");
-        variables_pointer->set_units(0, "centimeters");
-        variables_pointer->set_use(0, Variables::Input);
+        variables_items[0].name = "Time";
+        variables_items[0].units = "Seconds";
+        variables_items[0].use = Variables::Input;
+        variables_items[1].name = "Open";
+        variables_items[1].units = "price";
+        variables_items[1].use = Variables::Input;
+        variables_items[2].name = "High";
+        variables_items[2].units = "price";
+        variables_items[2].use = Variables::Input;
+        variables_items[3].name = "Low";
+        variables_items[3].units = "price";
+        variables_items[3].use = Variables::Input;
+        variables_items[4].name = "Close";
+        variables_items[4].units = "price";
+        variables_items[4].use = Variables::Input;
+        variables_items[5].name = "Volume";
+        variables_items[5].units = "";
+        variables_items[5].use = Variables::Input;
+        variables_items[6].name = "outHigh";
+        variables_items[6].units = "price";
+        variables_items[6].use = Variables::Target;
+        variables_items[7].name = "outLow";
+        variables_items[7].units = "price";
+        variables_items[7].use = Variables::Target;
+        variables_items[8].name = "outClose";
+        variables_items[8].units = "price";
+        variables_items[8].use = Variables::Target;
 
-        variables_pointer->set_name(1, "sepal_width");
-        variables_pointer->set_units(1, "centimeters");
-        variables_pointer->set_use(1, Variables::Input);
+        variables_pointer->set_items(variables_items);
 
-        variables_pointer->set_name(2, "petal_length");
-        variables_pointer->set_units(2, "centimeters");
-        variables_pointer->set_use(2, Variables::Input);
-
-        variables_pointer->set_name(3, "petal_width");
-        variables_pointer->set_units(3, "centimeters");
-        variables_pointer->set_use(3, Variables::Input);
-
-        variables_pointer->set_name(4, "iris_setosa");
-        variables_pointer->set_use(4, Variables::Target);
-
-        variables_pointer->set_name(5, "iris_versicolour");
-        variables_pointer->set_use(5, Variables::Target);
-
-        variables_pointer->set_name(6, "iris_virginica");
-        variables_pointer->set_use(6, Variables::Target);
+        ui->textBrowser->insertPlainText( "Done!\n" );
 
         const Matrix<std::string> inputs_information = variables_pointer->arrange_inputs_information();
         const Matrix<std::string> targets_information = variables_pointer->arrange_targets_information();
 
-        // Instances
-
+        // Instances ( Разбиение на обучающие, обобщающие и тестовые данные )
         Instances* instances_pointer = data_set.get_instances_pointer();
+        instances_pointer->split_random_indices(); // training = 0.6, generalization = 0.2, testing = 0.2
 
-        instances_pointer->split_random_indices();
+        const Vector< Statistics<double> > inputs_statistics = data_set.scale_inputs_mean_standard_deviation();
+        const Vector< Statistics<double> > outputs_statistics = data_set.scale_targets_mean_standard_deviation();
 
-        const Vector< Statistics<double> > inputs_statistics = data_set.scale_inputs_minimum_maximum();
-
-        // Neural network
-
-        NeuralNetwork neural_network(4, 6, 3);
+        ui->textBrowser->insertPlainText( "Neural Network... " );
+        // Neural network ( Создание нейро сети )
+        NeuralNetwork neural_network(6, 6, 3);
 
         Inputs* inputs_pointer = neural_network.get_inputs_pointer();
-
         inputs_pointer->set_information(inputs_information);
 
         Outputs* outputs_pointer = neural_network.get_outputs_pointer();
-
         outputs_pointer->set_information(targets_information);
-
+            // Scaling ( Масштабирование (нормирование) данных )
         neural_network.construct_scaling_layer();
-
         ScalingLayer* scaling_layer_pointer = neural_network.get_scaling_layer_pointer();
-
         scaling_layer_pointer->set_statistics(inputs_statistics);
+        scaling_layer_pointer->set_scaling_method(ScalingLayer::NoScaling); // MeanStandardDeviation?
+            // Unscaling ( Демасштабирование данных )
+        neural_network.construct_unscaling_layer();
+        UnscalingLayer* unscaling_layer_pointer = neural_network.get_unscaling_layer_pointer();
+        unscaling_layer_pointer->set_statistics(outputs_statistics);
+        unscaling_layer_pointer->set_unscaling_method(UnscalingLayer::NoUnscaling); // MeanStandardDeviation?
 
-        scaling_layer_pointer->set_scaling_method(ScalingLayer::NoScaling);
+        ui->textBrowser->insertPlainText( "Done!\n" );
 
-        neural_network.construct_probabilistic_layer();
-
-        ProbabilisticLayer* probabilistic_layer_pointer = neural_network.get_probabilistic_layer_pointer();
-
-        probabilistic_layer_pointer->set_probabilistic_method(ProbabilisticLayer::Softmax);
-
+        ui->textBrowser->insertPlainText( "Performance functional... " );
         // Performance functional
-
         PerformanceFunctional performance_functional(&neural_network, &data_set);
+        performance_functional.set_regularization_type(PerformanceFunctional::NEURAL_PARAMETERS_NORM); //need?
 
+        ui->textBrowser->insertPlainText( "Done!\n" );
+
+        ui->textBrowser->insertPlainText( "Training strategy... " );
         // Training strategy
-
         TrainingStrategy training_strategy(&performance_functional);
 
-        training_strategy.set_main_type(TrainingStrategy::QUASI_NEWTON_METHOD);
-
         QuasiNewtonMethod* quasi_Newton_method_pointer = training_strategy.get_quasi_Newton_method_pointer();
-
+        quasi_Newton_method_pointer->set_maximum_iterations_number(1000);
+        quasi_Newton_method_pointer->set_display_period(10);
         quasi_Newton_method_pointer->set_minimum_performance_increase(1.0e-6);
+        quasi_Newton_method_pointer->set_reserve_performance_history(true);
 
-        quasi_Newton_method_pointer->set_display(false);
+        TrainingStrategy::Results training_strategy_results = training_strategy.perform_training();
 
-        // Model selection
+        ui->textBrowser->insertPlainText( "Done!\n" );
 
-        ModelSelection model_selection(&training_strategy);
-
-        model_selection.set_order_selection_type(ModelSelection::GOLDEN_SECTION);
-
-        GoldenSectionOrder* golden_section_order_pointer = model_selection.get_golden_section_order_pointer();
-
-        golden_section_order_pointer->set_tolerance(1.0e-7);
-
-        ModelSelection::ModelSelectionResults model_selection_results;
-
-        model_selection_results = model_selection.perform_order_selection();
-
+        ui->textBrowser->insertPlainText( "Testing analysis... " );
         // Testing analysis
-
         TestingAnalysis testing_analysis(&neural_network, &data_set);
+        TestingAnalysis::LinearRegressionResults linear_regression_results = testing_analysis.perform_linear_regression_analysis();
 
-        const Matrix<size_t> confusion = testing_analysis.calculate_confusion();
+        ui->textBrowser->insertPlainText( "Done!\n" );
 
+        ui->textBrowser->insertPlainText( "Save results... " );
         // Save results
-
-        scaling_layer_pointer->set_scaling_method(ScalingLayer::MinimumMaximum);
+        scaling_layer_pointer->set_scaling_method(ScalingLayer::MeanStandardDeviation);
+        unscaling_layer_pointer->set_unscaling_method(UnscalingLayer::MeanStandardDeviation);
 
         data_set.save("../data/data_set.xml");
 
         neural_network.save("../data/neural_network.xml");
         neural_network.save_expression("../data/expression.txt");
 
+        performance_functional.save("../data/performance_functional.xml");
+
         training_strategy.save("../data/training_strategy.xml");
+        training_strategy_results.save("../data/training_strategy_results.dat");
 
-        model_selection.save("../data/model_selection.xml");
-        model_selection_results.save("../data/model_selection_results.dat");
+        linear_regression_results.save("../data/linear_regression_analysis_results.dat");
 
-        confusion.save("../data/confusion.dat");
-
+        ui->textBrowser->insertPlainText( "Done!\n" );
         //return(0);
     }
     catch(std::exception& e)
@@ -252,4 +239,33 @@ void MainWindow::on_runOpenNNButton_clicked()
 
         //return(1);
     }
+}
+
+Matrix<double> *MainWindow::getMatrixFromReader(IMt4Reader *reader)
+{
+    qint32 size = reader->getHistorySize();
+    std::vector<History *> *history = reader->getHistoryVector();
+
+    Matrix<double> *matrixDS = new Matrix<double>;
+    matrixDS->set( size - 1, 9 );
+
+    for( qint32 i = 0; i < size - 1; i++ )
+    {
+        Vector<double> newRow;
+        // Input
+        newRow.push_back( (double)(*history)[i]->Time );
+        newRow.push_back( (*history)[i]->Open );
+        newRow.push_back( (*history)[i]->High );
+        newRow.push_back( (*history)[i]->Low );
+        newRow.push_back( (*history)[i]->Close );
+        newRow.push_back( (double)(*history)[i]->Volume );
+        // Output
+        newRow.push_back( (*history)[i+1]->High );
+        newRow.push_back( (*history)[i+1]->Low );
+        newRow.push_back( (*history)[i+1]->Close );
+
+        matrixDS->set_row( i, newRow );
+    }
+
+    return matrixDS;
 }
