@@ -28,9 +28,9 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui
 
 win32-g++{
-QMAKE_LFLAGS += -static-libgcc
-QMAKE_LFLAGS += -static-libstdc++
-QMAKE_LFLAGS += -static
+    QMAKE_LFLAGS += -static-libgcc
+    QMAKE_LFLAGS += -static-libstdc++
+    QMAKE_LFLAGS += -static
 }
 
 # OpenNN library

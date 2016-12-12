@@ -115,6 +115,7 @@ void MainWindow::on_runOpenNNButton_clicked()
         ui->textBrowser->insertPlainText( "DataSet... " );
         // Data set ( Набор данных )
         DataSet data_set;
+        data_set.set( historyReader->getHistorySize() - 1, 9 );
         data_set.set_data( *getMatrixFromReader(historyReader) );
 
         // Variables ( Информация по входным и выходным данным )
@@ -218,17 +219,17 @@ void MainWindow::on_runOpenNNButton_clicked()
         scaling_layer_pointer->set_scaling_method(ScalingLayer::MeanStandardDeviation);
         unscaling_layer_pointer->set_unscaling_method(UnscalingLayer::MeanStandardDeviation);
 
-        data_set.save("../data/data_set.xml");
+        data_set.save("D:/Projects/data/data_set.xml");
 
-        neural_network.save("../data/neural_network.xml");
-        neural_network.save_expression("../data/expression.txt");
+        neural_network.save("D:/Projects/data/neural_network.xml");
+        neural_network.save_expression("D:/Projects/data/expression.txt");
 
-        performance_functional.save("../data/performance_functional.xml");
+        performance_functional.save("D:/Projects/data/performance_functional.xml");
 
-        training_strategy.save("../data/training_strategy.xml");
-        training_strategy_results.save("../data/training_strategy_results.dat");
+        training_strategy.save("D:/Projects/data/training_strategy.xml");
+        training_strategy_results.save("D:/Projects/data/training_strategy_results.dat");
 
-        linear_regression_results.save("../data/linear_regression_analysis_results.dat");
+        linear_regression_results.save("D:/Projects/data/linear_regression_analysis_results.dat");
 
         ui->textBrowser->insertPlainText( "Done!\n" );
         //return(0);
