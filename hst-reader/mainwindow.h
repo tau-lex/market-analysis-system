@@ -32,6 +32,7 @@ private slots:
     void on_runOpenNNButton_clicked();
 
     Matrix<double> *getMatrixFromReader(IMt4Reader *reader);
+    Forecast *getNewForecast(const History *hist, qint32 forcastTime);
 
 private:
     Ui::MainWindow *ui;

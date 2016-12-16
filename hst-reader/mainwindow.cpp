@@ -47,7 +47,7 @@ void MainWindow::on_saveCsvButton_clicked()
     if( !historyReader )
         ui->textBrowser->insertPlainText("Not find open file.\n");
 
-    QString outFile = "D:\\Projects\\MQL5 History\\csvWriter";
+    QString outFile = "D:\\Projects\\MQL5 History\\newPrediction";
     outFile = QString("%1-%2%3.csv").arg( outFile )
                                 .arg( QString(historyReader->getHeader()->Symbol) )
                                 .arg( historyReader->getHeader()->Period );
@@ -60,13 +60,14 @@ void MainWindow::on_saveCsvButton_clicked()
     header->Depth = 1;
 
     std::vector<Forecast*> *forecast = forecastWriter->getForecastVector();
-    for( qint32 i = 0; i < historyReader->getHistorySize(); i++ )
+    for( qint32 i = 0; i < historyReader->getHistorySize() - 1; i++ )
     {
-        Forecast *newFLine = new Forecast;
-        newFLine->Time =     ( *historyReader->getHistoryVector() )[i]->Time;
-        newFLine->High[0] =  ( *historyReader->getHistoryVector() )[i]->High;
-        newFLine->Low[0] =   ( *historyReader->getHistoryVector() )[i]->Low;
-        newFLine->Close[0] = ( *historyReader->getHistoryVector() )[i]->Close;
+        Forecast *newFLine = getNewForecast( (*historyReader->getHistoryVector())[i],
+                                             (*historyReader->getHistoryVector())[i + 1]->Time );
+        //newFLine->Time =     ( *historyReader->getHistoryVector() )[i]->Time;
+        //newFLine->High[0] =  ( *historyReader->getHistoryVector() )[i]->High;
+        //newFLine->Low[0] =   ( *historyReader->getHistoryVector() )[i]->Low;
+        //newFLine->Close[0] = ( *historyReader->getHistoryVector() )[i]->Close;
 
         forecast->push_back( newFLine );
         forecastWriter->setSize(i);
@@ -95,10 +96,11 @@ void MainWindow::readHistory(FileType type)
     historyReader->readFromFile();
     ui->textBrowser->insertPlainText( historyReader->getHeaderString() + "\n" );
 
-    /*for(int i = 0; i < historyReader->getHistorySize(); i++)
+    ///*
+    for(int i = 0; i < historyReader->getHistorySize(); i++)
     {
         ui->textBrowser->insertPlainText( historyReader->getHistoryString( i ) + "\n" );
-    }*/
+    }//*/
 
     QString tempMsg = QString( "MW: File readed. History size - %1\n\n" ).arg( historyReader->getHistorySize() );
     ui->textBrowser->insertPlainText( tempMsg );
@@ -269,4 +271,64 @@ Matrix<double> *MainWindow::getMatrixFromReader(IMt4Reader *reader)
     }
 
     return matrixDS;
+}
+
+Forecast *MainWindow::getNewForecast(const History *hist, qint32 forcastTime)
+{
+    Forecast *newForecast = new Forecast;
+    newForecast->Time = forcastTime;
+    double Time = static_cast<double>(forcastTime);
+    double Open = hist->Open;
+    double High = hist->High;
+    double Low = hist->Low;
+    double Close = hist->Close;
+    double Volume = static_cast<double>(hist->Volume);
+
+    double scaled_Time = ( Time - 1.22607e+09 ) / 1.46901e+08;
+    double scaled_Open = ( Open - 1.23565 ) / 0.168808;
+    double scaled_High = ( High - 1.24155 ) / 0.169224;
+    double scaled_Low = ( Low - 1.22981 ) / 0.16817;
+    double scaled_Close = ( Close - 1.23576 ) / 0.16864;
+    double scaled_Volume = ( Volume - 55038.5 ) / 61291.1;
+    double y_1_1 = tanh( -0.493731 + 1.31289 * scaled_Time +
+                         2.15081 *  scaled_Open - 0.89018 * scaled_High -
+                         0.381082 * scaled_Low +  0.85078 * scaled_Close +
+                         1.07173 *  scaled_Volume );
+    double y_1_2 = tanh( -0.388098 + 0.559863 * scaled_Time +
+                         0.675013 *  scaled_Open + 0.787622 * scaled_High +
+                         0.0367613 * scaled_Low -  0.774004 * scaled_Close +
+                         0.241172 *  scaled_Volume );
+    double y_1_3 = tanh( -0.53812 + 0.26891 * scaled_Time +
+                         0.386367 *  scaled_Open - 0.490414 *  scaled_High -
+                         0.746751 *  scaled_Low -  0.0889836 * scaled_Close +
+                         0.111324 *  scaled_Volume );
+    double y_1_4 = tanh( -1.70943 - 0.305006 * scaled_Time -
+                         0.0102027 *  scaled_Open - 0.0670519 * scaled_High +
+                         0.820993 *   scaled_Low +  0.423657 *  scaled_Close +
+                         0.00298224 * scaled_Volume );
+    double y_1_5 = tanh( -0.356751 - 1.03923 * scaled_Time -
+                         0.759348 * scaled_Open + 0.190465 * scaled_High -
+                         0.409322 * scaled_Low -  1.05359 *  scaled_Close -
+                         0.65556 *  scaled_Volume );
+    double y_1_6 = tanh( 1.50643 + 0.393741 * scaled_Time +
+                         0.369172 *  scaled_Open + 0.817134 * scaled_High +
+                         0.0705429 * scaled_Low -  0.469911 * scaled_Close -
+                         0.174542 *  scaled_Volume );
+    double scaled_outHigh = ( -0.0222355 - 0.0760875 * y_1_1 +
+                              0.375507 * y_1_2 - 0.842273 * y_1_3 +
+                              0.743765 * y_1_4 - 0.117617 * y_1_5 +
+                              0.466218 * y_1_6 );
+    double scaled_outLow = ( 0.000287203 - 0.212282 * y_1_1 +
+                             0.567827 * y_1_2 - 0.774556 * y_1_3 +
+                             0.762309 * y_1_4 - 0.105843 * y_1_5 +
+                             0.532234 * y_1_6 );
+    double scaled_outClose = ( -0.00141902 - 0.137676 * y_1_1 +
+                               0.455118 * y_1_2 - 0.808174 * y_1_3 +
+                               0.771652 * y_1_4 - 0.114845 * y_1_5 +
+                               0.494899 * y_1_6 );
+    newForecast->High[0] = 1.2416 + 0.169133 * scaled_outHigh;
+    newForecast->Low[0] = 1.22987 + 0.168074 * scaled_outLow;
+    newForecast->Close[0] = 1.23581 + 0.168547 * scaled_outClose;
+
+    return newForecast;
 }
