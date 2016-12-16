@@ -88,8 +88,8 @@ int OnInit()
     mainSavePath = "MAS_MarketData";
     mainReadPath = "MAS_Prediction";
     currentYM = StringConcatenate( TimeYear(TimeCurrent()), ".", TimeMonth(TimeCurrent()) );
-    //saveFileName = StringConcatenate( mainSavePath, "/", _Symbol, "/", currentYM, "-", _Period );
-    //readFileName = StringConcatenate( mainReadPath, "/", _Symbol, "/", currentYM, "-", _Period );
+    //saveFileName = StringConcatenate( mainSavePath, "/", _Symbol, "/h", currentYM, "-", _Period );
+    //readFileName = StringConcatenate( mainReadPath, "/", _Symbol, "/p", currentYM, "-", _Period );
     
     // Set Configuration
     SetConfigs();
@@ -163,7 +163,7 @@ void WriteHistoryFile()
 void WriteMain(int timeframe)
 {
     // Path to save file
-    saveFileName = StringConcatenate( mainSavePath, "/", _Symbol, "/", currentYM, "-", timeframe, ".csv" );
+    saveFileName = StringConcatenate( mainSavePath, "/", _Symbol, "/h", currentYM, "-", timeframe, ".csv" );
     
     // Find first bar in current month
     int limit = GetIndexFirstBarMonth( timeframe );
@@ -193,7 +193,7 @@ void WriteMain(int timeframe)
 void ReadForecastFile()
 {
     // Path to read file
-    readFileName = StringConcatenate( mainReadPath, "/", _Symbol, "/", currentYM, "-", _Period, ".csv" );
+    readFileName = StringConcatenate( mainReadPath, "/", _Symbol, "/p", currentYM, "-", _Period, ".csv" );
     
     // Open file new data prediction (FILE_SHARE_READ - file may be rewrited.)
     int forecastFile = FileOpen( readFileName, FILE_READ | FILE_SHARE_READ | FILE_CSV, csvChar );
