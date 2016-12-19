@@ -4,13 +4,15 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT      += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Market-Analysis
 TEMPLATE = app
 
+RESOURCES += \
+        Market-Analysis.qrc
 
 SOURCES += src/main.cpp \
         src/mainwindow.cpp \
