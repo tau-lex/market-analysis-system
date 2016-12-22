@@ -2,8 +2,8 @@
  <author/>
  <comment/>
  <exportmacro/>
- <class>SettingsDialog</class>
- <widget class="QDialog" name="SettingsDialog">
+ <class>KitConfigForm</class>
+ <widget class="QDialog" name="KitConfigForm">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -38,7 +38,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>SettingsDialog</receiver>
+   <receiver>KitConfigForm</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -54,7 +54,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>SettingsDialog</receiver>
+   <receiver>KitConfigForm</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
