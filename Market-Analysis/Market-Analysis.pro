@@ -25,7 +25,8 @@ SOURCES += src/main.cpp \
         src/configmt4.cpp \
         src/marketassaykit.cpp \
         src/neuralnetworkanalysis.cpp \
-        src/settingsdialog.cpp
+        src/settingsform.cpp \
+        src/kitconfigform.cpp
 
 HEADERS += include/mainwindow.h \
         include/imt4reader.h \
@@ -37,10 +38,12 @@ HEADERS += include/mainwindow.h \
         include/configmt4.h \
         include/marketassaykit.h \
         include/neuralnetworkanalysis.h \
-        include/settingsdialog.h
+        include/settingsform.h \
+        include/kitconfigform.h
 
 FORMS += mainwindow.ui \
-        settingsdialog.ui
+        settingsform.ui \
+        kitconfigform.ui
 
 win32-g++{
     QMAKE_LFLAGS += -static-libgcc

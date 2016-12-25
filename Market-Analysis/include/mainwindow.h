@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include "include/presenter.h"
+#include "include/settingsform.h"
+#include "include/kitconfigform.h"
+#include <QList>
 
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
@@ -14,7 +17,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 
-#define MAX_TAB 5
+#define MAX_TAB 10
 
 namespace Ui {
 class MainWindow;
@@ -28,76 +31,91 @@ public:
     ~MainWindow();
 
 private:
+    struct KitTabWidget {
+        QString         name;
+        bool            changed;
+        QWidget         *kitTab;
+        QLabel          *nameKitName;
+        QLabel          *serverName;
+        QLabel          *pathToMt4Name;
+        QListView       *inputListView;
+        QListView       *outputListView;
+        QLabel          *inputSize;
+        QLabel          *outputSize;
+        QProgressBar    *progressBar;
+        QVBoxLayout     *vLayoutTab;
+        QGroupBox       *hGBoxKitName;
+        QHBoxLayout     *hLayoutName;
+        QLabel          *nameKitLabel;
+        QGroupBox       *hGBoxPathMt4;
+        QHBoxLayout     *hLayoutPath;
+        QLabel          *serverLabel;
+        QLabel          *pathToMt4Label;
+        QHBoxLayout     *hLayoutConf;
+        QGroupBox       *vGBoxInput;
+        QVBoxLayout     *vLayoutInput;
+        QHBoxLayout     *hLayoutInputSize;
+        QLabel          *inputLabel;
+        QVBoxLayout     *vLayoutSymbol;
+        QSpacerItem     *verticalSpacer_2;
+        QLabel          *arrowLabel;
+        QSpacerItem     *verticalSpacer_3;
+        QGroupBox       *vGBoxOutput;
+        QVBoxLayout     *vLayoutOutput;
+        QHBoxLayout     *hLayoutOutputSize;
+        QLabel          *outputLabel;
+        QVBoxLayout     *vLayoutButtons;
+        QPushButton     *configurationButton;
+        QSpacerItem     *verticalSpacer;
+        QPlainTextEdit  *consoleTextEdit;
+    };
     Ui::MainWindow *ui;
     Presenter *presenter;
+    SettingsForm *settings;
+    KitConfigForm *kitConfig;
 
-    qint32 currentTab;
-    qint32 countTabs;
+    QVector<KitTabWidget *> tabList;
+    qint32 currentTab = 0;
+    qint32 countTabs = 0;
 
 signals:
     void addNewKit(QString);
+    void openKit(QString);
+    void saveKit(QString);
     void deleteKit(QString);
-    void opened(qint32);
+    void closedKit(QString);
+    void renamedKit(QString, QString);
+    void runTrainingKit(QString);
+    void runWorkKit(QString);
+    void stopWorkKit(QString);
+
+public slots:
+    void errorMessage(QString text);
 
 private slots:
-    void newKit();
-    void openKit();
-    void saveKit();
-    void closeKit();
+    void addNew();
+    void open();
+    void save();
+    void closeTab();
     void openSettings();
     void openKitConfig();
     void runTraining();
     void runWork();
     void stopWork();
-    void deleteKit();
+    void delete_Kit();
     void openHelp();
     void openAbout();
 
-    void openTab(qint32 idx);
-    void closeTab(qint32 idx);
-    void selectTab(qint32 idx);
+    bool openTab(const qint32 idx, const QString name);
+    void closeTab(const qint32 idx);
+    void selectTab(const qint32 idx);
+    void setTabName(const qint32 idx, const QString name);
     void setConnections();
 
-    void addTabToUi(qint32 idx);
-    void addTabConnections(qint32 idx);
+    void addTabToUi(const qint32 idx);
+    void addTabConnections(const qint32 idx);
+    void deleteTabFromUi(const qint32 idx);
     void closeEvent(QCloseEvent *event);
-
-private: // tab widgets
-    QList< QWidget* >       kitTab;
-    QList< QVBoxLayout* >   vLayoutTab;
-    QList< QGroupBox* >     hGBoxKitName;
-    QList< QHBoxLayout* >   hLayoutName;
-    QList< QLabel* >        nameKitLabel;
-    QList< QLabel* >        nameKitName;
-    QList< QGroupBox* >     hGBoxPathMt4;
-    QList< QHBoxLayout* >   hLayoutPath;
-    QList< QLabel* >        serverLabel;
-    QList< QLabel* >        serverName;
-    QList< QLabel* >        pathToMt4Label;
-    QList< QLabel* >        pathToMt4Name;
-    QList< QHBoxLayout* >   hLayoutConf;
-    QList< QGroupBox* >     vGBoxInput;
-    QList< QVBoxLayout* >   vLayoutInput;
-    QList< QListView* >     inputListView;
-    QList< QHBoxLayout* >   hLayoutInputSize;
-    QList< QLabel* >        inputLabel;
-    QList< QLabel* >        inputSize;
-    QList< QVBoxLayout* >   vLayoutSymbol;
-    QList< QSpacerItem* >   verticalSpacer_2;
-    QList< QLabel* >        arrowLabel;
-    QList< QSpacerItem* >   verticalSpacer_3;
-    QList< QGroupBox* >     vGBoxOutput;
-    QList< QVBoxLayout* >   vLayoutOutput;
-    QList< QListView* >     outputListView;
-    QList< QHBoxLayout* >   hLayoutOutputSize;
-    QList< QLabel* >        outputLabel;
-    QList< QLabel* >        outputSize;
-    QList< QVBoxLayout* >   vLayoutButtons;
-    QList< QPushButton* >   configurationButton;
-    QList< QSpacerItem* >   verticalSpacer;
-    QList< QProgressBar* >  progressBar;
-    QList< QPlainTextEdit* > consoleTextEdit;
-    // tab widgets
 };
 
 #endif // MAINWINDOW_H
