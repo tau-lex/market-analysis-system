@@ -66,6 +66,10 @@ private:
         QLabel          *outputLabel;
         QVBoxLayout     *vLayoutButtons;
         QPushButton     *configurationButton;
+        QPushButton     *trainingButton;
+        QPushButton     *workButton;
+        QPushButton     *stopButton;
+        QPushButton     *deleteButton;
         QSpacerItem     *verticalSpacer;
         QPlainTextEdit  *consoleTextEdit;
     };

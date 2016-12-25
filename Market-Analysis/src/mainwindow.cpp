@@ -58,7 +58,6 @@ void MainWindow::save()
 {
     // handle form
     emit saveKit( tabList[currentTab]->name );
-    qDebug() << "Done!";
 }
 
 void MainWindow::closeTab()
@@ -79,19 +78,16 @@ void MainWindow::openKitConfig()
 void MainWindow::runTraining()
 {
     emit runTrainingKit( tabList[currentTab]->name );
-    qDebug() << "Done!";
 }
 
 void MainWindow::runWork()
 {
     emit runWorkKit( tabList[currentTab]->name );
-    qDebug() << "Done!";
 }
 
 void MainWindow::stopWork()
 {
     emit stopWorkKit( tabList[currentTab]->name );
-    qDebug() << "Done!";
 }
 
 void MainWindow::delete_Kit()
@@ -103,14 +99,12 @@ void MainWindow::delete_Kit()
         closeTab();
         emit deleteKit( selected );
     }
-
-    qDebug() << "Done!";
 }
 
 void MainWindow::openHelp()
 {
     QMessageBox::about( this, tr("Help"),
-                        tr("The <b>Simple Terminal</b> example demonstrates... ") );
+                        tr("The <b>Market Analysis System</b> example demonstrates... ") );
 }
 
 void MainWindow::openAbout()
@@ -149,7 +143,6 @@ void MainWindow::closeTab(const qint32 idx)
         countTabs--;
         currentTab = ui->vTabWidget->currentIndex();
         emit closedKit( selected );
-        qDebug() << "Done!";
     } catch(...) {
         errorMessage( tr("CloseTab(int) Error") );
     }
@@ -208,201 +201,228 @@ void MainWindow::addTabToUi(const qint32 idx)
         tabList[idx]->vLayoutTab->setSpacing(6);
         tabList[idx]->vLayoutTab->setContentsMargins( 11, 11, 11, 11 );
         tabList[idx]->vLayoutTab->setObjectName( QStringLiteral("vLayoutTab") );
-
-        tabList[idx]->hGBoxKitName = new QGroupBox( tabList[idx]->kitTab );
-        tabList[idx]->hGBoxKitName->setObjectName( QStringLiteral("hGBoxKitName") );
-        tabList[idx]->hLayoutName = new QHBoxLayout( tabList[idx]->hGBoxKitName );
-        tabList[idx]->hLayoutName->setSpacing(6);
-        tabList[idx]->hLayoutName->setContentsMargins( 11, 11, 11, 11 );
-        tabList[idx]->hLayoutName->setObjectName( QStringLiteral("hLayoutName") );
-        tabList[idx]->hLayoutName->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->nameKitLabel = new QLabel( tabList[idx]->hGBoxKitName );
-        tabList[idx]->nameKitLabel->setObjectName( QStringLiteral("nameKitLabel") );
-        tabList[idx]->nameKitLabel->setMinimumSize( QSize(0, 16) );
-        tabList[idx]->nameKitLabel->setBaseSize( QSize(0, 0) );
-        QFont font;
-        font.setPointSize(11);
-        tabList[idx]->nameKitLabel->setFont( font );
-        tabList[idx]->nameKitLabel->setFrameShape( QFrame::NoFrame );
-        tabList[idx]->nameKitLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
-                                                  |Qt::AlignVCenter );
-        tabList[idx]->hLayoutName->addWidget( tabList[idx]->nameKitLabel );
-        tabList[idx]->nameKitName = new QLabel( tabList[idx]->hGBoxKitName );
-        tabList[idx]->nameKitName->setObjectName( QStringLiteral("nameKitName") );
-        tabList[idx]->nameKitName->setMinimumSize( QSize(0, 16) );
-        tabList[idx]->nameKitName->setFont( font );
-        tabList[idx]->hLayoutName->addWidget( tabList[idx]->nameKitName );
-        tabList[idx]->hLayoutName->setStretch( 0, 1 );
-        tabList[idx]->hLayoutName->setStretch( 1, 5 );
-        tabList[idx]->vLayoutTab->addWidget( tabList[idx]->hGBoxKitName );
-
-        tabList[idx]->hGBoxPathMt4 = new QGroupBox( tabList[idx]->kitTab );
-        tabList[idx]->hGBoxPathMt4->setObjectName( QStringLiteral("hGBoxPathMt4") );
-        tabList[idx]->hLayoutPath = new QHBoxLayout( tabList[idx]->hGBoxPathMt4 );
-        tabList[idx]->hLayoutPath->setSpacing(6);
-        tabList[idx]->hLayoutPath->setContentsMargins( 11, 11, 11, 11 );
-        tabList[idx]->hLayoutPath->setObjectName( QStringLiteral("hLayoutPath") );
-        tabList[idx]->hLayoutPath->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->serverLabel = new QLabel( tabList[idx]->hGBoxPathMt4 );
-        tabList[idx]->serverLabel->setObjectName( QStringLiteral("serverLabel") );
-        tabList[idx]->serverLabel->setMinimumSize( QSize(0, 16) );
-        QFont font1;
-        font1.setPointSize(9);
-        tabList[idx]->serverLabel->setFont( font1 );
-        tabList[idx]->serverLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
-                                                 |Qt::AlignVCenter );
-        tabList[idx]->hLayoutPath->addWidget( tabList[idx]->serverLabel );
-        tabList[idx]->serverName = new QLabel( tabList[idx]->hGBoxPathMt4 );
-        tabList[idx]->serverName->setObjectName( QStringLiteral("serverName") );
-        tabList[idx]->serverName->setMinimumSize( QSize(0, 16) );
-        tabList[idx]->serverName->setFont( font1 );
-        tabList[idx]->hLayoutPath->addWidget( tabList[idx]->serverName );
-        tabList[idx]->pathToMt4Label = new QLabel( tabList[idx]->hGBoxPathMt4 );
-        tabList[idx]->pathToMt4Label->setObjectName( QStringLiteral("pathToMt4Label") );
-        tabList[idx]->pathToMt4Label->setMinimumSize( QSize(0, 16) );
-        tabList[idx]->pathToMt4Label->setFont( font1 );
-        tabList[idx]->pathToMt4Label->setFrameShape( QFrame::NoFrame );
-        tabList[idx]->pathToMt4Label->setAlignment( Qt::AlignRight|Qt::AlignTrailing
+        {// Name
+            tabList[idx]->hGBoxKitName = new QGroupBox( tabList[idx]->kitTab );
+            tabList[idx]->hGBoxKitName->setObjectName( QStringLiteral("hGBoxKitName") );
+            tabList[idx]->hLayoutName = new QHBoxLayout( tabList[idx]->hGBoxKitName );
+            tabList[idx]->hLayoutName->setSpacing(6);
+            tabList[idx]->hLayoutName->setContentsMargins( 11, 11, 11, 11 );
+            tabList[idx]->hLayoutName->setObjectName( QStringLiteral("hLayoutName") );
+            tabList[idx]->hLayoutName->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->nameKitLabel = new QLabel( tabList[idx]->hGBoxKitName );
+            tabList[idx]->nameKitLabel->setObjectName( QStringLiteral("nameKitLabel") );
+            tabList[idx]->nameKitLabel->setMinimumSize( QSize(0, 16) );
+            tabList[idx]->nameKitLabel->setBaseSize( QSize(0, 0) );
+            QFont font;
+            font.setPointSize(11);
+            tabList[idx]->nameKitLabel->setFont( font );
+            tabList[idx]->nameKitLabel->setFrameShape( QFrame::NoFrame );
+            tabList[idx]->nameKitLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
+                                                      |Qt::AlignVCenter );
+            tabList[idx]->hLayoutName->addWidget( tabList[idx]->nameKitLabel );
+            tabList[idx]->nameKitName = new QLabel( tabList[idx]->hGBoxKitName );
+            tabList[idx]->nameKitName->setObjectName( QStringLiteral("nameKitName") );
+            tabList[idx]->nameKitName->setMinimumSize( QSize(0, 16) );
+            tabList[idx]->nameKitName->setFont( font );
+            tabList[idx]->hLayoutName->addWidget( tabList[idx]->nameKitName );
+            tabList[idx]->hLayoutName->setStretch( 0, 1 );
+            tabList[idx]->hLayoutName->setStretch( 1, 5 );
+            tabList[idx]->vLayoutTab->addWidget( tabList[idx]->hGBoxKitName );
+        } {// Server + MT4 Path
+            tabList[idx]->hGBoxPathMt4 = new QGroupBox( tabList[idx]->kitTab );
+            tabList[idx]->hGBoxPathMt4->setObjectName( QStringLiteral("hGBoxPathMt4") );
+            tabList[idx]->hLayoutPath = new QHBoxLayout( tabList[idx]->hGBoxPathMt4 );
+            tabList[idx]->hLayoutPath->setSpacing(6);
+            tabList[idx]->hLayoutPath->setContentsMargins( 11, 11, 11, 11 );
+            tabList[idx]->hLayoutPath->setObjectName( QStringLiteral("hLayoutPath") );
+            tabList[idx]->hLayoutPath->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->serverLabel = new QLabel( tabList[idx]->hGBoxPathMt4 );
+            tabList[idx]->serverLabel->setObjectName( QStringLiteral("serverLabel") );
+            tabList[idx]->serverLabel->setMinimumSize( QSize(0, 16) );
+            QFont font1;
+            font1.setPointSize(9);
+            tabList[idx]->serverLabel->setFont( font1 );
+            tabList[idx]->serverLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
+                                                     |Qt::AlignVCenter );
+            tabList[idx]->hLayoutPath->addWidget( tabList[idx]->serverLabel );
+            tabList[idx]->serverName = new QLabel( tabList[idx]->hGBoxPathMt4 );
+            tabList[idx]->serverName->setObjectName( QStringLiteral("serverName") );
+            tabList[idx]->serverName->setMinimumSize( QSize(0, 16) );
+            tabList[idx]->serverName->setFont( font1 );
+            tabList[idx]->hLayoutPath->addWidget( tabList[idx]->serverName );
+            tabList[idx]->pathToMt4Label = new QLabel( tabList[idx]->hGBoxPathMt4 );
+            tabList[idx]->pathToMt4Label->setObjectName( QStringLiteral("pathToMt4Label") );
+            tabList[idx]->pathToMt4Label->setMinimumSize( QSize(0, 16) );
+            tabList[idx]->pathToMt4Label->setFont( font1 );
+            tabList[idx]->pathToMt4Label->setFrameShape( QFrame::NoFrame );
+            tabList[idx]->pathToMt4Label->setAlignment( Qt::AlignRight|Qt::AlignTrailing
+                                                        |Qt::AlignVCenter );
+            tabList[idx]->hLayoutPath->addWidget( tabList[idx]->pathToMt4Label );
+            tabList[idx]->pathToMt4Name = new QLabel( tabList[idx]->hGBoxPathMt4 );
+            tabList[idx]->pathToMt4Name->setObjectName( QStringLiteral("pathToMt4Name") );
+            tabList[idx]->pathToMt4Name->setMinimumSize( QSize(0, 16) );
+            tabList[idx]->pathToMt4Name->setFont( font1 );
+            tabList[idx]->pathToMt4Name->setAlignment( Qt::AlignLeading|Qt::AlignLeft
+                                                       |Qt::AlignVCenter );
+            tabList[idx]->hLayoutPath->addWidget( tabList[idx]->pathToMt4Name );
+            tabList[idx]->hLayoutPath->setStretch( 0, 1 );
+            tabList[idx]->hLayoutPath->setStretch( 1, 2 );
+            tabList[idx]->hLayoutPath->setStretch( 2, 1 );
+            tabList[idx]->hLayoutPath->setStretch( 3, 2 );
+            tabList[idx]->vLayoutTab->addWidget( tabList[idx]->hGBoxPathMt4 );
+        } {// Input/Output Layers + Buttons
+            tabList[idx]->hLayoutConf = new QHBoxLayout( tabList[idx]->kitTab );
+            tabList[idx]->hLayoutConf->setSpacing(6);
+            tabList[idx]->hLayoutConf->setObjectName( QStringLiteral("hLayoutConf") );
+            tabList[idx]->hLayoutConf->setContentsMargins( 0, 0, 0, 0 );
+            tabList[idx]->vGBoxInput = new QGroupBox( tabList[idx]->kitTab );
+            tabList[idx]->vGBoxInput->setObjectName( QStringLiteral("vGBoxInput") );
+            tabList[idx]->vGBoxInput->setAlignment( Qt::AlignLeading|Qt::AlignLeft
                                                     |Qt::AlignVCenter );
-        tabList[idx]->hLayoutPath->addWidget( tabList[idx]->pathToMt4Label );
-        tabList[idx]->pathToMt4Name = new QLabel( tabList[idx]->hGBoxPathMt4 );
-        tabList[idx]->pathToMt4Name->setObjectName( QStringLiteral("pathToMt4Name") );
-        tabList[idx]->pathToMt4Name->setMinimumSize( QSize(0, 16) );
-        tabList[idx]->pathToMt4Name->setFont( font1 );
-        tabList[idx]->pathToMt4Name->setAlignment( Qt::AlignLeading|Qt::AlignLeft
-                                                   |Qt::AlignVCenter );
-        tabList[idx]->hLayoutPath->addWidget( tabList[idx]->pathToMt4Name );
-        tabList[idx]->hLayoutPath->setStretch( 0, 1 );
-        tabList[idx]->hLayoutPath->setStretch( 1, 2 );
-        tabList[idx]->hLayoutPath->setStretch( 2, 1 );
-        tabList[idx]->hLayoutPath->setStretch( 3, 2 );
-        tabList[idx]->vLayoutTab->addWidget( tabList[idx]->hGBoxPathMt4 );
-
-        tabList[idx]->hLayoutConf = new QHBoxLayout( tabList[idx]->kitTab );
-        tabList[idx]->hLayoutConf->setSpacing(6);
-        tabList[idx]->hLayoutConf->setObjectName( QStringLiteral("hLayoutConf") );
-        tabList[idx]->hLayoutConf->setContentsMargins( 0, 0, 0, 0 );
-        tabList[idx]->vGBoxInput = new QGroupBox( tabList[idx]->kitTab );
-        tabList[idx]->vGBoxInput->setObjectName( QStringLiteral("vGBoxInput") );
-        tabList[idx]->vGBoxInput->setAlignment( Qt::AlignLeading|Qt::AlignLeft
-                                                |Qt::AlignVCenter );
-        tabList[idx]->vGBoxInput->setFlat(false);
-        tabList[idx]->vLayoutInput = new QVBoxLayout( tabList[idx]->vGBoxInput );
-        tabList[idx]->vLayoutInput->setSpacing(6);
-        tabList[idx]->vLayoutInput->setContentsMargins( 11, 11, 11, 11 );
-        tabList[idx]->vLayoutInput->setObjectName( QStringLiteral("vLayoutInput") );
-        tabList[idx]->vLayoutInput->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->inputListView = new QListView( tabList[idx]->vGBoxInput );
-        tabList[idx]->inputListView->setObjectName( QStringLiteral("inputListView") );
-        tabList[idx]->vLayoutInput->addWidget( tabList[idx]->inputListView );
-        tabList[idx]->hLayoutInputSize = new QHBoxLayout( tabList[idx]->vGBoxInput );
-        tabList[idx]->hLayoutInputSize->setSpacing(6);
-        tabList[idx]->hLayoutInputSize->setObjectName( QStringLiteral("hLayoutInputSize") );
-        tabList[idx]->hLayoutInputSize->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->inputLabel = new QLabel( tabList[idx]->vGBoxInput );
-        tabList[idx]->inputLabel->setObjectName( QStringLiteral("inputLabel") );
-        tabList[idx]->inputLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
-                                                |Qt::AlignVCenter );
-        tabList[idx]->hLayoutInputSize->addWidget( tabList[idx]->inputLabel );
-        tabList[idx]->inputSize = new QLabel( tabList[idx]->vGBoxInput );
-        tabList[idx]->inputSize->setObjectName( QStringLiteral("inputSize") );
-        tabList[idx]->hLayoutInputSize->addWidget( tabList[idx]->inputSize );
-        tabList[idx]->hLayoutInputSize->setStretch( 0, 1 );
-        tabList[idx]->hLayoutInputSize->setStretch( 1, 2 );
-        tabList[idx]->vLayoutInput->addLayout( tabList[idx]->hLayoutInputSize );
-        tabList[idx]->hLayoutConf->addWidget( tabList[idx]->vGBoxInput );
-        tabList[idx]->vLayoutSymbol = new QVBoxLayout( tabList[idx]->kitTab );
-        tabList[idx]->vLayoutSymbol->setSpacing(6);
-        tabList[idx]->vLayoutSymbol->setObjectName( QStringLiteral("vLayoutSymbol") );
-        tabList[idx]->vLayoutSymbol->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->verticalSpacer_2 = new QSpacerItem( 20, 40, QSizePolicy::Minimum,
-                                                 QSizePolicy::Expanding );
-        tabList[idx]->vLayoutSymbol->addItem( tabList[idx]->verticalSpacer_2 );
-        tabList[idx]->arrowLabel = new QLabel( tabList[idx]->kitTab );
-        tabList[idx]->arrowLabel->setObjectName( QStringLiteral("arrowLabel") );
-        QSizePolicy sizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth( tabList[idx]->arrowLabel->sizePolicy()
-                                      .hasHeightForWidth() );
-        tabList[idx]->arrowLabel->setSizePolicy( sizePolicy );
-        tabList[idx]->arrowLabel->setMinimumSize( QSize(16, 16) );
-        tabList[idx]->arrowLabel->setMaximumSize( QSize(64, 64) );
-        tabList[idx]->arrowLabel->setAutoFillBackground(false);
-        tabList[idx]->arrowLabel->setFrameShape( QFrame::NoFrame );
-        tabList[idx]->arrowLabel->setFrameShadow( QFrame::Plain );
-        tabList[idx]->arrowLabel->setTextFormat( Qt::AutoText );
-        tabList[idx]->arrowLabel->setPixmap( QPixmap( QString::fromUtf8(":/img/right_64.png") ) );
-        tabList[idx]->arrowLabel->setScaledContents(true);
-        tabList[idx]->arrowLabel->setTextInteractionFlags( Qt::NoTextInteraction );
-        tabList[idx]->vLayoutSymbol->addWidget( tabList[idx]->arrowLabel );
-        tabList[idx]->verticalSpacer_3 = new QSpacerItem( 20, 40, QSizePolicy::Minimum,
-                                                 QSizePolicy::Expanding );
-        tabList[idx]->vLayoutSymbol->addItem( tabList[idx]->verticalSpacer_3 );
-        tabList[idx]->vLayoutSymbol->setStretch( 0, 2 );
-        tabList[idx]->vLayoutSymbol->setStretch( 1, 1 );
-        tabList[idx]->vLayoutSymbol->setStretch( 2, 2 );
-        tabList[idx]->hLayoutConf->addLayout( tabList[idx]->vLayoutSymbol );
-        tabList[idx]->vGBoxOutput = new QGroupBox( tabList[idx]->kitTab );
-        tabList[idx]->vGBoxOutput->setObjectName( QStringLiteral("vGBoxOutput") );
-        tabList[idx]->vGBoxOutput->setAlignment( Qt::AlignLeading|Qt::AlignLeft
-                                                 |Qt::AlignVCenter );
-        tabList[idx]->vGBoxOutput->setFlat(false);
-        tabList[idx]->vLayoutOutput = new QVBoxLayout( tabList[idx]->vGBoxOutput );
-        tabList[idx]->vLayoutOutput->setSpacing(6);
-        tabList[idx]->vLayoutOutput->setContentsMargins( 11, 11, 11, 11 );
-        tabList[idx]->vLayoutOutput->setObjectName( QStringLiteral("vLayoutOutput") );
-        tabList[idx]->vLayoutOutput->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->outputListView = new QListView( tabList[idx]->vGBoxOutput );
-        tabList[idx]->outputListView->setObjectName( QStringLiteral("outputListView") );
-        tabList[idx]->vLayoutOutput->addWidget( tabList[idx]->outputListView );
-        tabList[idx]->hLayoutOutputSize = new QHBoxLayout( tabList[idx]->vGBoxOutput );
-        tabList[idx]->hLayoutOutputSize->setSpacing(6);
-        tabList[idx]->hLayoutOutputSize->setObjectName( QStringLiteral("hLayoutOutputSize") );
-        tabList[idx]->hLayoutOutputSize->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->outputLabel = new QLabel( tabList[idx]->vGBoxOutput );
-        tabList[idx]->outputLabel->setObjectName( QStringLiteral("outputLabel") );
-        tabList[idx]->outputLabel->setLayoutDirection( Qt::LeftToRight );
-        tabList[idx]->outputLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
-                                                 |Qt::AlignVCenter );
-        tabList[idx]->hLayoutOutputSize->addWidget( tabList[idx]->outputLabel );
-        tabList[idx]->outputSize = new QLabel( tabList[idx]->vGBoxOutput );
-        tabList[idx]->outputSize->setObjectName( QStringLiteral("outputSize") );
-        tabList[idx]->hLayoutOutputSize->addWidget( tabList[idx]->outputSize );
-        tabList[idx]->hLayoutOutputSize->setStretch( 0, 1 );
-        tabList[idx]->hLayoutOutputSize->setStretch( 1, 2 );
-        tabList[idx]->vLayoutOutput->addLayout( tabList[idx]->hLayoutOutputSize );
-        tabList[idx]->hLayoutConf->addWidget( tabList[idx]->vGBoxOutput );
-        tabList[idx]->vLayoutButtons = new QVBoxLayout( tabList[idx]->kitTab );
-        tabList[idx]->vLayoutButtons->setSpacing(6);
-        tabList[idx]->vLayoutButtons->setObjectName( QStringLiteral("vLayoutButtons") );
-        tabList[idx]->vLayoutButtons->setContentsMargins( 3, 3, 3, 3 );
-        tabList[idx]->configurationButton = new QPushButton( tabList[idx]->kitTab );
-        tabList[idx]->configurationButton->setObjectName( QStringLiteral("configurationButton") );
-        QIcon icon9;
-        icon9.addFile( QStringLiteral(":/ui/img/gear_64.png"), QSize(),
-                       QIcon::Normal, QIcon::Off );
-        tabList[idx]->configurationButton->setIcon( icon9 );
-        tabList[idx]->vLayoutButtons->addWidget( tabList[idx]->configurationButton );
-        tabList[idx]->verticalSpacer = new QSpacerItem( 20, 40, QSizePolicy::Minimum,
-                                                        QSizePolicy::Expanding );
-        tabList[idx]->vLayoutButtons->addItem( tabList[idx]->verticalSpacer );
-        tabList[idx]->hLayoutConf->addLayout( tabList[idx]->vLayoutButtons );
-        tabList[idx]->vLayoutTab->addLayout( tabList[idx]->hLayoutConf );
-
+            tabList[idx]->vLayoutInput = new QVBoxLayout( tabList[idx]->vGBoxInput );
+            tabList[idx]->vLayoutInput->setSpacing(6);
+            tabList[idx]->vLayoutInput->setContentsMargins( 11, 11, 11, 11 );
+            tabList[idx]->vLayoutInput->setObjectName( QStringLiteral("vLayoutInput") );
+            tabList[idx]->vLayoutInput->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->inputListView = new QListView( tabList[idx]->vGBoxInput );
+            tabList[idx]->inputListView->setObjectName( QStringLiteral("inputListView") );
+            tabList[idx]->vLayoutInput->addWidget( tabList[idx]->inputListView );
+            tabList[idx]->hLayoutInputSize = new QHBoxLayout( tabList[idx]->vGBoxInput );
+            tabList[idx]->hLayoutInputSize->setSpacing(6);
+            tabList[idx]->hLayoutInputSize->setObjectName( QStringLiteral("hLayoutInputSize") );
+            tabList[idx]->hLayoutInputSize->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->inputLabel = new QLabel( tabList[idx]->vGBoxInput );
+            tabList[idx]->inputLabel->setObjectName( QStringLiteral("inputLabel") );
+            tabList[idx]->inputLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
+                                                    |Qt::AlignVCenter );
+            tabList[idx]->hLayoutInputSize->addWidget( tabList[idx]->inputLabel );
+            tabList[idx]->inputSize = new QLabel( tabList[idx]->vGBoxInput );
+            tabList[idx]->inputSize->setObjectName( QStringLiteral("inputSize") );
+            tabList[idx]->hLayoutInputSize->addWidget( tabList[idx]->inputSize );
+            tabList[idx]->hLayoutInputSize->setStretch( 0, 1 );
+            tabList[idx]->hLayoutInputSize->setStretch( 1, 2 );
+            tabList[idx]->vLayoutInput->addLayout( tabList[idx]->hLayoutInputSize );
+            tabList[idx]->hLayoutConf->addWidget( tabList[idx]->vGBoxInput );
+            tabList[idx]->vLayoutSymbol = new QVBoxLayout( tabList[idx]->kitTab );
+            tabList[idx]->vLayoutSymbol->setSpacing(6);
+            tabList[idx]->vLayoutSymbol->setObjectName( QStringLiteral("vLayoutSymbol") );
+            tabList[idx]->vLayoutSymbol->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->verticalSpacer_2 = new QSpacerItem( 20, 40, QSizePolicy::Minimum,
+                                                     QSizePolicy::Expanding );
+            tabList[idx]->vLayoutSymbol->addItem( tabList[idx]->verticalSpacer_2 );
+            tabList[idx]->arrowLabel = new QLabel( tabList[idx]->kitTab );
+            tabList[idx]->arrowLabel->setObjectName( QStringLiteral("arrowLabel") );
+            QSizePolicy sizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
+            sizePolicy.setHorizontalStretch(0);
+            sizePolicy.setVerticalStretch(0);
+            sizePolicy.setHeightForWidth( tabList[idx]->arrowLabel->sizePolicy()
+                                          .hasHeightForWidth() );
+            tabList[idx]->arrowLabel->setSizePolicy( sizePolicy );
+            tabList[idx]->arrowLabel->setMinimumSize( QSize(16, 16) );
+            tabList[idx]->arrowLabel->setMaximumSize( QSize(64, 64) );
+            tabList[idx]->arrowLabel->setAutoFillBackground(false);
+            tabList[idx]->arrowLabel->setFrameShape( QFrame::NoFrame );
+            tabList[idx]->arrowLabel->setFrameShadow( QFrame::Plain );
+            tabList[idx]->arrowLabel->setTextFormat( Qt::AutoText );
+            tabList[idx]->arrowLabel->setPixmap( QPixmap( QString::fromUtf8(":/img/right_64.png") ) );
+            tabList[idx]->arrowLabel->setScaledContents(true);
+            tabList[idx]->arrowLabel->setTextInteractionFlags( Qt::NoTextInteraction );
+            tabList[idx]->vLayoutSymbol->addWidget( tabList[idx]->arrowLabel );
+            tabList[idx]->verticalSpacer_3 = new QSpacerItem( 20, 40, QSizePolicy::Minimum,
+                                                     QSizePolicy::Expanding );
+            tabList[idx]->vLayoutSymbol->addItem( tabList[idx]->verticalSpacer_3 );
+            tabList[idx]->vLayoutSymbol->setStretch( 0, 2 );
+            tabList[idx]->vLayoutSymbol->setStretch( 1, 1 );
+            tabList[idx]->vLayoutSymbol->setStretch( 2, 2 );
+            tabList[idx]->hLayoutConf->addLayout( tabList[idx]->vLayoutSymbol );
+            tabList[idx]->vGBoxOutput = new QGroupBox( tabList[idx]->kitTab );
+            tabList[idx]->vGBoxOutput->setObjectName( QStringLiteral("vGBoxOutput") );
+            tabList[idx]->vGBoxOutput->setAlignment( Qt::AlignLeading|Qt::AlignLeft
+                                                     |Qt::AlignVCenter );
+            tabList[idx]->vLayoutOutput = new QVBoxLayout( tabList[idx]->vGBoxOutput );
+            tabList[idx]->vLayoutOutput->setSpacing(6);
+            tabList[idx]->vLayoutOutput->setContentsMargins( 11, 11, 11, 11 );
+            tabList[idx]->vLayoutOutput->setObjectName( QStringLiteral("vLayoutOutput") );
+            tabList[idx]->vLayoutOutput->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->outputListView = new QListView( tabList[idx]->vGBoxOutput );
+            tabList[idx]->outputListView->setObjectName( QStringLiteral("outputListView") );
+            tabList[idx]->vLayoutOutput->addWidget( tabList[idx]->outputListView );
+            tabList[idx]->hLayoutOutputSize = new QHBoxLayout( tabList[idx]->vGBoxOutput );
+            tabList[idx]->hLayoutOutputSize->setSpacing(6);
+            tabList[idx]->hLayoutOutputSize->setObjectName( QStringLiteral("hLayoutOutputSize") );
+            tabList[idx]->hLayoutOutputSize->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->outputLabel = new QLabel( tabList[idx]->vGBoxOutput );
+            tabList[idx]->outputLabel->setObjectName( QStringLiteral("outputLabel") );
+            tabList[idx]->outputLabel->setLayoutDirection( Qt::LeftToRight );
+            tabList[idx]->outputLabel->setAlignment( Qt::AlignRight|Qt::AlignTrailing
+                                                     |Qt::AlignVCenter );
+            tabList[idx]->hLayoutOutputSize->addWidget( tabList[idx]->outputLabel );
+            tabList[idx]->outputSize = new QLabel( tabList[idx]->vGBoxOutput );
+            tabList[idx]->outputSize->setObjectName( QStringLiteral("outputSize") );
+            tabList[idx]->hLayoutOutputSize->addWidget( tabList[idx]->outputSize );
+            tabList[idx]->hLayoutOutputSize->setStretch( 0, 1 );
+            tabList[idx]->hLayoutOutputSize->setStretch( 1, 2 );
+            tabList[idx]->vLayoutOutput->addLayout( tabList[idx]->hLayoutOutputSize );
+            tabList[idx]->hLayoutConf->addWidget( tabList[idx]->vGBoxOutput );
+        } {     // Buttons
+            tabList[idx]->vLayoutButtons = new QVBoxLayout( tabList[idx]->kitTab );
+            tabList[idx]->vLayoutButtons->setSpacing(6);
+            tabList[idx]->vLayoutButtons->setObjectName( QStringLiteral("vLayoutButtons") );
+            tabList[idx]->vLayoutButtons->setContentsMargins( 3, 3, 3, 3 );
+            tabList[idx]->configurationButton = new QPushButton( tabList[idx]->kitTab );
+            tabList[idx]->configurationButton->setObjectName( QStringLiteral("configurationButton") );
+            QIcon icon9;
+            icon9.addFile( QStringLiteral(":/img/gear_64.png"), QSize(),
+                           QIcon::Normal, QIcon::Off );
+            tabList[idx]->configurationButton->setIcon( icon9 );
+            tabList[idx]->vLayoutButtons->addWidget( tabList[idx]->configurationButton );
+            tabList[idx]->trainingButton = new QPushButton( tabList[idx]->kitTab );
+            tabList[idx]->trainingButton->setObjectName( QStringLiteral("trainingButton") );
+            QIcon icon91;
+            icon91.addFile( QStringLiteral(":/img/clipboard_pencil_64.png"), QSize(),
+                           QIcon::Normal, QIcon::Off );
+            tabList[idx]->trainingButton->setIcon( icon91 );
+            tabList[idx]->vLayoutButtons->addWidget( tabList[idx]->trainingButton );
+            tabList[idx]->workButton = new QPushButton( tabList[idx]->kitTab );
+            tabList[idx]->workButton->setObjectName( QStringLiteral("workButton") );
+            QIcon icon92;
+            icon92.addFile( QStringLiteral(":/img/statistics2_diagram_64.png"), QSize(),
+                           QIcon::Normal, QIcon::Off );
+            tabList[idx]->workButton->setIcon( icon92 );
+            tabList[idx]->vLayoutButtons->addWidget( tabList[idx]->workButton );
+            tabList[idx]->stopButton = new QPushButton( tabList[idx]->kitTab );
+            tabList[idx]->stopButton->setObjectName( QStringLiteral("stopButton") );
+            QIcon icon93;
+            icon93.addFile( QStringLiteral(":/img/stop_64.png"), QSize(),
+                           QIcon::Normal, QIcon::Off );
+            tabList[idx]->stopButton->setIcon( icon93 );
+            tabList[idx]->vLayoutButtons->addWidget( tabList[idx]->stopButton );
+            tabList[idx]->deleteButton = new QPushButton( tabList[idx]->kitTab );
+            tabList[idx]->deleteButton->setObjectName( QStringLiteral("deleteButton") );
+            QIcon icon94;
+            icon94.addFile( QStringLiteral(":/img/warning_64.png"), QSize(),
+                           QIcon::Normal, QIcon::Off );
+            tabList[idx]->deleteButton->setIcon( icon94 );
+            tabList[idx]->vLayoutButtons->addWidget( tabList[idx]->deleteButton );
+            tabList[idx]->verticalSpacer = new QSpacerItem( 20, 40, QSizePolicy::Minimum,
+                                                            QSizePolicy::Expanding );
+            tabList[idx]->vLayoutButtons->addItem( tabList[idx]->verticalSpacer );
+            tabList[idx]->hLayoutConf->addLayout( tabList[idx]->vLayoutButtons );
+            tabList[idx]->vLayoutTab->addLayout( tabList[idx]->hLayoutConf );
+        } // Progress Bar
         tabList[idx]->progressBar = new QProgressBar( tabList[idx]->kitTab );
         tabList[idx]->progressBar->setObjectName( QStringLiteral("progressBar") );
         tabList[idx]->progressBar->setMaximum(120);
         tabList[idx]->progressBar->setValue(24);
         tabList[idx]->vLayoutTab->addWidget( tabList[idx]->progressBar );
-
+        // Console
         tabList[idx]->consoleTextEdit = new QPlainTextEdit( tabList[idx]->kitTab );
         tabList[idx]->consoleTextEdit->setObjectName( QStringLiteral("consoleTextEdit") );
         tabList[idx]->vLayoutTab->addWidget( tabList[idx]->consoleTextEdit );
         tabList[idx]->vLayoutTab->setStretch( 2, 2 );
         tabList[idx]->vLayoutTab->setStretch( 4, 2 );
         QIcon icon10;
-        icon10.addFile( QStringLiteral(":/ui/img/briefcase_64.png"),
+        icon10.addFile( QStringLiteral(":/img/briefcase_64.png"),
                         QSize(), QIcon::Normal, QIcon::Off );
         ui->vTabWidget->addTab( tabList[idx]->kitTab, icon10, QString() );
     } catch(...) {   // setupUi
@@ -435,8 +455,16 @@ void MainWindow::addTabToUi(const qint32 idx)
         tabList[idx]->outputSize->setText(QString());
         tabList[idx]->configurationButton->setText(QApplication::translate("MainWindow",
                                                                     "Configuration", 0));
+        tabList[idx]->trainingButton->setText(QApplication::translate("MainWindow",
+                                                                    "Train", 0));
+        tabList[idx]->workButton->setText(QApplication::translate("MainWindow",
+                                                                    "Run work", 0));
+        tabList[idx]->stopButton->setText(QApplication::translate("MainWindow",
+                                                                    "Stop", 0));
+        tabList[idx]->deleteButton->setText(QApplication::translate("MainWindow",
+                                                                    "Delete", 0));
         tabList[idx]->progressBar->setFormat(QApplication::translate("MainWindow",
-                                                              "Progress %p%", 0));
+                                                                     "%p%", 0));
     } catch(...) {   // retranslateUi
         errorMessage( tr("Trancelate error!") );
     }
@@ -447,6 +475,14 @@ void MainWindow::addTabConnections(const qint32 idx)
 {
     connect( tabList[idx]->configurationButton, &QPushButton::clicked,
              this, &MainWindow::openKitConfig );
+    connect( tabList[idx]->trainingButton, &QPushButton::clicked,
+             this, &MainWindow::runTraining );
+    connect( tabList[idx]->workButton, &QPushButton::clicked,
+             this, &MainWindow::runWork );
+    connect( tabList[idx]->stopButton, &QPushButton::clicked,
+             this, &MainWindow::stopWork );
+    connect( tabList[idx]->deleteButton, &QPushButton::clicked,
+             this, &MainWindow::delete_Kit );
 }
 
 void MainWindow::deleteTabFromUi(const qint32 idx)
@@ -454,6 +490,14 @@ void MainWindow::deleteTabFromUi(const qint32 idx)
     try {
         disconnect( tabList[idx]->configurationButton, &QPushButton::clicked,
                     this, &MainWindow::openKitConfig );
+        disconnect( tabList[idx]->trainingButton, &QPushButton::clicked,
+                    this, &MainWindow::runTraining );
+        disconnect( tabList[idx]->workButton, &QPushButton::clicked,
+                    this, &MainWindow::runWork );
+        disconnect( tabList[idx]->stopButton, &QPushButton::clicked,
+                    this, &MainWindow::stopWork );
+        disconnect( tabList[idx]->deleteButton, &QPushButton::clicked,
+                    this, &MainWindow::delete_Kit );
         delete tabList[idx]->kitTab;
         delete tabList[idx];
         tabList.removeAt( idx );
