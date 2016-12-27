@@ -22,7 +22,6 @@ SOURCES += src/main.cpp \
         src/csvwriter.cpp \
         src/presenter.cpp \
         src/configmas.cpp \
-        src/configmt4.cpp \
         src/marketassaykit.cpp \
         src/neuralnetworkanalysis.cpp \
         src/settingsform.cpp \
@@ -35,7 +34,6 @@ HEADERS += include/mainwindow.h \
         include/csvwriter.h \
         include/presenter.h \
         include/configmas.h \
-        include/configmt4.h \
         include/marketassaykit.h \
         include/neuralnetworkanalysis.h \
         include/settingsform.h \
