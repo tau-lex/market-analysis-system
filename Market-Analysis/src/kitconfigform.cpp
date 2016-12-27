@@ -12,3 +12,8 @@ KitConfigForm::~KitConfigForm()
 {
     delete ui;
 }
+
+void KitConfigForm::setConfigMt4Ptr(ConfigMT4 *configKit)
+{
+
+}

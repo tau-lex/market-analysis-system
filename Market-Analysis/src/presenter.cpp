@@ -1,35 +1,77 @@
 #include "include/presenter.h"
-#include "ui_mainwindow.h"
+#include "include/mainwindow.h"
 
 Presenter::Presenter(QObject *parent) : QObject(parent)
-{ }
-
-void Presenter::loadListOfKits()
 {
-    listOfKits = ConfigMAS::Instance().getListOfKits();
-    for( qint32 i = 0; i < listOfKits.size(); i++ )
-        arrayOfKits[ listOfKits[i] ] = 0;
+    ConfigMAS::Instance().load( settings );
+    ConfigMAS::Instance().load( configKitList );
+
+    setConnections();
 }
 
-void Presenter::openDefaultTabKit()
+QStringList Presenter::previousSession()
 {
-    if( listOfKits.size() == 0 )
-        this->loadListOfKits();
-    if( listOfKits.size() == 0 ) {
-        defaultKit = "default";
-    } else {
-        defaultKit = ConfigMAS::Instance().getDefaultKit();
-    }
-    this->openTabKit( defaultKit );
+    QStringList lastSession;
+    //lastSession = settings->lastSession;
+    lastSession.append( settings->defaultKit );
+    return lastSession;
 }
 
-void Presenter::openTabKit(const QString kit)
+Settings *Presenter::getSettingsPtr()
 {
-    arrayOfKits[ kit ] = new MarketAssayKit( kit, this );
-    emit setUiNameTab( kit );
+    return settings;
 }
 
-void Presenter::setupCurrentMAKitUi()
+ConfigMT4 *Presenter::getConfigMt4Ptr(QString nameKit)
+{
+    return configKitList[0];
+}
+
+void Presenter::newMAKit(const QString name)
 {
 
+}
+
+void Presenter::openMAKit(const QString name)
+{
+
+}
+
+void Presenter::saveMAKit(const QString name)
+{
+
+}
+
+void Presenter::deleteMAKit(const QString name)
+{
+
+}
+
+void Presenter::closeMAKit(const QString name)
+{
+
+}
+
+void Presenter::renameMAKit(const QString oldName, const QString newName)
+{
+
+}
+
+void Presenter::runTraining(const QString name)
+{
+
+}
+
+void Presenter::runWork(const QString name)
+{
+
+}
+
+void Presenter::stopWork(const QString name)
+{
+
+}
+
+void Presenter::setConnections()
+{
 }

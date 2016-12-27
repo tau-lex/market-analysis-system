@@ -12,3 +12,8 @@ SettingsForm::~SettingsForm()
 {
     delete ui;
 }
+
+void SettingsForm::setSettingsPtr(Settings *settings)
+{
+
+}

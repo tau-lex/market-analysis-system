@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QDateTime>
+#include "include/configmas.h"
 
 class MarketAssayKit : public QObject
 {
@@ -20,13 +21,14 @@ private:
     const QString configFile = "\\MQL4\\Files\\mas_mt4.conf";
     const QString newHistoryPath = "\\MQL4\\Files\\MAS_MarketData\\";
     const QString predictionPath = "\\MQL4\\Files\\MAS_Prediction\\";
-    qint32 idKit;
     QString nameKit;
     QString pathMt4;
+    QString server;
     QString historyPath; // "\\history\\_SERVER_\\"
     std::list<MT_Tool> input;
     std::list<MT_Tool> output;
-    qint32 depthPrediction;
+    qint32 depthHistory;
+    qint32 depthPrediction = 5;
     QDateTime lastTraining;
     bool isTrained;
     bool isRun;
@@ -37,8 +39,6 @@ signals:
     void trained();
 
 public slots:
-    void setId(const qint32 id);
-    qint32 getId() const;
     void setName(const QString newName);
     QString getName() const;
     void setPathForMt4(const QString path);

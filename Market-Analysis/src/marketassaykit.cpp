@@ -12,16 +12,6 @@ MarketAssayKit::~MarketAssayKit()
 
 }
 
-void MarketAssayKit::setId(const qint32 id)
-{
-    idKit = id;
-}
-
-qint32 MarketAssayKit::getId() const
-{
-    return idKit;
-}
-
 void MarketAssayKit::setName(const QString newName)
 {
     nameKit = newName;

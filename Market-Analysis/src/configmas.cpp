@@ -9,27 +9,34 @@ ConfigMAS &ConfigMAS::Instance()
     return singleInstance;
 }
 
-void ConfigMAS::load()
+void ConfigMAS::load(const Settings *settings)
 {
-    //if( findAutosave ) {
-    //    loadAutosave();
-    //    emit loaded();
-    //    return;
-    //}
-    // other impl.
-    emit loaded();
+
 }
 
-void ConfigMAS::save()
+void ConfigMAS::save(const Settings *settings)
 {
-    settings.sync();
-    emit saved();
+
 }
 
-void ConfigMAS::autosave()
+void ConfigMAS::load(const ConfigMT4 *configKit)
 {
-    save();
-    emit changed();
+
+}
+
+void ConfigMAS::save(const ConfigMT4 *configKit)
+{
+
+}
+
+void ConfigMAS::load(QVector<ConfigMT4 *> &configKitList)
+{
+
+}
+
+void ConfigMAS::save(const QVector<ConfigMT4 *> &configKitList)
+{
+
 }
 
 qint32 ConfigMAS::addKit(const QString &kit)
@@ -39,7 +46,7 @@ qint32 ConfigMAS::addKit(const QString &kit)
     settings.setArrayIndex( ind );
     settings.setValue( "name", kit );
     settings.endArray();
-    autosave();
+    //autosave();
     return ind;
 }
 
@@ -59,20 +66,20 @@ void ConfigMAS::deleteKit(const QString &kit)
         settings.setValue( "name", listOfKits[i] );
     }
     settings.endArray();
-    autosave();
+    //autosave();
 }
 
 void ConfigMAS::renameKit(const QString &oldName, const QString &newName)
 {
     deleteKit( oldName );
     addKit( newName );
-    autosave();
+    //autosave();
 }
 
 void ConfigMAS::setDefaultKit(const QString &kit)
 {
     settings.setValue( "default", kit);
-    autosave();
+    //autosave();
 }
 
 const QString ConfigMAS::getDefaultKit() const

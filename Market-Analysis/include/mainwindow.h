@@ -2,10 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVector>
 #include "include/presenter.h"
 #include "include/settingsform.h"
 #include "include/kitconfigform.h"
-#include <QList>
 
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
@@ -33,7 +33,8 @@ public:
 private:
     struct KitTabWidget {
         QString         name;
-        bool            changed;
+        ConfigMT4       *config;
+        //bool            changed;
         QWidget         *kitTab;
         QLabel          *nameKitName;
         QLabel          *serverName;
@@ -42,7 +43,13 @@ private:
         QListView       *outputListView;
         QLabel          *inputSize;
         QLabel          *outputSize;
+        QPushButton     *configurationButton;
+        QPushButton     *trainingButton;
+        QPushButton     *workButton;
+        QPushButton     *stopButton;
+        QPushButton     *deleteButton;
         QProgressBar    *progressBar;
+        QPlainTextEdit  *consoleTextEdit;
         QVBoxLayout     *vLayoutTab;
         QGroupBox       *hGBoxKitName;
         QHBoxLayout     *hLayoutName;
@@ -65,19 +72,12 @@ private:
         QHBoxLayout     *hLayoutOutputSize;
         QLabel          *outputLabel;
         QVBoxLayout     *vLayoutButtons;
-        QPushButton     *configurationButton;
-        QPushButton     *trainingButton;
-        QPushButton     *workButton;
-        QPushButton     *stopButton;
-        QPushButton     *deleteButton;
         QSpacerItem     *verticalSpacer;
-        QPlainTextEdit  *consoleTextEdit;
     };
     Ui::MainWindow *ui;
     Presenter *presenter;
     SettingsForm *settings;
     KitConfigForm *kitConfig;
-
     QVector<KitTabWidget *> tabList;
     qint32 currentTab = 0;
     qint32 countTabs = 0;
@@ -94,7 +94,10 @@ signals:
     void stopWorkKit(QString);
 
 public slots:
-    void errorMessage(QString text);
+    void updateTab(const QString name);
+    void setProgress(const QString kit, const qint32 value);
+    void consoleMessage(const QString kit, const QString text);
+    void errorMessage(const QString kit, const QString text);
 
 private slots:
     void addNew();
@@ -110,6 +113,7 @@ private slots:
     void openHelp();
     void openAbout();
 
+    void newSession(const QStringList list);
     bool openTab(const qint32 idx, const QString name);
     void closeTab(const qint32 idx);
     void selectTab(const qint32 idx);
