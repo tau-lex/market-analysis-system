@@ -431,7 +431,7 @@ Layers size = &quot;6, 9, 3&quot;.</string>
         <string>Training_ratio + Generalization_ratio + Testing_ratio = 100%</string>
        </property>
        <property name="inputMask">
-        <string>00 %,00 %,00 %;_</string>
+        <string>00%, 00%, 00%;_</string>
        </property>
       </widget>
      </item>
