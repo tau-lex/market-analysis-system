@@ -2,7 +2,7 @@
 #define SETTINGSFORM_H
 
 #include <QDialog>
-#include "include/configmas.h"
+#include "include/settingsstruct.h"
 
 namespace Ui {
 class SettingsForm;

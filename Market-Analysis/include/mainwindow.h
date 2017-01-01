@@ -3,10 +3,6 @@
 
 #include <QMainWindow>
 #include <QVector>
-#include "include/presenter.h"
-#include "include/settingsform.h"
-#include "include/kitconfigform.h"
-
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QListView>
@@ -16,6 +12,9 @@
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
+#include "include/presenter.h"
+#include "include/settingsform.h"
+#include "include/kitconfigform.h"
 
 #define MAX_TAB 10
 
@@ -33,8 +32,8 @@ public:
 private:
     struct KitTabWidget {
         QString         name;
+        bool            changed = false;
         ConfigMT4       *config;
-        //bool            changed;
         QWidget         *kitTab;
         QLabel          *nameKitName;
         QLabel          *serverName;
@@ -118,9 +117,11 @@ private slots:
     void closeTab(const qint32 idx);
     void selectTab(const qint32 idx);
     void setTabName(const qint32 idx, const QString name);
+    void updateTab(const qint32 idx);
+    void updateTabButtons(const qint32 idx);
     void setConnections();
 
-    void addTabToUi(const qint32 idx);
+    void addTabToUi(const qint32 idx, const QString name);
     void addTabConnections(const qint32 idx);
     void deleteTabFromUi(const qint32 idx);
     void closeEvent(QCloseEvent *event);

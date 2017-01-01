@@ -2,8 +2,6 @@
 #include "ui_mainwindow.h"
 #include <QMessageBox>
 
-#include <QDebug>
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -15,50 +13,31 @@ MainWindow::MainWindow(QWidget *parent) :
     settings->setSettingsPtr( presenter->getSettingsPtr() );
 
     setConnections();
-    QStringList temp = presenter->previousSession();
-    newSession( temp );
+
+    newSession( presenter->previousSession() );
 }
 
 MainWindow::~MainWindow()
 {
+    delete presenter;
     foreach( KitTabWidget *item, tabList ) {
         delete item->kitTab;
     }
     delete ui;
-    delete presenter;
 }
 
 void MainWindow::updateTab(const QString name)
 {
-    foreach( KitTabWidget *tab, tabList) {
-        if( tab->name == name ) {
-            tab->serverName->setText( tab->config->server );
-            tab->pathToMt4Name->setText( tab->config->pathMt4 );
-            //tab->inputListView = tab->config;
-            //tab->outputListView = tab->config;
-            tab->inputSize->setText( static_cast<QString>(tab->config->depthHistory) ); // * tab->config->'inList'
-            tab->outputSize->setText( static_cast<QString>(tab->config->depthPrediction) ); // * tab->config->'outList'
-            tab->configurationButton->setEnabled( !tab->config->isRun );
-            ui->actionKit_Configuration->setEnabled( !tab->config->isRun );
-            tab->trainingButton->setEnabled( !tab->config->isTrained );
-            ui->actionTrain_NN->setEnabled( !tab->config->isTrained );
-            tab->workButton->setEnabled( !tab->config->isRun );
-            ui->actionStart_forecasting->setEnabled( !tab->config->isRun );
-            tab->stopButton->setEnabled( tab->config->isRun );
-            ui->actionStop->setEnabled( tab->config->isRun );
-            tab->deleteButton->setEnabled( !tab->config->isRun );
-            ui->actionDelete_Kit->setEnabled( !tab->config->isRun );
-            tab->progressBar->setValue( tab->config->progress );
-        }
-    }
+    for( qint32 i = 0; i < tabList.size(); i++ )
+        if( tabList[i]->name == name )
+            updateTab( i );
 }
 
 void MainWindow::setProgress(const QString kit, const qint32 value)
 {
-    foreach( KitTabWidget *tab, tabList ) {
+    foreach( KitTabWidget *tab, tabList )
         if( tab->name == kit )
             tab->progressBar->setValue(value);
-    }
 }
 
 void MainWindow::consoleMessage(const QString kit, const QString text)
@@ -82,33 +61,74 @@ void MainWindow::errorMessage(const QString kit, const QString text)
 void MainWindow::addNew()
 {
     try {
-        if( openTab( countTabs, "New MAS Kit" ) )
-            emit addNewKit( tabList[currentTab]->name );
-    } catch(...) {
-        errorMessage( "MainWindow", tr("Oups! newKit() error") );
+        if( countTabs >= MAX_TAB )
+                throw 1;
+        qint32 ind = 1;
+        foreach( KitTabWidget *tab, tabList )
+            if( tab->name.contains( tr("New MAS Kit") ) )
+                ind++;
+        QString newKit = tr("New MAS Kit #%1").arg(ind);
+        emit addNewKit( newKit );
+        if( !openTab( countTabs, newKit ) ) {
+            emit deleteKit( newKit );
+            throw 2;
+        }
+    } catch(int e) {
+        switch( e ) {
+        case 1: {
+            errorMessage( "MainWindow",
+                          tr("You have exceeded the allowed number of tabs - %1").arg( MAX_TAB ) );
+            break;
+        } case 2: {
+            errorMessage( "MainWindow", tr("Oups! error - %1").arg(e) );
+            break;
+        }
+        }
     }
 }
 
 void MainWindow::open()
 {
     try {
-        // <- dialog OpenTab
-        if( openTab( countTabs, "default" ) )
-            emit openKit( tabList[currentTab]->name );
-    } catch(...) {
-        errorMessage( "MainWindow", tr("Oups! openKit() error") );
+        if( countTabs >= MAX_TAB )
+                throw 1;
+        qint32 ind = 1; // kostyl !  => QDialog.getString()
+        foreach( KitTabWidget *tab, tabList )
+            if( tab->name.contains( tr("default") ) )
+                ind++;
+        // kostyl !
+        QString openKitStr = tr("default #%1").arg(ind);
+        emit openKit( openKitStr );
+        if( !openTab( countTabs, openKitStr ) ) {
+            emit deleteKit( openKitStr );
+            throw 2;
+        }
+    } catch(int e) {
+        switch( e ) {
+        case 1: {
+            errorMessage( "MainWindow",
+                          tr("You have exceeded the allowed number of tabs - %1").arg( MAX_TAB ) );
+            break;
+        } case 2: {
+            errorMessage( "MainWindow", tr("Oups! error - %1").arg(e) );
+            break;
+        }
+        }
     }
 }
 
 void MainWindow::save()
 {
-    // update form
-    emit saveKit( tabList[currentTab]->name );
+    if( currentTab >= 0 ) {
+        updateTab( currentTab );
+        emit saveKit( tabList[currentTab]->name );
+    }
 }
 
 void MainWindow::closeTab()
 {
-    closeTab( currentTab );
+    if( currentTab >= 0 )
+        closeTab( currentTab );
 }
 
 void MainWindow::openSettings()
@@ -118,32 +138,39 @@ void MainWindow::openSettings()
 
 void MainWindow::openKitConfig()
 {
-    kitConfig->setConfigMt4Ptr( presenter->getConfigMt4Ptr( tabList[currentTab]->name ) );
-    kitConfig->show();
+    if( currentTab >= 0 ) {
+        kitConfig->setConfigMt4Ptr( presenter->getConfigMt4Ptr( tabList[currentTab]->name ) );
+        kitConfig->show();
+    }
 }
 
 void MainWindow::runTraining()
 {
-    emit runTrainingKit( tabList[currentTab]->name );
+    if( currentTab >= 0 )
+        emit runTrainingKit( tabList[currentTab]->name );
 }
 
 void MainWindow::runWork()
 {
-    emit runWorkKit( tabList[currentTab]->name );
+    if( currentTab >= 0 )
+        emit runWorkKit( tabList[currentTab]->name );
 }
 
 void MainWindow::stopWork()
 {
-    emit stopWorkKit( tabList[currentTab]->name );
+    if( currentTab >= 0 )
+        emit stopWorkKit( tabList[currentTab]->name );
 }
 
 void MainWindow::delete_Kit()
 {
+    if( currentTab < 0 )
+        return;
     QString selected = tabList[currentTab]->name;
     if( QMessageBox::Yes == QMessageBox::question( this, tr("Delete Kit?"),
                                                    tr("Are you sure that you want to delete set \"%1\"?")
                                                    .arg(selected) ) ) {
-        closeTab();
+        closeTab( currentTab );
         emit deleteKit( selected );
     }
 }
@@ -162,132 +189,167 @@ void MainWindow::openAbout()
 
 void MainWindow::newSession(const QStringList list)
 {
-    foreach( QString kit, list ) {
+    foreach( QString kit, list )
         if( openTab( countTabs, kit ) )
             emit openKit( kit );
-    }
+    //delete[] list;
 }
 
 bool MainWindow::openTab(const qint32 idx, const QString name)
 {
-    try {
-        if( idx >= MAX_TAB ) {
-            ui->statusBar->setStatusTip( tr("You have exceeded the allowed number of tabs - %1").arg( MAX_TAB ) );
-            return false;
-        }
-        tabList.append( new KitTabWidget );
-        tabList[idx]->config = presenter->getConfigMt4Ptr( name );
-        addTabToUi( idx );
-        setTabName( idx, name );
-        updateTab( name );
-        ui->vTabWidget->setCurrentIndex( idx );
-        currentTab = idx;
-        countTabs++;
-        return true;
-    } catch(...) {
-        errorMessage( "MainWindow", tr("Open Error") );
+    if( idx >= MAX_TAB )
         return false;
-    }
+    tabList.append( new KitTabWidget );
+    addTabToUi( idx, name );
+    setTabName( idx, name );
+    ui->vTabWidget->setCurrentIndex( idx );
+    countTabs++;
+    return true;
 }
 
 void MainWindow::closeTab(const qint32 idx)
 {
     try {
-        // check saved?
+        if( currentTab < 0 )
+            throw 5;
         QString selected = tabList[idx]->name;
+        if( tabList[idx]->changed ) {
+            if( QMessageBox::Yes == QMessageBox::question( this, tr("Save Kit?"),
+                                                       tr("Are you sure that you want to delete set \"%1\"?")
+                                                       .arg(selected) ) ) {
+                emit saveKit( selected );
+            }
+        }
         tabList[idx]->kitTab->close();
         deleteTabFromUi( idx );
+        emit closedKit( selected );
         countTabs--;
         currentTab = ui->vTabWidget->currentIndex();
-        updateTab( tabList[currentTab]->name );
-        emit closedKit( selected );
-    } catch(...) {
-        errorMessage( "MainWindow", tr("CloseTab(int) Error") );
+        //updateTab( tabList[currentTab]->name );
+        updateTabButtons( currentTab );
+    } catch(int e) {
+        errorMessage( "MainWindow", tr("CloseTab(int) Error - #%1").arg(e) );
     }
 }
 
 void MainWindow::selectTab(const qint32 idx)
 {
     currentTab = idx;
-    updateTab( tabList[currentTab]->name );
+    if( currentTab >= 0 )
+        updateTabButtons( currentTab );
 }
 
 void MainWindow::setTabName( const qint32 idx, const QString name )
 {
-    try {
-        QString oldName = tabList[idx]->name;
-        tabList[idx]->name = name;
-        tabList[idx]->nameKitName->setText( name );
-        ui->vTabWidget->setTabText( idx, name );
-        if( oldName != tabList[idx]->name )
-            emit renamedKit( oldName, tabList[idx]->name );
-    } catch(...) {
-        errorMessage( "MainWindow", tr("setTabName() error") );
-    }
+    QString oldName = tabList[idx]->name;
+    tabList[idx]->name = name;
+    tabList[idx]->config->nameKit = name;
+    tabList[idx]->nameKitName->setText( name );
+    ui->vTabWidget->setTabText( idx, name );
+    if( oldName != tabList[idx]->name )
+        emit renamedKit( oldName, tabList[idx]->name );
+}
+
+void MainWindow::updateTab(const qint32 idx)
+{
+    if( currentTab < 0 )
+        return;
+    KitTabWidget *tab = tabList[idx];
+    if( tab->name != tab->config->nameKit )
+        setTabName( idx, tab->config->nameKit );
+    tab->serverName->setText( tab->config->server );
+    tab->pathToMt4Name->setText( tab->config->mt4Path );
+    //tab->inputListView = tab->config;
+    //tab->outputListView = tab->config;
+    tab->inputSize->setText( QString("%1").arg(tab->config->depthHistory) ); // * tab->config->'inList'
+    tab->outputSize->setText( QString("%1").arg(tab->config->depthPrediction) ); // * tab->config->'outList'
+    tab->progressBar->setValue( tab->config->progress );
+    updateTabButtons( idx );
+}
+
+void MainWindow::updateTabButtons(const qint32 idx)
+{
+    if( currentTab < 0 )
+        return;
+    KitTabWidget *tab = tabList[idx];
+    tab->configurationButton->setEnabled( !tab->config->isRun );
+    ui->actionKit_Configuration->setEnabled( !tab->config->isRun );
+    tab->trainingButton->setEnabled( !tab->config->isTrained );
+    ui->actionTrain_NN->setEnabled( !tab->config->isTrained );
+    tab->workButton->setEnabled( !tab->config->isRun );
+    ui->actionStart_forecasting->setEnabled( !tab->config->isRun );
+    tab->stopButton->setEnabled( tab->config->isRun );
+    ui->actionStop->setEnabled( tab->config->isRun );
+    tab->deleteButton->setEnabled( !tab->config->isRun );
+    ui->actionDelete_Kit->setEnabled( !tab->config->isRun );
 }
 
 void MainWindow::setConnections()
-{   // actions and widgets
-    connect( ui->actionNew_Kit, SIGNAL( triggered(bool) ), this, SLOT( addNew() ) );
-    connect( ui->actionOpen_Kit, SIGNAL( triggered(bool) ), this, SLOT( open() ) );
-    connect( ui->actionSave_Kit, SIGNAL( triggered(bool) ), this, SLOT( save() ) );
-    connect( ui->actionClose_Kit, SIGNAL( triggered(bool) ),
-             this, SLOT( closeTab() ) );
-    connect( ui->actionSettings, SIGNAL( triggered(bool) ),
-             this, SLOT( openSettings() ) );
-    connect( ui->actionKit_Configuration, SIGNAL( triggered(bool) ),
-             this, SLOT( openKitConfig() ) );
-    connect( ui->actionTrain_NN, SIGNAL( triggered(bool) ),
-             this, SLOT( runTraining() ) );
-    connect( ui->actionStart_forecasting, SIGNAL( triggered(bool) ),
-             this, SLOT( runWork() ) );
-    connect( ui->actionStop, SIGNAL( triggered(bool) ), this, SLOT( stopWork() ) );
-    connect( ui->actionDelete_Kit, SIGNAL( triggered(bool) ),
-             this, SLOT( delete_Kit() ) );
-    connect( ui->actionHelp, SIGNAL( triggered(bool) ), this, SLOT( openHelp() ) );
-    connect( ui->actionAbout, SIGNAL( triggered(bool) ), this, SLOT( openAbout() ) );
-    connect( ui->actionExit, &QAction::triggered, this, &MainWindow::close );
-    connect( ui->vTabWidget, SIGNAL( tabCloseRequested(int) ),
-             this, SLOT( closeTab(qint32) ) );
-    connect( ui->vTabWidget, SIGNAL( currentChanged(int) ),
-             this, SLOT( selectTab(qint32) ) );
-    // signals from MainWindow
-    connect( this, SIGNAL( addNewKit(QString) ),
-             presenter, SLOT( newMAKit(QString) ) );
-    connect( this, SIGNAL( openKit(QString) ),
-             presenter, SLOT( openMAKit(QString) ) );
-    connect( this, SIGNAL( saveKit(QString) ),
-             presenter, SLOT( saveMAKit(QString) ) );
-    connect( this, SIGNAL( deleteKit(QString) ),
-             presenter, SLOT( deleteMAKit(QString) ) );
-    connect( this, SIGNAL( closedKit(QString) ),
-             presenter, SLOT( closeMAKit(QString) ) );
-    connect( this, SIGNAL( renamedKit(QString, QString) ),
-             presenter, SLOT( renameMAKit(QString,QString) ) );
-    connect( this, SIGNAL( runTrainingKit(QString) ),
-             presenter, SLOT( runTraining(QString) ) );
-    connect( this, SIGNAL( runWorkKit(QString) ),
-             presenter, SLOT( runWork(QString) ) );
-    connect( this, SIGNAL( stopWorkKit(QString) ),
-             presenter, SLOT( stopWork(QString) ) );
-    // signals from MAKit or Presenter to MAinWindow Slots
-    connect( presenter, SIGNAL( updatedKit(QString) ),
-             this, SLOT( updateTab(QString) ) );
-    connect( presenter, SIGNAL( trainDone(QString) ),
-             this, SLOT( updateTab(QString) ) );
-    connect( presenter, SIGNAL( progress(QString, qint32) ),
-             this, SLOT( setProgress(QString, qint32) ) );
-    connect( presenter, SIGNAL( writeToConsole(QString, QString) ),
-             this, SLOT( consoleMessage(QString, QString) ) );
-    connect( presenter, SIGNAL( error(QString, QString) ),
-             this, SLOT( errorMessage(QString, QString) ) );
+{
+    {   // actions and widgets
+        connect( ui->actionNew_Kit, SIGNAL( triggered(bool) ), this, SLOT( addNew() ) );
+        connect( ui->actionOpen_Kit, SIGNAL( triggered(bool) ), this, SLOT( open() ) );
+        connect( ui->actionSave_Kit, SIGNAL( triggered(bool) ), this, SLOT( save() ) );
+        connect( ui->actionClose_Kit, SIGNAL( triggered(bool) ),
+                 this, SLOT( closeTab() ) );
+        connect( ui->actionSettings, SIGNAL( triggered(bool) ),
+                 this, SLOT( openSettings() ) );
+        connect( ui->actionKit_Configuration, SIGNAL( triggered(bool) ),
+                 this, SLOT( openKitConfig() ) );
+        connect( ui->actionTrain_NN, SIGNAL( triggered(bool) ),
+                 this, SLOT( runTraining() ) );
+        connect( ui->actionStart_forecasting, SIGNAL( triggered(bool) ),
+                 this, SLOT( runWork() ) );
+        connect( ui->actionStop, SIGNAL( triggered(bool) ), this, SLOT( stopWork() ) );
+        connect( ui->actionDelete_Kit, SIGNAL( triggered(bool) ),
+                 this, SLOT( delete_Kit() ) );
+        connect( ui->actionHelp, SIGNAL( triggered(bool) ), this, SLOT( openHelp() ) );
+        connect( ui->actionAbout, SIGNAL( triggered(bool) ), this, SLOT( openAbout() ) );
+        connect( ui->actionExit, &QAction::triggered, this, &MainWindow::close );
+        connect( ui->vTabWidget, SIGNAL( tabCloseRequested(int) ),
+                 this, SLOT( closeTab(qint32) ) );
+        connect( ui->vTabWidget, SIGNAL( currentChanged(int) ),
+                 this, SLOT( selectTab(qint32) ) );
+    } { // signals from MainWindow
+        connect( this, SIGNAL( addNewKit(QString) ),
+                 presenter, SLOT( newMAKit(QString) ) );
+        connect( this, SIGNAL( openKit(QString) ),
+                 presenter, SLOT( openMAKit(QString) ) );
+        connect( this, SIGNAL( saveKit(QString) ),
+                 presenter, SLOT( saveMAKit(QString) ) );
+        connect( this, SIGNAL( deleteKit(QString) ),
+                 presenter, SLOT( deleteMAKit(QString) ) );
+        connect( this, SIGNAL( closedKit(QString) ),
+                 presenter, SLOT( closeMAKit(QString) ) );
+        connect( this, SIGNAL( renamedKit(QString, QString) ),
+                 presenter, SLOT( renameMAKit(QString,QString) ) );
+        connect( this, SIGNAL( runTrainingKit(QString) ),
+                 presenter, SLOT( runTraining(QString) ) );
+        connect( this, SIGNAL( runWorkKit(QString) ),
+                 presenter, SLOT( runWork(QString) ) );
+        connect( this, SIGNAL( stopWorkKit(QString) ),
+                 presenter, SLOT( stopWork(QString) ) );
+    } { // signals from MAKit or Presenter to MAinWindow Slots
+        connect( presenter, SIGNAL( updatedKit(QString) ),
+                 this, SLOT( updateTab(QString) ) );
+        connect( presenter, SIGNAL( trainDone(QString) ),
+                 this, SLOT( updateTab(QString) ) );
+        connect( presenter, SIGNAL( progress(QString, qint32) ),
+                 this, SLOT( setProgress(QString, qint32) ) );
+        connect( presenter, SIGNAL( writeToConsole(QString, QString) ),
+                 this, SLOT( consoleMessage(QString, QString) ) );
+        connect( presenter, SIGNAL( error(QString, QString) ),
+                 this, SLOT( errorMessage(QString, QString) ) );
+    }
 }
 
-void MainWindow::addTabToUi(const qint32 idx)
+void MainWindow::addTabToUi(const qint32 idx, const QString name)
 {
     try {       // setupUi
+        tabList[idx]->config = presenter->getConfigMt4Ptr( name );
+        tabList[idx]->name = name;
         tabList[idx]->kitTab = new QWidget( ui->vTabWidget );
-        tabList[idx]->kitTab->setObjectName( QString("tabKit") );
+        tabList[idx]->kitTab->setObjectName( name );
         tabList[idx]->vLayoutTab = new QVBoxLayout( tabList[idx]->kitTab );
         tabList[idx]->vLayoutTab->setSpacing(6);
         tabList[idx]->vLayoutTab->setContentsMargins( 11, 11, 11, 11 );
@@ -455,7 +517,7 @@ void MainWindow::addTabToUi(const qint32 idx)
             tabList[idx]->hLayoutOutputSize->setStretch( 1, 2 );
             tabList[idx]->vLayoutOutput->addLayout( tabList[idx]->hLayoutOutputSize );
             tabList[idx]->hLayoutConf->addWidget( tabList[idx]->vGBoxOutput );
-        } {     // Buttons
+        } {//..// Buttons
             tabList[idx]->vLayoutButtons = new QVBoxLayout( tabList[idx]->kitTab );
             tabList[idx]->vLayoutButtons->setSpacing(6);
             tabList[idx]->vLayoutButtons->setObjectName( QStringLiteral("vLayoutButtons") );
@@ -517,14 +579,15 @@ void MainWindow::addTabToUi(const qint32 idx)
         icon10.addFile( QStringLiteral(":/img/briefcase_64.png"),
                         QSize(), QIcon::Normal, QIcon::Off );
         ui->vTabWidget->addTab( tabList[idx]->kitTab, icon10, QString() );
+        updateTab( idx );
     } catch(...) {   // setupUi
-        errorMessage( "MainWindow", tr("Open tab error!") );
+        errorMessage( "MainWindow", tr("Open %1 tab error!").arg(name) );
         delete tabList[idx]->kitTab;
         delete tabList[idx]->verticalSpacer;
         delete tabList[idx]->verticalSpacer_2;
         delete tabList[idx]->verticalSpacer_3;
     }
-    try {       // retranslateUi
+    {   // retranslateUi
         tabList[idx]->nameKitLabel->setText(QApplication::translate("MainWindow",
                                                              "Kit name :", 0));
         tabList[idx]->nameKitName->setText(QString());
@@ -557,9 +620,7 @@ void MainWindow::addTabToUi(const qint32 idx)
                                                                     "Delete", 0));
         tabList[idx]->progressBar->setFormat(QApplication::translate("MainWindow",
                                                                      "%p%", 0));
-    } catch(...) {   // retranslateUi
-        errorMessage( "MainWindow", tr("Trancelate error!") );
-    }
+    }   // retranslateUi
     addTabConnections( idx );
 }
 

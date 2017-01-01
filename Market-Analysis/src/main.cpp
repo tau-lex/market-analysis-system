@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QApplication::setOrganizationName("Terentew Aleksey");
-    QApplication::setOrganizationDomain("https://github.com/terentjew-alexey");
+    QApplication::setOrganizationDomain("https://www.mql5.com/ru/users/terentjew23");
     QApplication::setApplicationName("Market Analysis System");
 
     MainWindow w;

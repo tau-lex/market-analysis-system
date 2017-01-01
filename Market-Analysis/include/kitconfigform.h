@@ -2,7 +2,8 @@
 #define KITCONFIGFORM_H
 
 #include <QDialog>
-#include "include/configmas.h"
+#include <QAbstractButton>
+#include "include/settingsstruct.h"
 
 namespace Ui {
 class KitConfigForm;
@@ -14,11 +15,26 @@ class KitConfigForm : public QDialog
 public:
     explicit KitConfigForm(QWidget *parent = 0);
     ~KitConfigForm();
-    void setConfigMt4Ptr(ConfigMT4 *configKit);
 
 private:
     Ui::KitConfigForm *ui;
+    Settings *settings;
     ConfigMT4 *configKit;
+
+public slots:
+    void setSettingsPtr(Settings *sett);
+    void setConfigMt4Ptr(ConfigMT4 *config);
+    void show();
+
+private slots:
+    void updateUi();
+    void checkTerminalPath();
+    void on_mt4PathButton_clicked();
+    void on_addSymbolButton_clicked();
+    void on_deleteButton_clicked();
+    void on_upButton_clicked();
+    void on_downButton_clicked();
+    void on_buttonBox_clicked(QAbstractButton *button);
 };
 
 #endif // KITCONFIGFORM_H
