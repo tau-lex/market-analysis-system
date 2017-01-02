@@ -2,49 +2,39 @@
 #define MARKETASSAYKIT_H
 
 #include <QObject>
-#include <QDateTime>
-#include "include/configmas.h"
+#include <QThread>
+//#include <QDateTime>
+#include "include/settingsstruct.h"
+#include "include/neuralnetworkanalysis.h"
 
 class MarketAssayKit : public QObject
 {
     Q_OBJECT
 public:
-    //explicit MarketAssayKit(QObject *parent = 0);
-    explicit MarketAssayKit(QString name = "default", QObject *parent = 0);
+    explicit MarketAssayKit(QObject *parent = 0);
     ~MarketAssayKit();
 
 private:
-    struct MT_Tool {
-        QString nameTool;
-        qint32 period;
-    };
-    const QString configFile = "\\MQL4\\Files\\mas_mt4.conf";
-    const QString newHistoryPath = "\\MQL4\\Files\\MAS_MarketData\\";
-    const QString predictionPath = "\\MQL4\\Files\\MAS_Prediction\\";
-    QString nameKit;
-    QString pathMt4;
-    QString server;
-    QString historyPath; // "\\history\\_SERVER_\\"
-    std::list<MT_Tool> input;
-    std::list<MT_Tool> output;
-    qint32 depthHistory;
-    qint32 depthPrediction = 5;
-    QDateTime lastTraining;
-    bool isTrained;
-    bool isRun;
-    //list inputLayer
-    //list outputLayer
+    ConfigMT4 *config;
+    QThread maThread;
+    NeuralNetworkAnalysis ma_nnWorker;
+    //QDateTime lastTraining;
 
 signals:
-    void trained();
+    // to MA_NN
+    void runTraining();
+    void runPrediction();
+    void stop();
+    // from MA_NN
+    void trained(QString);
+    void progress(QString, qint32);
+    void message(QString, QString);
 
 public slots:
-    void setName(const QString newName);
-    QString getName() const;
-    void setPathForMt4(const QString path);
-    QString getPathForMt4() const;
+    void setKitPtr(ConfigMT4 *cfg);
 
-    //void saveConf() const;
+private slots:
+    void setConnections();
 };
 
 #endif // MARKETASSAYKIT_H

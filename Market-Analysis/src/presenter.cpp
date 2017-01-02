@@ -1,5 +1,8 @@
 #include "include/presenter.h"
 #include "include/settingsmas.h"
+
+#include <QDir>
+#include <QApplication>
 #include <QDebug>
 
 Presenter::Presenter(QObject *parent) : QObject(parent)
@@ -53,6 +56,12 @@ void Presenter::newMAKit(const QString name)
     mapKits[name]->itemKit = new MarketAssayKit;
     mapKits[name]->itemKit->setKitPtr( mapKits[name]->configKit );
     setConnections( name );
+    QString mDir = QApplication::applicationDirPath();
+    mDir += "/Market Kits/";
+    mDir += name;
+    if(!QDir().exists(mDir))
+        QDir().mkdir(mDir);
+    mapKits[name]->configKit->kitPath = mDir;
 }
 
 void Presenter::openMAKit(const QString name)

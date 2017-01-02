@@ -29,7 +29,7 @@ void SettingsMAS::load(ConfigMT4 *configKit)
     configKit->input.append("GBPUSD.pro1440");
     configKit->input.append("USDJPY.pro1440");
     configKit->input.append("AUDUSD.pro1440");
-    configKit->input.append("SP5001440");
+    configKit->input.append("S&P5001440");
     configKit->input.append("DAX1440");
     configKit->input.append("FTSE1001440");
     configKit->input.append("BRENT1440");
