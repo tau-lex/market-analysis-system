@@ -192,7 +192,6 @@ void MainWindow::newSession(const QStringList list)
     foreach( QString kit, list )
         if( openTab( countTabs, kit ) )
             emit openKit( kit );
-    //delete[] list;
 }
 
 bool MainWindow::openTab(const qint32 idx, const QString name)
@@ -274,7 +273,7 @@ void MainWindow::updateTabButtons(const qint32 idx)
     KitTabWidget *tab = tabList[idx];
     tab->configurationButton->setEnabled( !tab->config->isRun );
     ui->actionKit_Configuration->setEnabled( !tab->config->isRun );
-    tab->trainingButton->setEnabled( !tab->config->isTrained );
+    tab->trainingButton->setEnabled( !tab->config->isRun );
     ui->actionTrain_NN->setEnabled( !tab->config->isTrained );
     tab->workButton->setEnabled( !tab->config->isRun );
     ui->actionStart_forecasting->setEnabled( !tab->config->isRun );

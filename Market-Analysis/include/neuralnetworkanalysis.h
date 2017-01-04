@@ -26,14 +26,14 @@ public slots:
     void runPrediction();
     void stop();
     void setConfigKit(ConfigMT4 *cfg);
-    void setLoaded(bool isLoaded);
 
 private:
     ConfigMT4                       *config;
     QString                         nameKit;
-    bool                            isLoaded;
-    qint32                          rowsDS = 1,
-                                    columnsDS = 0;
+    qint32                          rowsDS = 1;
+    qint32                          columnsDS = 0;
+    qint64                          firstEntryTime;
+    qint64                          lastEntryTime;
     Matrix<double>                  *matrixDS;
     DataSet                         *dataSet;
     NeuralNetwork                   *neuralNetwork;
@@ -45,15 +45,18 @@ private:
     Vector< Statistics<double> >    outputsStatistics;
 
 private slots:
-    void prepareDataSet();
+    void loadTrainedModel();
+    void prepareDataSet(FileType historyType);
     void prepareVariablesInfo();
     void prepareInstances();
     void prepareNeuralNetwork();
     void preparePerformanceFunc();
+    void runTrainingNeuralNetwork();
+    void runWorkingProcess();
 
     inline bool checkSymbolIsTime(QString &symbol);
     void getFirstEntryTime(QMap<QString, IMt4Reader *> &readers, qint64 &first, qint64 &last);
-
+    //void parseNNExeption();
 };
 
 #endif // NEURALNETWORKANALYSIS_H

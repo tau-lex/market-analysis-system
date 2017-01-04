@@ -54,14 +54,9 @@ void Presenter::newMAKit(const QString name)
     mapKits[name]->configKit = new ConfigMT4;
     mapKits[name]->configKit->nameKit = name;
     mapKits[name]->itemKit = new MarketAssayKit;
-    mapKits[name]->itemKit->setKitPtr( mapKits[name]->configKit );
+    mapKits[name]->configKit->kitPath = getKitPath( name );
     setConnections( name );
-    QString mDir = QApplication::applicationDirPath();
-    mDir += "/Market Kits/";
-    mDir += name;
-    if(!QDir().exists(mDir))
-        QDir().mkdir(mDir);
-    mapKits[name]->configKit->kitPath = mDir;
+    mapKits[name]->itemKit->setKitPtr( mapKits[name]->configKit );
 }
 
 void Presenter::openMAKit(const QString name)
@@ -150,6 +145,20 @@ void Presenter::saveKits(const QStringList list)
 {
     foreach( auto &kit, list )
         SettingsMAS::Instance().save( mapKits[kit]->configKit );
+}
+
+QString Presenter::getKitPath(const QString name)
+{
+    QString mDir = QApplication::applicationDirPath();
+    mDir += "/Market Kits/";
+    mDir += name;
+    if( !QDir().exists(mDir) ) {
+        mapKits[name]->configKit->isTrained = false;
+        QDir().mkdir(mDir);
+    } else {
+        mapKits[name]->configKit->isTrained = true;
+    }
+    return mDir;
 }
 
 void Presenter::setConnections(const QString name)

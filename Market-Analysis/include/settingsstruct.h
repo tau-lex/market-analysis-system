@@ -13,11 +13,11 @@ struct Settings {
 struct ConfigMT4 {
     QString nameKit = "default";
     QString kitPath;
-    QString mt4Path = "C:\\Program Files (x86)\\STForex MetaTrader 4"; // default "C:\\"
-    QString historyPath = "\\history\\STForex-Live\\"; // default ?
-    const QString configFile = "\\MQL4\\Files\\mas_mt4.conf";
-    const QString newHistoryPath = "\\MQL4\\Files\\MAS_MarketData\\";
-    const QString predictionPath = "\\MQL4\\Files\\MAS_Prediction\\";
+    QString mt4Path = "C:/Program Files (x86)/STForex MetaTrader 4"; // default "C:\\"
+    QString historyPath = "/history/STForex-Live/"; // default ?
+    const QString configFile = "/MQL4/Files/mas_mt4.conf";
+    const QString newHistoryPath = "/MQL4/Files/MAS_MarketData/h";
+    const QString predictionPath = "/MQL4/Files/MAS_Prediction/p";
     QString server = "STForex-Live";
 
     qint32 period = 1440;
@@ -30,8 +30,9 @@ struct ConfigMT4 {
     qint32 layersSize[3] = { 21, 11, 6 };
     qint32 divideInstances[3] = { 60, 20, 20 };
     //QDateTime lastTraining;
+    bool isLoaded = false;
     bool isRun = false;
-    bool isTrained = false;
+    bool isTrained = true;
     qint32 progress = 0;
 };
 

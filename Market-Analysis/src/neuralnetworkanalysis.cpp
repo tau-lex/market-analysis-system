@@ -13,13 +13,16 @@ NeuralNetworkAnalysis::NeuralNetworkAnalysis(QObject *parent) : QObject(parent),
     matrixDS(nullptr),
     dataSet(nullptr),
     neuralNetwork(nullptr),
-    performanceFunc(nullptr)
+    performanceFunc(nullptr),
+    trainingStrategy(nullptr)
 {
     srand((unsigned)time(NULL));
 }
 
 NeuralNetworkAnalysis::~NeuralNetworkAnalysis()
 {
+    if( trainingStrategy )
+        delete trainingStrategy;
     if( performanceFunc )
         delete performanceFunc;
     if( neuralNetwork )
@@ -34,7 +37,8 @@ void NeuralNetworkAnalysis::runTraining()
 {
     qDebug()<<"From nn thread: "<<QThread::currentThreadId();
     try {
-        prepareDataSet();
+        //loadTrainingModel();
+        prepareDataSet( FileType::HST );
         prepareVariablesInfo();
         prepareInstances();
         prepareNeuralNetwork();
@@ -42,14 +46,26 @@ void NeuralNetworkAnalysis::runTraining()
 
 
         trained( config->nameKit );
-    } catch(int e) {
-        message( config->nameKit, tr("Error prepare Data Set - %1").arg(e) );
+    } catch(qint32 e) {
+        message( config->nameKit, tr("Training Error - %1").arg(e) );
     }
 }
 
 void NeuralNetworkAnalysis::runPrediction()
 {
     qDebug()<<"From nn thread: "<<QThread::currentThreadId();
+    try {
+        if( !config->isLoaded && !config->isTrained ) {
+            message( config->nameKit, tr("Prediction work stoped. Model not trained.") );
+            // emit stoped( config->nameKit );
+            return;
+        }
+        prepareDataSet( FileType::CSV );
+        prepareVariablesInfo();
+        runWorkingProcess();
+    } catch(qint32 e) {
+        message( config->nameKit, tr("Prediction work Error - %1").arg(e) );
+    }
 }
 
 void NeuralNetworkAnalysis::stop()
@@ -60,14 +76,24 @@ void NeuralNetworkAnalysis::stop()
 void NeuralNetworkAnalysis::setConfigKit(ConfigMT4 *cfg)
 {
     config = cfg;
+    loadTrainedModel();
 }
 
-void NeuralNetworkAnalysis::setLoaded(bool isLoaded)
+void NeuralNetworkAnalysis::loadTrainedModel()
 {
-    this->isLoaded = isLoaded;
+    if( !config->isTrained )
+        return;
+    if( !neuralNetwork )
+        neuralNetwork = new NeuralNetwork();
+    neuralNetwork->load( QString("%1/%2.xml")
+                         .arg( config->kitPath )
+                         .arg( "neuralNetwork" )
+                         .toStdString() );
+    config->isLoaded = true;
+    message( config->nameKit, tr("Neural Network model loaded.") );
 }
 
-void NeuralNetworkAnalysis::prepareDataSet()
+void NeuralNetworkAnalysis::prepareDataSet(FileType historyType)
 {
     message( config->nameKit, tr("Start prepare Data Set.") );
     QMap<QString, IMt4Reader *> readers;
@@ -84,9 +110,16 @@ void NeuralNetworkAnalysis::prepareDataSet()
             if( config->volumeIn )
                 columnsDS += 1;
         }
-        readers[symbol] = new HstReader( QString("%1%2%3.hst").arg( config->mt4Path )
-                                         .arg( config->historyPath )
-                                         .arg( symbol ) );
+        if( historyType == FileType::HST )
+            readers[symbol] = new HstReader( QString("%1%2%3.hst")
+                                             .arg( config->mt4Path )
+                                             .arg( config->historyPath )
+                                             .arg( symbol ) );
+        else
+            readers[symbol] = new CsvReader( QString("%1%2%3.csv")
+                                             .arg( config->mt4Path )
+                                             .arg( config->newHistoryPath )
+                                             .arg( symbol ) );
         if( readers[symbol]->readFromFile() ) {
             message( config->nameKit, tr("History file \"%1\" succeful loaded.")
                      .arg( readers[symbol]->getFileName() ) );
@@ -102,8 +135,8 @@ void NeuralNetworkAnalysis::prepareDataSet()
         else
             columnsDS += 3;
     }
-    qint64 timeCurrentIter, lastEntryTime;
-    getFirstEntryTime( readers, timeCurrentIter, lastEntryTime );
+    getFirstEntryTime( readers, firstEntryTime, lastEntryTime );
+    qint64 timeCurrentIter = firstEntryTime;
     message( config->nameKit, tr("The data set belongs to the interval of time:\n\t%1 (%2 sec.) - %3 (%4 sec.)")
                               .arg( QDateTime::fromTime_t( timeCurrentIter )
                                     .toString("yyyy.MM.dd hh:mm:ss") )
@@ -285,6 +318,8 @@ void NeuralNetworkAnalysis::preparePerformanceFunc()
     TestingAnalysis testingAnalysis( neuralNetwork, dataSet );
     TestingAnalysis::LinearRegressionResults linearRegressionResults = testingAnalysis.perform_linear_regression_analysis();
 
+    message( config->nameKit, tr("Model training done!") );
+    config->isTrained = true;
     // Save results
     message( config->nameKit, tr("Save results.") );
     neuralNetwork->get_scaling_layer_pointer()->set_scaling_method( ScalingLayer::MeanStandardDeviation );
@@ -302,6 +337,55 @@ void NeuralNetworkAnalysis::preparePerformanceFunc()
 
     linearRegressionResults.save( QString("%1/linearRegressionResults.dat").arg( config->kitPath ).toStdString() );
 
+}
+
+void NeuralNetworkAnalysis::runTrainingNeuralNetwork()
+{
+
+}
+
+void NeuralNetworkAnalysis::runWorkingProcess()
+{
+    qint64 timeCurrentIter = firstEntryTime;
+    QMap<QString, CsvWriter *> predictionWriters;
+    foreach( QString symbol, config->output ) {
+        predictionWriters[symbol] = new CsvWriter( QString("%1%2%3.csv")
+                                                   .arg( config->mt4Path )
+                                                   .arg( config->predictionPath )
+                                                   .arg( symbol ) );
+        HeaderWr *header = predictionWriters[symbol]->getHeader();
+        header->Symbol = QString(symbol);
+        header->Period = config->period;
+        header->Digits = 4;
+        header->Depth = 1;
+    }
+    Matrix<double> inputMatrix( dataSet->arrange_input_data() );
+    Matrix<double> outputMatrix( neuralNetwork->calculate_output_data( inputMatrix ) );
+    for( qint32 i = 0; i < outputMatrix.get_rows_number(); i++ ) {
+        timeCurrentIter += ( 60 * config->period );
+        while( QDateTime::fromTime_t(timeCurrentIter).date().dayOfWeek() >= 6 )
+            timeCurrentIter += ( 60 * config->period );
+        foreach( QString symbol, config->output ) {
+            std::vector<Forecast *> *forecast = predictionWriters[symbol]->
+                                                getForecastVector();
+            Forecast *newFLine = new Forecast;
+            newFLine->Time = timeCurrentIter;
+            newFLine->High[0] = outputMatrix.arrange_row( i )[0];
+            newFLine->Low[0] = outputMatrix.arrange_row( i )[1];
+            newFLine->Close[0] = outputMatrix.arrange_row( i )[2];
+            forecast->push_back( newFLine );
+            predictionWriters[symbol]->setSize( i );
+        }
+    }
+    foreach( QString symbol, config->output )
+        predictionWriters[symbol]->writeFile();
+    // clean prediction writers
+    QMapIterator<QString, CsvWriter *> i(predictionWriters);
+    while( i.hasNext() ) {
+        i.next();
+        delete i.value();
+    }
+    message( config->nameKit, tr("Prediction write done.") );
 }
 
 inline bool NeuralNetworkAnalysis::checkSymbolIsTime(QString &symbol)

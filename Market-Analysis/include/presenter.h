@@ -47,6 +47,7 @@ public slots:
 private slots:
     void loadKits(const QStringList list);
     void saveKits(const QStringList list);
+    QString getKitPath(const QString name);
     void setConnections(const QString name);
     void deleteConnections(const QString name);
 };
