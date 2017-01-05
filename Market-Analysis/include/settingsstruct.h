@@ -2,16 +2,26 @@
 #define SETTINGSSTRUCT_H
 
 #include <QObject>
-#include <QDateTime>
+#include <QApplication>
+#include <QDir>
+//#include <QDateTime>
 
 struct Settings {
-    qint32      maxOpenTabs;
-    QStringList sessionList;
-    QString defaultKit = "default";
+    qint32          maxOpenTabs = 5;
+    QStringList     savedKitsList;
+    QStringList     sessionList;
+    //QString         defaultKit = "default";
+    qint32          winPosX;
+    qint32          winPosY;
+    qint32          winSizeX;
+    qint32          winSizeY;
 };
 
 struct ConfigMT4 {
-    QString nameKit = "default";
+    ConfigMT4(QString name) : nameKit( name ) {
+        setPath();
+    }
+    QString nameKit;
     QString kitPath;
     QString mt4Path = "C:/Program Files (x86)/STForex MetaTrader 4"; // default "C:\\"
     QString historyPath = "/history/STForex-Live/"; // default ?
@@ -34,6 +44,36 @@ struct ConfigMT4 {
     bool isRun = false;
     bool isTrained = true;
     qint32 progress = 0;
+    //=======Functions=======
+    void rename(const QString newName) {
+        renamePath( newName );
+        nameKit = newName;
+    }
+    void remove() {
+//        if( !QDir().exists(kitPath) )
+//            QDir().rmdir( kitPath );
+    }
+
+private:
+    void setPath() {
+        QString mDir = QApplication::applicationDirPath();
+        mDir += "/Market Kits/";
+        mDir += nameKit;
+        if( !QDir().exists(mDir) )
+            QDir().mkdir( mDir );
+        //else
+        //    throw;
+    }
+    void renamePath(const QString newName) {
+        QString mDir = QApplication::applicationDirPath();
+        mDir += "/Market Kits/";
+        QString mDir1 = mDir + nameKit;
+        QString mDir2 = mDir + newName;
+        if( !QDir().exists(mDir1) )
+            QDir().rename( mDir1, mDir2 );
+        //else
+        //    throw;
+    }
 };
 
 #endif // SETTINGSSTRUCT_H

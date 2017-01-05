@@ -1,14 +1,19 @@
 #include "include/presenter.h"
 #include "include/settingsmas.h"
 
-#include <QDir>
 #include <QApplication>
+#include <QMap>
+#include <QMessageBox>
 #include <QDebug>
 
-Presenter::Presenter(QObject *parent) : QObject(parent)
+Presenter::Presenter(QObject *parent) : QObject(parent),
+    settings(new Settings),
+    mainWindow(new MainWindow),
+    settingsForm(new SettingsForm),
+    kitConfigForm(new KitConfigForm)
 {
-    settings = new Settings;
-    SettingsMAS::Instance().load( settings );
+    loadSettings();
+    settingsForm->setSettingsPtr( settings );
     loadKits( settings->sessionList );
 
     //setConnections();
@@ -16,100 +21,93 @@ Presenter::Presenter(QObject *parent) : QObject(parent)
 
 Presenter::~Presenter()
 {
-    QMapIterator<QString, Pair *> i(mapKits);
+    delete kitConfigForm;
+    delete settingsForm;
+    delete mainWindow;
+    QMapIterator<QString, Trio *> i(mapKits);
     while( i.hasNext() ) {
         i.next();
-        delete i.value()->configKit;
-        delete i.value()->itemKit;
+        //delete i.value()->configKit;
+        //delete i.value()->itemMAKit;
+        //delete i.value()->tabKit;
+        delete i.value();
     }
     delete settings;
 }
 
-QStringList Presenter::previousSession() const
+void Presenter::openMainWindow()
 {
-    return settings->sessionList;
+    mainWindow->show();
 }
 
-Settings *Presenter::getSettingsPtr() const
+void Presenter::openSettingsForm()
 {
-    return settings;
+    settingsForm->show();
 }
 
-ConfigMT4 *Presenter::getConfigMt4Ptr(const QString name)
+void Presenter::openKitConfigForm()
 {
-    if( mapKits.contains( name ) )
-        return mapKits[name]->configKit;
-    newMAKit( name );
-    return mapKits[name]->configKit;
+    kitConfigForm->show();
 }
 
-void Presenter::newMAKit(const QString name)
+void Presenter::errorMessage(const QString text)
 {
-    if( mapKits.contains( name ) ) {
-        error( name, tr("Can't open new kit!\nSet\"%1\" has been created!")
-               .arg(name) );
-        return; //skip
+    //QMessageBox::warning( this, tr("Program Error!"), text );
+}
+
+void Presenter::setCurrentKit(const QString name)
+{
+    currentKit = name;
+    kitConfigForm->setConfigMt4Ptr( mapKits[currentKit]->configKit );
+}
+
+void Presenter::newMAKit(void)
+{
+    QString name = tr("New Market Kit");
+    qint32 idx = 1;
+    while( settings->savedKitsList.contains(name) ) {
+        idx += 1;
+        name = tr("New Market Kit (%1)").arg( idx );
     }
-    mapKits[name] = new Pair;
-    mapKits[name]->configKit = new ConfigMT4;
-    mapKits[name]->configKit->nameKit = name;
-    mapKits[name]->itemKit = new MarketAssayKit;
-    mapKits[name]->configKit->kitPath = getKitPath( name );
+    mapKits[name] = new Trio( this, mainWindow, name );
     setConnections( name );
-    mapKits[name]->itemKit->setKitPtr( mapKits[name]->configKit );
+    //?
 }
 
 void Presenter::openMAKit(const QString name)
 {
-    if( !mapKits.contains( name ) )
-        loadMAKit( name );
-}
-
-void Presenter::saveMAKit(const QString name)
-{
-    SettingsMAS::Instance().save( mapKits[name]->configKit );
-    //SettingsMAS::Instance().save( mapKits[name].itemKit ); ?
-}
-
-void Presenter::loadMAKit(const QString name)
-{
-    if( !mapKits.contains( name ) )
-        newMAKit( name );
-    SettingsMAS::Instance().load( mapKits[name]->configKit );
+    if( !settings->savedKitsList.contains( name ) )
+        return;
+    mapKits[name] = new Trio( this, mainWindow, name );
+    setConnections( name );
+    loadMAKit( name );
+    //?
 }
 
 void Presenter::deleteMAKit(const QString name)
 {
-    delete mapKits[name]->configKit;
-    mapKits[name]->configKit = 0;
-    delete mapKits[name]->itemKit;
-    mapKits[name]->itemKit = 0;
+    mapKits[name]->configKit->remove();
+    closeMAKit( name );
     SettingsMAS::Instance().deleteMAKit( name );
 }
 
 void Presenter::closeMAKit(const QString name)
 {
-    try {
-        if( !mapKits.contains( name ) )
-            throw 11;
-        deleteConnections( name );
-        delete mapKits[name]->configKit;
-        mapKits[name]->configKit = 0;
-        delete mapKits[name]->itemKit;
-        mapKits[name]->itemKit = 0;
-        qDebug() << "Close -" << name;
-    } catch(int e) {
-        emit error( "Presenter", tr("Close Market Assay Kit \"%1\" error - %2")
-                    .arg( name )
-                    .arg( e ) );
-    }
+    saveMAKit( name );
+    deleteConnections( name );
+    delete mapKits[name]->configKit;
+    mapKits[name]->configKit = 0;
+    delete mapKits[name]->itemMAKit;
+    mapKits[name]->itemMAKit = 0;
+    delete mapKits[name]->tabKit;
+    mapKits[name]->tabKit = 0;
 }
 
 void Presenter::renameMAKit(const QString oldName, const QString newName)
 {
     if( oldName == newName )
         return;
-    mapKits[newName] = new Pair;
+    mapKits[newName] = new Trio;
     mapKits[newName] = mapKits[oldName];
     mapKits[oldName] = 0;
     mapKits.erase( mapKits.find( oldName ) );
@@ -120,63 +118,93 @@ void Presenter::renameMAKit(const QString oldName, const QString newName)
 void Presenter::runTraining(const QString name)
 {
     mapKits[name]->configKit->isRun = true;
-    emit mapKits[name]->itemKit->runTraining();
+    emit mapKits[name]->itemMAKit->runTraining();
 }
 
 void Presenter::runWork(const QString name)
 {
     mapKits[name]->configKit->isRun = true;
-    emit mapKits[name]->itemKit->runPrediction();
+    emit mapKits[name]->itemMAKit->runPrediction();
 }
 
 void Presenter::stopWork(const QString name)
 {
     mapKits[name]->configKit->isRun = false;
-    emit mapKits[name]->itemKit->stop();
+    emit mapKits[name]->itemMAKit->stop();
 }
 
-void Presenter::loadKits(const QStringList list)
+void Presenter::createTab()
+{
+
+}
+
+void Presenter::loadSettings()
+{
+    SettingsMAS::Instance().load( settings );
+}
+
+void Presenter::saveSettings()
+{
+    SettingsMAS::Instance().save( settings );
+}
+
+void Presenter::loadMAKit(const QString name)
+{
+    SettingsMAS::Instance().load( mapKits[name]->configKit );
+}
+
+void Presenter::saveMAKit(const QString name)
+{
+    SettingsMAS::Instance().save( mapKits[name]->configKit );
+}
+
+void Presenter::loadKits(const QStringList &list)
 {
     foreach( auto &kit, list )
-        openMAKit( kit );
+        loadMAKit( kit );
 }
 
-void Presenter::saveKits(const QStringList list)
+void Presenter::saveKits(const QStringList &list)
 {
     foreach( auto &kit, list )
-        SettingsMAS::Instance().save( mapKits[kit]->configKit );
+        saveMAKit( kit );
 }
 
-QString Presenter::getKitPath(const QString name)
+void Presenter::setConnections()
 {
-    QString mDir = QApplication::applicationDirPath();
-    mDir += "/Market Kits/";
-    mDir += name;
-    if( !QDir().exists(mDir) ) {
-        mapKits[name]->configKit->isTrained = false;
-        QDir().mkdir(mDir);
-    } else {
-        mapKits[name]->configKit->isTrained = true;
-    }
-    return mDir;
+
 }
 
 void Presenter::setConnections(const QString name)
 {
-    connect( mapKits[name]->itemKit, SIGNAL( trained(QString) ),
+    connect( mapKits[name]->itemMAKit, SIGNAL( trained(QString) ),
              this, SIGNAL( trainDone(QString) ) );
-    connect( mapKits[name]->itemKit, SIGNAL( progress(QString, qint32) ),
+    connect( mapKits[name]->itemMAKit, SIGNAL( progress(QString, qint32) ),
              this, SIGNAL( progress(QString, qint32) ) );
-    connect( mapKits[name]->itemKit, SIGNAL( message(QString,QString) ),
+    connect( mapKits[name]->itemMAKit, SIGNAL( message(QString,QString) ),
              this, SIGNAL( writeToConsole(QString,QString) ) );
 }
 
 void Presenter::deleteConnections(const QString name)
 {
-    disconnect( mapKits[name]->itemKit, SIGNAL( trained(QString) ),
+    disconnect( mapKits[name]->itemMAKit, SIGNAL( trained(QString) ),
                 this, SIGNAL( trainDone(QString) ) );
-    disconnect( mapKits[name]->itemKit, SIGNAL( progress(QString, qint32) ),
+    disconnect( mapKits[name]->itemMAKit, SIGNAL( progress(QString, qint32) ),
                 this, SIGNAL( progress(QString, qint32) ) );
-    disconnect( mapKits[name]->itemKit, SIGNAL( message(QString,QString) ),
+    disconnect( mapKits[name]->itemMAKit, SIGNAL( message(QString,QString) ),
                 this, SIGNAL( writeToConsole(QString,QString) ) );
+}
+
+Presenter::Trio::Trio(QObject *parent1, MainWindow *parent2, QString name)
+{
+    configKit = new ConfigMT4( name );
+    itemMAKit = new MarketAssayKit( parent1, configKit );
+    tabKit = new MainWindow::KitTabWidget( parent2, name );
+}
+
+Presenter::Trio::~Trio()
+{
+    delete configKit;
+    delete itemMAKit;
+    delete tabKit;
 }

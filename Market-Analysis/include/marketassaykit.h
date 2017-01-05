@@ -11,7 +11,7 @@ class MarketAssayKit : public QObject
 {
     Q_OBJECT
 public:
-    explicit MarketAssayKit(QObject *parent = 0);
+    explicit MarketAssayKit(QObject *parent = 0, ConfigMT4 *cfg = 0);
     ~MarketAssayKit();
 
 private:
@@ -31,7 +31,6 @@ signals:
     void message(QString, QString);
 
 public slots:
-    void setKitPtr(ConfigMT4 *cfg);
 
 private slots:
     void setConnections();

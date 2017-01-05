@@ -12,9 +12,6 @@
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
-#include "include/presenter.h"
-#include "include/settingsform.h"
-#include "include/kitconfigform.h"
 
 #define MAX_TAB 10
 
@@ -28,12 +25,11 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
-private:
     struct KitTabWidget {
+        KitTabWidget(MainWindow *parent = 0, QString name = "");
+        ~KitTabWidget();
+        MainWindow      *parent;
         QString         name;
-        bool            changed = false;
-        ConfigMT4       *config;
         QWidget         *kitTab;
         QLabel          *nameKitName;
         QLabel          *serverName;
@@ -72,31 +68,19 @@ private:
         QLabel          *outputLabel;
         QVBoxLayout     *vLayoutButtons;
         QSpacerItem     *verticalSpacer;
+        //=======Functions=======
+        void rename(QString newName);
     };
-    Ui::MainWindow *ui;
-    Presenter *presenter;
-    SettingsForm *settings;
-    KitConfigForm *kitConfig;
-    QVector<KitTabWidget *> tabList;
-    qint32 currentTab = 0;
-    qint32 countTabs = 0;
 
-signals:
-    void addNewKit(QString);
-    void openKit(QString);
-    void saveKit(QString);
-    void deleteKit(QString);
-    void closedKit(QString);
-    void renamedKit(QString, QString);
-    void runTrainingKit(QString);
-    void runWorkKit(QString);
-    void stopWorkKit(QString);
+private:
+    Ui::MainWindow      *ui;
+    qint32              currentTabId = 0;
+    qint32              countTabs = 0;
 
 public slots:
-    void updateTab(const QString name);
-    void setProgress(const QString kit, const qint32 value);
-    void consoleMessage(const QString kit, const QString text);
-    void errorMessage(const QString kit, const QString text);
+    Ui::MainWindow *getUi();
+    void updateActions(bool kitActions[5]);
+    void addNewTab(const QString name, const KitTabWidget *tab);
 
 private slots:
     void addNew();
@@ -112,19 +96,28 @@ private slots:
     void openHelp();
     void openAbout();
 
-    void newSession(const QStringList list);
-    bool openTab(const qint32 idx, const QString name);
     void closeTab(const qint32 idx);
-    void selectTab(const qint32 idx);
-    void setTabName(const qint32 idx, const QString name);
-    void updateTab(const qint32 idx);
-    void updateTabButtons(const qint32 idx);
+    void setCurrentTab(const qint32 idx);
+    //void setTabName(const qint32 idx, const QString name); // ?
     void setConnections();
 
-    void addTabToUi(const qint32 idx, const QString name);
-    void addTabConnections(const qint32 idx);
-    void deleteTabFromUi(const qint32 idx);
+    void newTabConnections(const KitTabWidget *tab);
+    void deleteTabConnections(const KitTabWidget *tab);
     void closeEvent(QCloseEvent *event);
+
+signals:
+    void addNewKit();
+    void openKit();
+    void saveKit(QString);
+    void deleteKit(QString);
+    void closedKit(QString);
+    void currentTab(QString);
+    void settings();
+    void kitConfigs(QString);
+    void renamedKit(QString, QString);
+    void runTrainingKit(QString);
+    void runWorkKit(QString);
+    void stopWorkKit(QString);
 };
 
 #endif // MAINWINDOW_H

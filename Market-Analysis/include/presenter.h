@@ -2,7 +2,9 @@
 #define PRESENTER_H
 
 #include <QObject>
-#include <QMap>
+#include "include/mainwindow.h"
+#include "include/settingsform.h"
+#include "include/kitconfigform.h"
 #include "include/settingsstruct.h"
 #include "include/marketassaykit.h"
 
@@ -14,12 +16,47 @@ public:
     ~Presenter();
 
 private:
-    struct Pair {
-        ConfigMT4 *configKit;
-        MarketAssayKit *itemKit;
+    struct Trio {
+        ConfigMT4                   *configKit;
+        MarketAssayKit              *itemMAKit;
+        MainWindow::KitTabWidget    *tabKit;
+        Trio(QObject *parent1 = 0, MainWindow *parent2 = 0, QString name = "");
+        ~Trio();
     };
-    Settings *settings;
-    QMap<QString, Pair *> mapKits;
+    Settings                *settings;
+    QMap<QString, Trio *>   mapKits;
+    MainWindow              *mainWindow;
+    SettingsForm            *settingsForm;
+    KitConfigForm           *kitConfigForm;
+    QString                 currentKit;
+
+public slots:
+    void openMainWindow(void);
+    void openSettingsForm(void);
+    void openKitConfigForm(void);
+    void errorMessage(const QString text);
+    void setCurrentKit(const QString name);
+
+    void newMAKit(void);                    // ?
+    void openMAKit(const QString name);     // ?
+    void deleteMAKit(const QString name);
+    void closeMAKit(const QString name);
+    void renameMAKit(const QString oldName, const QString newName); // ?
+    void runTraining(const QString name);
+    void runWork(const QString name);
+    void stopWork(const QString name);
+
+private slots:
+    void createTab();
+    void loadSettings(void);
+    void saveSettings(void);
+    void loadMAKit(const QString name);
+    void saveMAKit(const QString name);
+    void loadKits(const QStringList &list);
+    void saveKits(const QStringList &list);
+    void setConnections(void);                  // ?
+    void setConnections(const QString name);    // ?
+    void deleteConnections(const QString name); // ?
 
 signals:
     void updatedKit(QString);
@@ -27,29 +64,6 @@ signals:
     void progress(QString, qint32);
     void writeToConsole(QString, QString);
     void error(QString, QString);
-
-public slots:
-    QStringList previousSession() const;
-    Settings *getSettingsPtr() const;
-    ConfigMT4 *getConfigMt4Ptr(const QString nameKit);
-
-    void newMAKit(const QString name);
-    void openMAKit(const QString name);
-    void saveMAKit(const QString name);
-    void loadMAKit(const QString name);
-    void deleteMAKit(const QString name);
-    void closeMAKit(const QString name);
-    void renameMAKit(const QString oldName, const QString newName);
-    void runTraining(const QString name);
-    void runWork(const QString name);
-    void stopWork(const QString name);
-
-private slots:
-    void loadKits(const QStringList list);
-    void saveKits(const QStringList list);
-    QString getKitPath(const QString name);
-    void setConnections(const QString name);
-    void deleteConnections(const QString name);
 };
 
 #endif // PRESENTER_H

@@ -13,7 +13,6 @@ SettingsMAS &SettingsMAS::Instance()
 
 void SettingsMAS::load(Settings *settings)
 {
-    settings->defaultKit = "default";
     settings->sessionList.append( "default" );
 }
 
@@ -40,7 +39,7 @@ void SettingsMAS::load(ConfigMT4 *configKit)
     configKit->input.append("HOUR");
     configKit->input.append("WEEKDAY");
     configKit->output.append("XAUUSD.pro1440");
-    emit loaded( configKit->nameKit );
+    //emit loaded( configKit->nameKit );
 }
 
 void SettingsMAS::save(const ConfigMT4 *configKit)
