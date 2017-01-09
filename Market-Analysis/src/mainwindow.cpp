@@ -17,9 +17,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-Ui::MainWindow *MainWindow::getUi()
+QTabWidget *MainWindow::getTabWidget()
 {
-    return ui;
+    return ui->vTabWidget;
 }
 
 void MainWindow::updateActions(bool kitActions[])
@@ -40,9 +40,33 @@ void MainWindow::addNewTab(const QString name, const MainWindow::KitTabWidget *t
     newTabConnections( tab );
 }
 
-//void MainWindow::errorMessage(const QString kit, const QString text)
-//{
-//}
+void MainWindow::newTabConnections(const KitTabWidget *tab)
+{
+    connect( tab->configurationButton, &QPushButton::clicked,
+             this, &MainWindow::openKitConfig );
+    connect( tab->trainingButton, &QPushButton::clicked,
+             this, &MainWindow::runTraining );
+    connect( tab->workButton, &QPushButton::clicked,
+             this, &MainWindow::runWork );
+    connect( tab->stopButton, &QPushButton::clicked,
+             this, &MainWindow::stopWork );
+    connect( tab->deleteButton, &QPushButton::clicked,
+             this, &MainWindow::delete_Kit );
+}
+
+void MainWindow::deleteTabConnections(const KitTabWidget *tab)
+{
+    disconnect( tab->configurationButton, &QPushButton::clicked,
+                this, &MainWindow::openKitConfig );
+    disconnect( tab->trainingButton, &QPushButton::clicked,
+                this, &MainWindow::runTraining );
+    disconnect( tab->workButton, &QPushButton::clicked,
+                this, &MainWindow::runWork );
+    disconnect( tab->stopButton, &QPushButton::clicked,
+                this, &MainWindow::stopWork );
+    disconnect( tab->deleteButton, &QPushButton::clicked,
+                this, &MainWindow::delete_Kit );
+}
 
 void MainWindow::addNew()
 {
@@ -111,16 +135,16 @@ void MainWindow::delete_Kit()
 void MainWindow::openHelp()
 {
     QMessageBox::about( this, tr("Help"),
-                        tr("The <b>Market Analysis System</b> example demonstrates... ") );
+                        tr("The <b>Market Analysis System</b> help.") );
 }
 
 void MainWindow::openAbout()
 {
     QMessageBox::about( this, tr("About Market Analysis System"),
-                        tr("The <b>Market Analysis System</b>. \
-                            Version %1. \
-                            Developed %2. \
-                            %3 ")
+                        tr("The <b>Market Analysis System</b>.\n\
+                            Version %1.\n\
+                            Developed %2.\n\
+                            %3")
                            .arg( QApplication::applicationVersion() )
                            .arg( QApplication::organizationName() )
                            .arg( QApplication::organizationDomain() ) );
@@ -128,17 +152,14 @@ void MainWindow::openAbout()
 
 void MainWindow::closeTab(const qint32 idx)
 {
-    if( ui->vTabWidget->currentIndex() != idx )
-        return;
+    ui->vTabWidget->setCurrentIndex( idx );
     QString selected = ui->vTabWidget->currentWidget()->objectName();
-//    if( QMessageBox::Yes == QMessageBox::question( this, tr("Save Kit?"),
-//                                                   tr("Are you sure that you want to delete set \"%1\"?")
-//                                                   .arg( selected ) ) ) {
-//        emit closedKit( selected );
-//    }
-    //deleteTabConnections(); ?
-    ui->vTabWidget->currentWidget()->close();
-    emit closedKit( selected );
+    if( QMessageBox::Yes == QMessageBox::question( this, tr("Close Kit?"),
+                                                   tr("Are you sure that you want to close kit \"%1\"?")
+                                                   .arg( selected ) ) ) {
+        ui->vTabWidget->currentWidget()->close();
+        emit closedKit( selected );
+    }
 }
 
 void MainWindow::setCurrentTab(const qint32 idx)
@@ -147,41 +168,6 @@ void MainWindow::setCurrentTab(const qint32 idx)
     if( ui->vTabWidget->count() > 0 )
         emit currentTab( ui->vTabWidget->currentWidget()->objectName() );
 }
-
-//          to presenter
-//void MainWindow::updateTab(const qint32 idx)
-//{
-//    if( currentTab < 0 )
-//        return;
-//    KitTabWidget *tab = tabList[idx];
-//    if( tab->name != tab->config->nameKit )
-//        setTabName( idx, tab->config->nameKit );
-//    tab->serverName->setText( tab->config->server );
-//    tab->pathToMt4Name->setText( tab->config->mt4Path );
-//    tab->inputListView = tab->config;
-//    tab->outputListView = tab->config;
-//    tab->inputSize->setText( QString("%1").arg(tab->config->depthHistory) ); // * tab->config->'inList'
-//    tab->outputSize->setText( QString("%1").arg(tab->config->depthPrediction) ); // * tab->config->'outList'
-//    tab->progressBar->setValue( tab->config->progress );
-//    updateTabButtons( idx );
-//}
-
-//void MainWindow::updateTabButtons(const qint32 idx)
-//{
-//    if( currentTab < 0 )
-//        return;
-//    KitTabWidget *tab = tabList[idx];
-//    tab->configurationButton->setEnabled( !tab->config->isRun );
-//    ui->actionKit_Configuration->setEnabled( !tab->config->isRun );
-//    tab->trainingButton->setEnabled( !tab->config->isRun );
-//    ui->actionTrain_NN->setEnabled( !tab->config->isTrained );
-//    tab->workButton->setEnabled( !tab->config->isRun );
-//    ui->actionStart_forecasting->setEnabled( !tab->config->isRun );
-//    tab->stopButton->setEnabled( tab->config->isRun );
-//    ui->actionStop->setEnabled( tab->config->isRun );
-//    tab->deleteButton->setEnabled( !tab->config->isRun );
-//    ui->actionDelete_Kit->setEnabled( !tab->config->isRun );
-//}
 
 void MainWindow::setConnections()
 {
@@ -210,34 +196,6 @@ void MainWindow::setConnections()
              this, SLOT( setCurrentTab(qint32) ) );
 }
 
-void MainWindow::newTabConnections(const KitTabWidget *tab)
-{
-    connect( tab->configurationButton, &QPushButton::clicked,
-             this, &MainWindow::openKitConfig );
-    connect( tab->trainingButton, &QPushButton::clicked,
-             this, &MainWindow::runTraining );
-    connect( tab->workButton, &QPushButton::clicked,
-             this, &MainWindow::runWork );
-    connect( tab->stopButton, &QPushButton::clicked,
-             this, &MainWindow::stopWork );
-    connect( tab->deleteButton, &QPushButton::clicked,
-             this, &MainWindow::delete_Kit );
-}
-
-void MainWindow::deleteTabConnections(const KitTabWidget *tab)
-{
-    disconnect( tab->configurationButton, &QPushButton::clicked,
-                this, &MainWindow::openKitConfig );
-    disconnect( tab->trainingButton, &QPushButton::clicked,
-                this, &MainWindow::runTraining );
-    disconnect( tab->workButton, &QPushButton::clicked,
-                this, &MainWindow::runWork );
-    disconnect( tab->stopButton, &QPushButton::clicked,
-                this, &MainWindow::stopWork );
-    disconnect( tab->deleteButton, &QPushButton::clicked,
-                this, &MainWindow::delete_Kit );
-}
-
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     /*if (maybeSave()) {
@@ -246,7 +204,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     } else {
         event->ignore();
     } */
-    event->accept();
+    emit closeWindow();
+    //event->accept();
 }
 
 
@@ -254,7 +213,7 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
     parent(parent),
     name(name)
 {
-    kitTab = new QWidget( parent->getUi()->vTabWidget );
+    kitTab = new QWidget( /*parent->getTabWidget()*/ );
     kitTab->setObjectName( name );
     vLayoutTab = new QVBoxLayout( kitTab );
     vLayoutTab->setSpacing(6);
@@ -330,7 +289,7 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
         hLayoutPath->setStretch( 3, 2 );
         vLayoutTab->addWidget( hGBoxPathMt4 );
     } {// Input/Output Layers + Buttons
-        hLayoutConf = new QHBoxLayout( kitTab );
+        hLayoutConf = new QHBoxLayout();
         hLayoutConf->setSpacing(6);
         hLayoutConf->setObjectName( QStringLiteral("hLayoutConf") );
         hLayoutConf->setContentsMargins( 0, 0, 0, 0 );
@@ -343,10 +302,10 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
         vLayoutInput->setContentsMargins( 11, 11, 11, 11 );
         vLayoutInput->setObjectName( QStringLiteral("vLayoutInput") );
         vLayoutInput->setContentsMargins( 3, 3, 3, 3 );
-        inputListView = new QListView( vGBoxInput );
+        inputListView = new QListWidget( vGBoxInput );
         inputListView->setObjectName( QStringLiteral("inputListView") );
         vLayoutInput->addWidget( inputListView );
-        hLayoutInputSize = new QHBoxLayout( vGBoxInput );
+        hLayoutInputSize = new QHBoxLayout();
         hLayoutInputSize->setSpacing(6);
         hLayoutInputSize->setObjectName( QStringLiteral("hLayoutInputSize") );
         hLayoutInputSize->setContentsMargins( 3, 3, 3, 3 );
@@ -362,7 +321,7 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
         hLayoutInputSize->setStretch( 1, 2 );
         vLayoutInput->addLayout( hLayoutInputSize );
         hLayoutConf->addWidget( vGBoxInput );
-        vLayoutSymbol = new QVBoxLayout( kitTab );
+        vLayoutSymbol = new QVBoxLayout();
         vLayoutSymbol->setSpacing(6);
         vLayoutSymbol->setObjectName( QStringLiteral("vLayoutSymbol") );
         vLayoutSymbol->setContentsMargins( 3, 3, 3, 3 );
@@ -378,17 +337,13 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
                                       .hasHeightForWidth() );
         arrowLabel->setSizePolicy( sizePolicy );
         arrowLabel->setMinimumSize( QSize(16, 16) );
-        arrowLabel->setMaximumSize( QSize(64, 64) );
-        arrowLabel->setAutoFillBackground(false);
-        arrowLabel->setFrameShape( QFrame::NoFrame );
-        arrowLabel->setFrameShadow( QFrame::Plain );
-        arrowLabel->setTextFormat( Qt::AutoText );
+        arrowLabel->setMaximumSize( QSize(48, 48) );
         arrowLabel->setPixmap( QPixmap( QString::fromUtf8(":/img/right_64.png") ) );
         arrowLabel->setScaledContents(true);
-        arrowLabel->setTextInteractionFlags( Qt::NoTextInteraction );
+//        arrowLabel->setTextInteractionFlags( Qt::NoTextInteraction );
         vLayoutSymbol->addWidget( arrowLabel );
         verticalSpacer_3 = new QSpacerItem( 20, 40, QSizePolicy::Minimum,
-                                   QSizePolicy::Expanding );
+                                            QSizePolicy::Expanding );
         vLayoutSymbol->addItem( verticalSpacer_3 );
         vLayoutSymbol->setStretch( 0, 2 );
         vLayoutSymbol->setStretch( 1, 1 );
@@ -403,10 +358,10 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
         vLayoutOutput->setContentsMargins( 11, 11, 11, 11 );
         vLayoutOutput->setObjectName( QStringLiteral("vLayoutOutput") );
         vLayoutOutput->setContentsMargins( 3, 3, 3, 3 );
-        outputListView = new QListView( vGBoxOutput );
+        outputListView = new QListWidget( vGBoxOutput );
         outputListView->setObjectName( QStringLiteral("outputListView") );
         vLayoutOutput->addWidget( outputListView );
-        hLayoutOutputSize = new QHBoxLayout( vGBoxOutput );
+        hLayoutOutputSize = new QHBoxLayout();
         hLayoutOutputSize->setSpacing(6);
         hLayoutOutputSize->setObjectName( QStringLiteral("hLayoutOutputSize") );
         hLayoutOutputSize->setContentsMargins( 3, 3, 3, 3 );
@@ -423,8 +378,8 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
         hLayoutOutputSize->setStretch( 1, 2 );
         vLayoutOutput->addLayout( hLayoutOutputSize );
         hLayoutConf->addWidget( vGBoxOutput );
-    } {//..// Buttons
-        vLayoutButtons = new QVBoxLayout( kitTab );
+    } {// ..// Buttons
+        vLayoutButtons = new QVBoxLayout();
         vLayoutButtons->setSpacing(6);
         vLayoutButtons->setObjectName( QStringLiteral("vLayoutButtons") );
         vLayoutButtons->setContentsMargins( 3, 3, 3, 3 );
@@ -479,39 +434,46 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
     consoleTextEdit->setObjectName( QStringLiteral("consoleTextEdit") );
     consoleTextEdit->setReadOnly(true);
     vLayoutTab->addWidget( consoleTextEdit );
-    vLayoutTab->setStretch( 2, 2 );
+    vLayoutTab->setStretch( 2, 1 );
     vLayoutTab->setStretch( 4, 2 );
 
-    // retranslateUi
-    nameKitLabel->setText(QApplication::translate("MainWindow", "Kit name :", 0));
-    nameKitName->setText(QString());
-    serverLabel->setText(QApplication::translate("MainWindow", "Server :", 0));
-    serverName->setText(QString());
-    pathToMt4Label->setText(QApplication::translate("MainWindow", "Path to MT4 :", 0));
-    pathToMt4Name->setText(QString());
-    vGBoxInput->setTitle(QApplication::translate("MainWindow",
-                                          "Input neural network :", 0));
-    inputLabel->setText(QApplication::translate("MainWindow", "History size :", 0));
-    inputSize->setText(QString());
-    arrowLabel->setText(QString());
-    vGBoxOutput->setTitle(QApplication::translate("MainWindow",
-                                                  "Output neural network :", 0));
-    outputLabel->setText(QApplication::translate("MainWindow",
-                                                 "Prediction size :", 0));
-    outputSize->setText(QString());
-    configurationButton->setText(QApplication::translate("MainWindow",
-                                                         "Configuration", 0));
-    trainingButton->setText(QApplication::translate("MainWindow", "Train", 0));
-    workButton->setText(QApplication::translate("MainWindow", "Run work", 0));
-    stopButton->setText(QApplication::translate("MainWindow", "Stop", 0));
-    deleteButton->setText(QApplication::translate("MainWindow", "Delete", 0));
-    progressBar->setFormat(QApplication::translate("MainWindow", "%p%", 0));
+    {   // retranslateUi
+        nameKitLabel->setText(QApplication::translate("MainWindow", "Kit name :", 0));
+        nameKitName->setText(QString());
+        serverLabel->setText(QApplication::translate("MainWindow", "Server :", 0));
+        serverName->setText(QString());
+        pathToMt4Label->setText(QApplication::translate("MainWindow", "Path to MT4 :", 0));
+        pathToMt4Name->setText(QString());
+        vGBoxInput->setTitle(QApplication::translate("MainWindow",
+                                              "Input neural network :", 0));
+        inputLabel->setText(QApplication::translate("MainWindow", "History size :", 0));
+        inputSize->setText(QString());
+        arrowLabel->setText(QString());
+        vGBoxOutput->setTitle(QApplication::translate("MainWindow",
+                                                      "Output neural network :", 0));
+        outputLabel->setText(QApplication::translate("MainWindow",
+                                                     "Prediction size :", 0));
+        outputSize->setText(QString());
+        configurationButton->setText(QApplication::translate("MainWindow",
+                                                             "Configuration", 0));
+        trainingButton->setText(QApplication::translate("MainWindow", "Train", 0));
+        workButton->setText(QApplication::translate("MainWindow", "Run work", 0));
+        stopButton->setText(QApplication::translate("MainWindow", "Stop", 0));
+        deleteButton->setText(QApplication::translate("MainWindow", "Delete", 0));
+        progressBar->setFormat(QApplication::translate("MainWindow", "%p%", 0));
+    }
 }
 
 MainWindow::KitTabWidget::~KitTabWidget()
 {
-    delete verticalSpacer;
-    delete verticalSpacer_2;
-    delete verticalSpacer_3;
-    delete kitTab;
+    if( kitTab )
+        delete kitTab;
+}
+
+void MainWindow::KitTabWidget::rename(const QString newName)
+{
+    name = newName;
+    kitTab->setObjectName( newName );
+    parent->getTabWidget()->setTabText( parent->getTabWidget()->currentIndex(),
+                                             newName );
 }

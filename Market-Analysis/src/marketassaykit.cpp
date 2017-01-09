@@ -1,7 +1,5 @@
 #include "include/marketassaykit.h"
 
-#include <QDebug>
-
 MarketAssayKit::MarketAssayKit(QObject *parent, ConfigMT4 *cfg) :
     QObject(parent),
     config(cfg)
@@ -10,11 +8,12 @@ MarketAssayKit::MarketAssayKit(QObject *parent, ConfigMT4 *cfg) :
     ma_nnWorker.setConfigKit( cfg );
     ma_nnWorker.moveToThread(&maThread);
     maThread.start();
-    qDebug()<<"From main thread: "<<QThread::currentThreadId();
 }
 
 MarketAssayKit::~MarketAssayKit()
-{ }
+{
+    maThread.exit();
+}
 
 void MarketAssayKit::setConnections()
 {

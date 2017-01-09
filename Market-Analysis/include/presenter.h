@@ -33,30 +33,33 @@ private:
 public slots:
     void openMainWindow(void);
     void openSettingsForm(void);
-    void openKitConfigForm(void);
+    void openKitConfigForm(const QString name);
     void errorMessage(const QString text);
     void setCurrentKit(const QString name);
 
-    void newMAKit(void);                    // ?
-    void openMAKit(const QString name);     // ?
-    void deleteMAKit(const QString name);
+    void newMAKit(void);
+    void openDialog(void);
+    void openMAKit(const QString name);
     void closeMAKit(const QString name);
-    void renameMAKit(const QString oldName, const QString newName); // ?
+    void renameMAKit(const QString oldName, const QString newName);
+    void deleteMAKit(const QString name);
     void runTraining(const QString name);
     void runWork(const QString name);
     void stopWork(const QString name);
 
 private slots:
-    void createTab();
+    void updateTab(const QString name);
     void loadSettings(void);
     void saveSettings(void);
     void loadMAKit(const QString name);
     void saveMAKit(const QString name);
-    void loadKits(const QStringList &list);
-    void saveKits(const QStringList &list);
+    //void loadKits(const QStringList &list);
+    //void saveKits(const QStringList &list);
+    void updateActionsButtons(const QString name);
     void setConnections(void);                  // ?
     void setConnections(const QString name);    // ?
     void deleteConnections(const QString name); // ?
+    void closeWindow();
 
 signals:
     void updatedKit(QString);

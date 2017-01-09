@@ -3,7 +3,6 @@
 
 #include <QObject>
 #include <QThread>
-//#include <QDateTime>
 #include "include/settingsstruct.h"
 #include "include/neuralnetworkanalysis.h"
 
@@ -18,7 +17,6 @@ private:
     ConfigMT4 *config;
     QThread maThread;
     NeuralNetworkAnalysis ma_nnWorker;
-    //QDateTime lastTraining;
 
 signals:
     // to MA_NN

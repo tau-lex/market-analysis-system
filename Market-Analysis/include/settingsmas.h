@@ -30,7 +30,6 @@ public slots:
     //void save(const QVector<ConfigMT4 *> &configKitList);
 
     void deleteMAKit(const QString &kit);
-    void renameMAKit(const QString &oldName, const QString &newName);
 };
 
 #endif // CONFIGMAS_H
