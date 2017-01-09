@@ -20,6 +20,7 @@ SOURCES += src/main.cpp \
         src/kitconfigform.cpp \
         src/openkitdialog.cpp \
         src/presenter.cpp \
+        src/settingsstruct.cpp \
         src/settingsmas.cpp \
         src/marketassaykit.cpp \
         src/neuralnetworkanalysis.cpp \

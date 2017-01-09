@@ -14,8 +14,8 @@ SettingsMAS::~SettingsMAS()
 {
     if( global )
         delete global;
-    if( kitConfigFile )
-        delete kitConfigFile;
+    if( kitFile )
+        delete kitFile;
 }
 
 SettingsMAS &SettingsMAS::Instance()
@@ -26,51 +26,80 @@ SettingsMAS &SettingsMAS::Instance()
 
 void SettingsMAS::load(Settings *settings)
 {
-    settings->maxOpenTabs = global->value( sKeys.maxTabs ).toInt();
-    qint32 size = global->value( sKeys.savedSize, 0 ).toInt();
+    settings->maxOpenTabs = global->value( _s.maxTabs ).toInt();
+    qint32 size = global->value( _s.savedSize, 0 ).toInt();
     for( qint32 i = 0; i < size; i++ )
-        settings->savedKitsList
-                .append( global->value( QString("%1%2")
-                                        .arg( sKeys.savedKit )
-                                        .arg( i ), "" ).toString() );
-    size = global->value( sKeys.lastSize, 0 ).toInt();
+        settings->savedKits.append( global->value( QString("%1%2")
+                                                   .arg( _s.savedKit )
+                                                   .arg( i ) ).toString() );
+    size = global->value( _s.lastSize, 0 ).toInt();
     for( qint32 i = 0; i < size; i++ )
-        settings->sessionList
-                .append( global->value( QString("%1%2")
-                                        .arg( sKeys.lastKit )
-                                        .arg( i ), "" ).toString() );
-    settings->winPosX = global->value( sKeys.posX ).toInt();
-    settings->winPosY = global->value( sKeys.posY ).toInt();
-    settings->winSizeX = global->value( sKeys.sizeX ).toInt();
-    settings->winSizeY = global->value( sKeys.sizeY ).toInt();
-    settings->savedKitsList.removeAll("");
-    settings->sessionList.removeAll("");
+        settings->session.append( global->value( QString("%1%2")
+                                                     .arg( _s.lastKit )
+                                                     .arg( i ) ).toString() );
+    settings->winPosX = global->value( _s.posX ).toInt();
+    settings->winPosY = global->value( _s.posY ).toInt();
+    settings->winSizeX = global->value( _s.sizeX ).toInt();
+    settings->winSizeY = global->value( _s.sizeY ).toInt();
+    settings->savedKits.removeAll("");
+    settings->session.removeAll("");
 }
 
 void SettingsMAS::save(const Settings *settings)
 {
-    global->setValue( sKeys.maxTabs, settings->maxOpenTabs );
-    global->setValue( sKeys.savedSize, settings->savedKitsList.size() );
-    for( qint32 i = 0; i < settings->savedKitsList.size(); i++)
-        global->setValue( QString("%1%2").arg( sKeys.savedKit ).arg( i ),
-                          settings->savedKitsList[i] );
-    global->setValue( sKeys.lastSize, settings->sessionList.size() );
-    for( qint32 i = 0; i < settings->sessionList.size(); i++)
-        global->setValue( QString("%1%2").arg( sKeys.lastKit ).arg( i ),
-                          settings->sessionList[i] );
-    global->setValue( sKeys.posX, settings->winPosX );
-    global->setValue( sKeys.posY, settings->winPosY );
-    global->setValue( sKeys.sizeX, settings->winSizeX );
-    global->setValue( sKeys.sizeY, settings->winSizeY );
+    clear();
+    global->setValue( _s.maxTabs, settings->maxOpenTabs );
+    global->setValue( _s.savedSize, settings->savedKits.size() );
+    for( qint32 i = 0; i < settings->savedKits.size(); i++)
+        global->setValue( QString("%1%2").arg( _s.savedKit ).arg( i ),
+                          settings->savedKits[i] );
+    global->setValue( _s.lastSize, settings->session.size() );
+    for( qint32 i = 0; i < settings->session.size(); i++)
+        global->setValue( QString("%1%2").arg( _s.lastKit ).arg( i ),
+                          settings->session[i] );
+    global->setValue( _s.posX, settings->winPosX );
+    global->setValue( _s.posY, settings->winPosY );
+    global->setValue( _s.sizeX, settings->winSizeX );
+    global->setValue( _s.sizeY, settings->winSizeY );
 }
 
 void SettingsMAS::load(ConfigMT4 *configKit)
 {
-    if( configKit->nameKit.contains( "New Market Kit" ) )
+    if( configKit->nameKit.contains( "New Market Kit" ) ) {
         loadDefault( configKit );
+        return;
+    }
+    kitFile = new QSettings( QString("%1/%2").arg( configKit->kitPath )
+                             .arg( "config.ini" ), QSettings::IniFormat);
+//    configKit->nameKit = kitFile->;
+//    configKit->kitPath;
+//    configKit->mt4Path;
+//    configKit->server;
+//    configKit->historyPath;
+//    configKit->configFile;
+//    configKit->newHistoryPath;
+//    configKit->predictionPath;
+//    configKit->periods;
+//    configKit->volumeIn;
+//    configKit->input;
+//    configKit->output;
+//    configKit->depthHistory;
+//    configKit->depthPrediction;
+//    configKit->layersCount;
+//    configKit->layersSize;
+//    configKit->trainingModel;
+//    configKit->divideInstances;
+//    configKit->lastTraining;
+//    configKit->isLoaded;
+//    configKit->isReady;
+//    configKit->isTrained;
+//    configKit->isRun;
+//    configKit->progress;
+//    configKit->servers;
+//    configKit->symbols;
+//    configKit->symbolsOfTime;
+//    configKit->trainingModels;
 
-
-    //emit loaded( configKit->nameKit );
 }
 
 void SettingsMAS::save(const ConfigMT4 *configKit)
@@ -96,4 +125,18 @@ void SettingsMAS::loadDefault(ConfigMT4 *configKit)
     configKit->output.append("EURUSD.pro1440");
     configKit->layersCount = 1;
     configKit->layersSize[0] = 9;
+}
+
+void SettingsMAS::clear()
+{
+    qint32 idx = 0;
+    while( global->contains( QString("%1%2").arg( _s.savedKit ).arg( idx ) ) ) {
+        global->remove( QString("%1%2").arg( _s.savedKit ).arg( idx ) );
+        idx++;
+    }
+    idx = 0;
+    while( global->contains( QString("%1%2").arg( _s.lastKit ).arg( idx ) ) ) {
+        global->remove( QString("%1%2").arg( _s.lastKit ).arg( idx ) );
+        idx++;
+    }
 }

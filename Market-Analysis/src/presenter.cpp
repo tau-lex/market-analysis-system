@@ -17,7 +17,7 @@ Presenter::Presenter(QObject *parent) : QObject(parent),
     setConnections();
     loadSettings();
     settingsForm->setSettingsPtr( settings );
-    foreach( QString kit, settings->sessionList )
+    foreach( QString kit, settings->session )
         openMAKit( kit );
 }
 
@@ -70,7 +70,7 @@ void Presenter::newMAKit(void)
 {
     qint32 idx = 1;
     QString name = tr("New Market Kit (%1)").arg( idx );
-    while( settings->savedKitsList.contains(name) ) {
+    while( settings->savedKits.contains(name) ) {
         idx += 1;
         name = tr("New Market Kit (%1)").arg( idx );
     }
@@ -78,28 +78,28 @@ void Presenter::newMAKit(void)
     setConnections( name );
     loadMAKit( name );
     mainWindow->addNewTab( name, mapKits[name]->tabKit );
-    settings->savedKitsList.append( name );
-    settings->sessionList.append( name );
+    settings->savedKits.append( name );
+    settings->session.append( name );
     setCurrentKit( name );
 }
 
 void Presenter::openDialog()
 {
-    openKitDialog->show( settings->savedKitsList );
+    openKitDialog->show( settings->savedKits );
 }
 
 void Presenter::openMAKit(QString name)
 {
-    if( !settings->savedKitsList.contains( name ) || name == "" )
+    if( !settings->savedKits.contains( name ) || name == "" )
         return;
     mapKits[name] = new Trio( this, mainWindow, name );
     setConnections( name );
     loadMAKit( name );
     mainWindow->addNewTab( name, mapKits[name]->tabKit );
-    if( !settings->savedKitsList.contains(name) )
-        settings->savedKitsList.append( name );
-    if( !settings->sessionList.contains( name ) )
-        settings->sessionList.append( name );
+    if( !settings->savedKits.contains(name) )
+        settings->savedKits.append( name );
+    if( !settings->session.contains( name ) )
+        settings->session.append( name );
     setCurrentKit( name );
 }
 
@@ -111,7 +111,7 @@ void Presenter::closeMAKit(const QString name)
     delete mapKits[name];
     mapKits[name] = 0;
     mapKits.erase( mapKits.find( name ) );
-    settings->sessionList.removeOne( name );
+    settings->session.removeOne( name );
 }
 
 void Presenter::renameMAKit(const QString oldName, const QString newName)
@@ -125,10 +125,10 @@ void Presenter::renameMAKit(const QString oldName, const QString newName)
     mapKits[newName]->configKit->rename( newName );
     mapKits[newName]->tabKit->rename( newName );
     saveMAKit( newName );
-    settings->savedKitsList.append( newName );
-    settings->savedKitsList.removeOne( oldName );
-    settings->sessionList.append( newName );
-    settings->sessionList.removeOne( oldName );
+    settings->savedKits.append( newName );
+    settings->savedKits.removeOne( oldName );
+    settings->session.append( newName );
+    settings->session.removeOne( oldName );
     //updateTab( newName );
 }
 

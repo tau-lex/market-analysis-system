@@ -14,7 +14,7 @@ private:
     explicit SettingsMAS(QObject *parent = 0);
     ~SettingsMAS();
     QSettings *global = 0;
-    QSettings *kitConfigFile = 0;
+    QSettings *kitFile = 0;
 
 private:
     struct SettingsKeys {
@@ -35,8 +35,8 @@ private:
         const QString   nnKitGr;
         const QString   mt4KitGr;
     };
-    SettingsKeys        sKeys;
-    KitKeys             kKeys;
+    SettingsKeys        _s;
+    KitKeys             _k;
 
 public slots:
     void load(Settings *settings);
@@ -47,6 +47,7 @@ public slots:
 
 private slots:
     void loadDefault(ConfigMT4 *configKit);
+    void clear(void);
 
 signals:
     void saved(QString);
