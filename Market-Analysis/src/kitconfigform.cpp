@@ -153,10 +153,12 @@ void KitConfigForm::on_deleteButton_clicked()
         widget = ui->outputListWidget;
     }
     if( widget ) {
-        widget->removeItemWidget( widget->currentItem() );
+        QListWidgetItem* item = widget->currentItem();
+        if( item )
+            delete item;
     }
-//    if( !tempPeriods.contains( ui->periodCBox->currentData().toString().toInt() ) )
-//        tempPeriods.append( ui->periodCBox->currentData().toString().toInt() );
+    if( ui->inputListWidget->count() == 0 && ui->outputListWidget->count() == 0 )
+        tempPeriods.clear();
 }
 
 void KitConfigForm::on_upButton_clicked()
@@ -168,15 +170,31 @@ void KitConfigForm::on_upButton_clicked()
         widget = ui->outputListWidget;
     }
     if( widget ) {
-//        QListWidgetItem *item = widget->currentItem();
-//        widget->insertItem( (widget - 1), *item );
-//        widget->removeItemWidget( item );
+        QListWidgetItem *item = widget->currentItem();
+        if( item ) {
+            widget->insertItem( (widget->currentRow() - 1), item->text() );
+            widget->setCurrentRow( widget->currentRow() - 2 );
+            delete item;
+        }
     }
 }
 
 void KitConfigForm::on_downButton_clicked()
 {
-
+    QListWidget *widget = 0;
+    if( ui->inputListWidget->hasFocus() ) {
+        widget = ui->inputListWidget;
+    } else if( ui->outputListWidget->hasFocus() ) {
+        widget = ui->outputListWidget;
+    }
+    if( widget ) {
+        QListWidgetItem *item = widget->currentItem();
+        if( item ) {
+            widget->insertItem( (widget->currentRow() + 2), item->text() );
+            widget->setCurrentRow( widget->currentRow() + 2 );
+            delete item;
+        }
+    }
 }
 
 void KitConfigForm::on_buttonBox_clicked(QAbstractButton *button)
@@ -195,7 +213,10 @@ void KitConfigForm::on_buttonBox_clicked(QAbstractButton *button)
 
 void KitConfigForm::save(void)
 {
-    configKit->nameKit = ui->nameKitEdit->text();
+    QString oldName = "";
+    if( configKit->nameKit != ui->nameKitEdit->text() )
+        oldName = configKit->nameKit;
+    configKit->rename( ui->nameKitEdit->text() );
     configKit->mt4Path = ui->mt4PathEdit->text();
     configKit->server = ui->serverCBox->currentText();
     configKit->historyPath = QString("/history/%1/").arg( configKit->server );
@@ -207,13 +228,35 @@ void KitConfigForm::save(void)
     for( auto i = 0; i < configKit->layersCount; i++ )
         configKit->layersSize[i] = ui->layersSizeLEdit->text().section( ",", i, i).toInt();
     configKit->periods = tempPeriods;
-//    for( qint32 i = 0; i < ui->inputListWidget->ha; i++ )
-//        configKit->input.append( ui->inputListWidget->item( i )->text() );
-//    for( qint32 i = 0; i < ui->outputListWidget->size(); i++ )
-//        configKit->output.append( ui->outputListWidget->item( i )->text() );
+    configKit->input.clear();
+    for( qint32 i = 0; i < ui->inputListWidget->count(); i++ )
+        configKit->input.append( ui->inputListWidget->item( i )->text() );
+    configKit->output.clear();
+    for( qint32 i = 0; i < ui->outputListWidget->count(); i++ )
+        configKit->output.append( ui->outputListWidget->item( i )->text() );
     configKit->depthHistory = ui->depthInLEdit->text().toInt();
     configKit->depthPrediction = ui->depthOutLEdit->text().toInt();
-    emit saved( configKit->nameKit );
+    configKit->isReady = isReady();
+    if( oldName == "" ) {
+        emit savedUpd( configKit->nameKit );
+        emit saved( configKit->nameKit );
+    } else {
+        emit savedUpd( oldName );
+        emit saved( configKit->nameKit );
+    }
+}
+
+bool KitConfigForm::isReady(void)
+{
+    if( configKit->mt4Path.size() > 5 &&
+            configKit->historyPath.size() > 10 &&
+            configKit->historyPath.contains( configKit->server ) &&
+            configKit->input.size() > 0 &&
+            configKit->output.size() > 0 &&
+            configKit->depthHistory > 0 &&
+            configKit->depthPrediction > 0 )
+        return true;
+    return false;
 }
 
 void KitConfigForm::accept()

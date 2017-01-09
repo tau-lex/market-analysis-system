@@ -5,6 +5,7 @@
 #include "include/mainwindow.h"
 #include "include/settingsform.h"
 #include "include/kitconfigform.h"
+#include "include/openkitdialog.h"
 #include "include/settingsstruct.h"
 #include "include/marketassaykit.h"
 
@@ -20,7 +21,7 @@ private:
         ConfigMT4                   *configKit;
         MarketAssayKit              *itemMAKit;
         MainWindow::KitTabWidget    *tabKit;
-        Trio(QObject *parent1 = 0, MainWindow *parent2 = 0, QString name = "");
+        Trio(Presenter *parent1 = 0, MainWindow *parent2 = 0, QString name = "");
         ~Trio();
     };
     Settings                *settings;
@@ -28,6 +29,7 @@ private:
     MainWindow              *mainWindow;
     SettingsForm            *settingsForm;
     KitConfigForm           *kitConfigForm;
+    OpenKitDialog           *openKitDialog;
     QString                 currentKit;
 
 public slots:
@@ -53,10 +55,8 @@ private slots:
     void saveSettings(void);
     void loadMAKit(const QString name);
     void saveMAKit(const QString name);
-    //void loadKits(const QStringList &list);
-    //void saveKits(const QStringList &list);
     void updateActionsButtons(const QString name);
-    void setConnections(void);                  // ?
+    void setConnections(void);
     void setConnections(const QString name);    // ?
     void deleteConnections(const QString name); // ?
     void closeWindow();

@@ -8,7 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    this->setWindowTitle( QString("%1 - v.%2")
+                          .arg( QApplication::applicationName() )
+                          .arg( QApplication::applicationVersion() ) );
     setConnections();
 }
 
@@ -38,6 +40,7 @@ void MainWindow::addNewTab(const QString name, const MainWindow::KitTabWidget *t
                     QSize(), QIcon::Normal, QIcon::Off );
     ui->vTabWidget->addTab( tab->kitTab, icon10, name );
     newTabConnections( tab );
+    ui->vTabWidget->setCurrentWidget( tab->kitTab );
 }
 
 void MainWindow::newTabConnections(const KitTabWidget *tab)
@@ -121,14 +124,13 @@ void MainWindow::stopWork()
 
 void MainWindow::delete_Kit()
 {
-    if( ui->vTabWidget->count() > 0 ) {
-        QString selected = ui->vTabWidget->currentWidget()->objectName();
-        if( QMessageBox::Yes == QMessageBox::question( this, tr("Delete Kit?"),
-                                                       tr("Are you sure that you want to delete set \"%1\"?")
-                                                       .arg(selected) ) ) {
-            closeTab( ui->vTabWidget->currentIndex() );
-            emit deleteKit( selected );
-        }
+    if( ui->vTabWidget->count() <= 0 )
+        return;
+    QString selected = ui->vTabWidget->currentWidget()->objectName();
+    if( QMessageBox::Yes == QMessageBox::question( this, tr("Delete Kit?"),
+                                                   tr("Are you sure that you want to delete set \"%1\"?")
+                                                   .arg(selected) ) ) {
+        emit deleteKit( selected );
     }
 }
 
@@ -141,9 +143,9 @@ void MainWindow::openHelp()
 void MainWindow::openAbout()
 {
     QMessageBox::about( this, tr("About Market Analysis System"),
-                        tr("The <b>Market Analysis System</b>.\n\
-                            Version %1.\n\
-                            Developed %2.\n\
+                        tr("The <b>Market Analysis System</b>.<br>\
+                            Version %1.<br>\
+                            Developed %2.<br>\
                             %3")
                            .arg( QApplication::applicationVersion() )
                            .arg( QApplication::organizationName() )
@@ -157,7 +159,6 @@ void MainWindow::closeTab(const qint32 idx)
     if( QMessageBox::Yes == QMessageBox::question( this, tr("Close Kit?"),
                                                    tr("Are you sure that you want to close kit \"%1\"?")
                                                    .arg( selected ) ) ) {
-        ui->vTabWidget->currentWidget()->close();
         emit closedKit( selected );
     }
 }
@@ -204,16 +205,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
     } else {
         event->ignore();
     } */
+    event->ignore();
     emit closeWindow();
-    //event->accept();
 }
 
 
-MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
+MainWindow::KitTabWidget::KitTabWidget(QTabWidget *parent, QString name) :
     parent(parent),
     name(name)
 {
-    kitTab = new QWidget( /*parent->getTabWidget()*/ );
+    kitTab = new QWidget( /*parent*/ );
     kitTab->setObjectName( name );
     vLayoutTab = new QVBoxLayout( kitTab );
     vLayoutTab->setSpacing(6);
@@ -242,6 +243,7 @@ MainWindow::KitTabWidget::KitTabWidget(MainWindow *parent, QString name) :
         nameKitName->setObjectName( QStringLiteral("nameKitName") );
         nameKitName->setMinimumSize( QSize(0, 16) );
         nameKitName->setFont( font );
+        nameKitName->setText( name );
         hLayoutName->addWidget( nameKitName );
         hLayoutName->setStretch( 0, 1 );
         hLayoutName->setStretch( 1, 5 );
@@ -474,6 +476,5 @@ void MainWindow::KitTabWidget::rename(const QString newName)
 {
     name = newName;
     kitTab->setObjectName( newName );
-    parent->getTabWidget()->setTabText( parent->getTabWidget()->currentIndex(),
-                                             newName );
+    parent->setTabText( parent->currentIndex(), newName );
 }

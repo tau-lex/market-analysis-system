@@ -18,12 +18,12 @@ struct Settings {
 
 struct ConfigMT4 {
     ConfigMT4(QString name) : nameKit( name ) {
-        setModels(); setSymbolsOfTime();
+        setPath(); setModels(); setSymbolsOfTime();
     }
     ~ConfigMT4() { }
     QString nameKit;
     QString kitPath;
-    QString mt4Path = "C:/Program Files (x86)/STForex MetaTrader 4"; // default "C:\\"
+    QString mt4Path = "C:/";
     QString server;
     QString historyPath = "/history/"; // default ?
     const QString configFile = "/MQL4/Files/mas_mt4.conf";
@@ -41,8 +41,9 @@ struct ConfigMT4 {
     qint32 divideInstances[3] = { 60, 20, 20 };
     //QDateTime lastTraining;
     bool isLoaded = false;
-    bool isRun = false;
+    bool isReady = false;
     bool isTrained = false;
+    bool isRun = false;
     qint32 progress = 0;
     QStringList servers;
     QStringList symbols;
@@ -50,8 +51,10 @@ struct ConfigMT4 {
     QStringList trainingModels;
 //===========Functions==============================
     void rename(const QString newName) {
-        renamePath( newName );
-        nameKit = newName;
+        if( nameKit != newName ) {
+            renamePath( newName );
+            nameKit = newName;
+        }
     }
     void remove() {
 //        if( !QDir().exists(kitPath) )
@@ -64,7 +67,7 @@ struct ConfigMT4 {
         return false;
     }
     void updateServerParameters() {
-        setPath();
+        //setPath();
         setServer();
         setSymbols();
     }
@@ -89,6 +92,8 @@ private:
         //    throw;
     }
     void setServer(void) {
+        if( mt4Path.size() <= 5 )
+            return;
         QDir path( QString("%1%2").arg( mt4Path, "/history" ) );
         QStringList files = path.entryList( QDir::Dirs );
         files.removeOne( "default" );
@@ -100,9 +105,11 @@ private:
         files.removeOne( ".." );
         servers = files;
         if( server == "" )
-            server = servers.first();
+            if( !server.isEmpty() )
+                server = servers.first();
     }
     void setSymbols(void) {
+        symbols.clear();
         // read mas_mt4.conf
         symbols.append("EURUSD.pro");
         symbols.append("GBPUSD.pro");
@@ -118,6 +125,7 @@ private:
         symbolsOfTime.append("YEAR");
         symbolsOfTime.append("MONTH");
         symbolsOfTime.append("DAY");
+        symbolsOfTime.append("YEARDAY");
         symbolsOfTime.append("HOUR");
         symbolsOfTime.append("MINUTE");
         symbolsOfTime.append("WEEKDAY");

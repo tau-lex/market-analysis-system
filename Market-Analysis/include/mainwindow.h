@@ -23,9 +23,9 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     struct KitTabWidget {
-        KitTabWidget(MainWindow *parent = 0, QString name = "");
+        KitTabWidget(QTabWidget *parent = 0, QString name = "");
         ~KitTabWidget();
-        MainWindow      *parent;
+        QTabWidget      *parent;
         QString         name;
         QWidget         *kitTab;
         QLabel          *nameKitName;

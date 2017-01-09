@@ -18,6 +18,7 @@ SOURCES += src/main.cpp \
         src/mainwindow.cpp \
         src/settingsform.cpp \
         src/kitconfigform.cpp \
+        src/openkitdialog.cpp \
         src/presenter.cpp \
         src/settingsmas.cpp \
         src/marketassaykit.cpp \
@@ -30,6 +31,7 @@ SOURCES += src/main.cpp \
 HEADERS += include/mainwindow.h \
         include/settingsform.h \
         include/kitconfigform.h \
+        include/openkitdialog.h \
         include/presenter.h \
         include/settingsstruct.h \
         include/settingsmas.h \
@@ -42,7 +44,8 @@ HEADERS += include/mainwindow.h \
 
 FORMS += mainwindow.ui \
         settingsform.ui \
-        kitconfigform.ui
+        kitconfigform.ui \
+        openkitdialog.ui
 
 win32-g++{
     QMAKE_LFLAGS += -static-libgcc

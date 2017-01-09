@@ -6,6 +6,7 @@ SettingsForm::SettingsForm(QWidget *parent) :
     ui(new Ui::SettingsForm)
 {
     ui->setupUi(this);
+    this->setWindowTitle( tr("Program settings") );
 }
 
 SettingsForm::~SettingsForm()
@@ -13,7 +14,7 @@ SettingsForm::~SettingsForm()
     delete ui;
 }
 
-void SettingsForm::setSettingsPtr(Settings *settings)
+void SettingsForm::setSettingsPtr(Settings *sett)
 {
-
+    settings = sett;
 }

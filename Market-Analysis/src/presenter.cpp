@@ -10,17 +10,15 @@
 Presenter::Presenter(QObject *parent) : QObject(parent),
     settings(new Settings),
     mainWindow(new MainWindow),
-    settingsForm(new SettingsForm),
-    kitConfigForm(new KitConfigForm)
+    settingsForm(new SettingsForm(mainWindow)),
+    kitConfigForm(new KitConfigForm(mainWindow)),
+    openKitDialog(new OpenKitDialog(mainWindow))
 {
     setConnections();
     loadSettings();
     settingsForm->setSettingsPtr( settings );
-    //kitConfigForm->setSettingsPtr( settings );
-    foreach( QString kit, settings->sessionList ) {
+    foreach( QString kit, settings->sessionList )
         openMAKit( kit );
-        qDebug() << kit ;
-    }
 }
 
 Presenter::~Presenter()
@@ -33,6 +31,7 @@ Presenter::~Presenter()
         //delete i.value()->tabKit;
         delete i.value();
     }
+    delete openKitDialog;
     delete kitConfigForm;
     delete settingsForm;
     delete mainWindow;
@@ -64,38 +63,44 @@ void Presenter::setCurrentKit(const QString name)
 {
     currentKit = name;
     kitConfigForm->setConfigMt4Ptr( mapKits[currentKit]->configKit );
-    updateActionsButtons( name );
+    updateTab( name );
 }
 
 void Presenter::newMAKit(void)
 {
-    QString name = tr("New Market Kit");
     qint32 idx = 1;
+    QString name = tr("New Market Kit (%1)").arg( idx );
     while( settings->savedKitsList.contains(name) ) {
         idx += 1;
         name = tr("New Market Kit (%1)").arg( idx );
     }
     mapKits[name] = new Trio( this, mainWindow, name );
     setConnections( name );
-    updateTab( name );
+    loadMAKit( name );
     mainWindow->addNewTab( name, mapKits[name]->tabKit );
+    settings->savedKitsList.append( name );
+    settings->sessionList.append( name );
+    setCurrentKit( name );
 }
 
 void Presenter::openDialog()
 {
-    openMAKit( "default" );
-    // question what open
+    openKitDialog->show( settings->savedKitsList );
 }
 
 void Presenter::openMAKit(QString name)
 {
-    if( !settings->savedKitsList.contains( name ) && name != "default" )
+    if( !settings->savedKitsList.contains( name ) || name == "" )
         return;
     mapKits[name] = new Trio( this, mainWindow, name );
     setConnections( name );
     loadMAKit( name );
-    updateTab( name );
     mainWindow->addNewTab( name, mapKits[name]->tabKit );
+    if( !settings->savedKitsList.contains(name) )
+        settings->savedKitsList.append( name );
+    if( !settings->sessionList.contains( name ) )
+        settings->sessionList.append( name );
+    setCurrentKit( name );
 }
 
 void Presenter::closeMAKit(const QString name)
@@ -103,12 +108,10 @@ void Presenter::closeMAKit(const QString name)
     saveMAKit( name );
     mainWindow->deleteTabConnections( mapKits[name]->tabKit );
     deleteConnections( name );
-    delete mapKits[name]->configKit;
-    mapKits[name]->configKit = 0;
-    delete mapKits[name]->itemMAKit;
-    mapKits[name]->itemMAKit = 0;
-    delete mapKits[name]->tabKit;
-    mapKits[name]->tabKit = 0;
+    delete mapKits[name];
+    mapKits[name] = 0;
+    mapKits.erase( mapKits.find( name ) );
+    settings->sessionList.removeOne( name );
 }
 
 void Presenter::renameMAKit(const QString oldName, const QString newName)
@@ -116,48 +119,57 @@ void Presenter::renameMAKit(const QString oldName, const QString newName)
     if( oldName == newName )
         return;
     mapKits[newName] = mapKits[oldName];
+    SettingsMAS::Instance().deleteMAKit( mapKits[oldName]->configKit );
     mapKits[oldName] = 0;
     mapKits.erase( mapKits.find( oldName ) );
     mapKits[newName]->configKit->rename( newName );
     mapKits[newName]->tabKit->rename( newName );
-    //saveMAKit( newName );
-    SettingsMAS::Instance().deleteMAKit( oldName );
+    saveMAKit( newName );
+    settings->savedKitsList.append( newName );
+    settings->savedKitsList.removeOne( oldName );
+    settings->sessionList.append( newName );
+    settings->sessionList.removeOne( oldName );
     //updateTab( newName );
 }
 
 void Presenter::deleteMAKit(const QString name)
 {
+    SettingsMAS::Instance().deleteMAKit( mapKits[name]->configKit );
     closeMAKit( name );
-    SettingsMAS::Instance().deleteMAKit( name );
-    delete mapKits[name];
-    mapKits[name] = 0;
-    mapKits.erase( mapKits.find( name ) );
 }
 
 void Presenter::runTraining(const QString name)
 {
     mapKits[name]->configKit->isRun = true;
     emit mapKits[name]->itemMAKit->runTraining();
+    updateTab( name );
 }
 
 void Presenter::runWork(const QString name)
 {
     mapKits[name]->configKit->isRun = true;
     emit mapKits[name]->itemMAKit->runPrediction();
+    updateTab( name );
 }
 
 void Presenter::stopWork(const QString name)
 {
     mapKits[name]->configKit->isRun = false;
     emit mapKits[name]->itemMAKit->stop();
+    updateTab( name );
 }
 
 void Presenter::updateTab(const QString name)
 {
     MainWindow::KitTabWidget *tab = mapKits[name]->tabKit;
     ConfigMT4 *config = mapKits[name]->configKit;
-    tab->name = config->nameKit;
-    tab->nameKitName->setText( config->nameKit );
+    QString nname = name; // const fix
+    if( tab->name != config->nameKit ||
+            tab->nameKitName->text() != config->nameKit ) {
+        renameMAKit( tab->name, config->nameKit );
+        nname = config->nameKit; // here
+    }
+    tab->nameKitName->setText( nname );
     tab->serverName->setText( config->server );
     tab->pathToMt4Name->setText( config->mt4Path );
     tab->inputListView->clear();
@@ -175,10 +187,11 @@ void Presenter::updateTab(const QString name)
                               .arg( config->depthPrediction * config->output.size() ) );
     tab->progressBar->setValue( config->progress );
     tab->configurationButton->setEnabled( !config->isRun );
-    tab->trainingButton->setEnabled( !config->isRun );
+    tab->trainingButton->setEnabled( !config->isRun ? config->isReady : false );
     tab->workButton->setEnabled( !config->isRun ? config->isTrained : false );
     tab->stopButton->setEnabled( config->isRun );
     tab->deleteButton->setEnabled( !config->isRun );
+    updateActionsButtons( nname );
 }
 
 void Presenter::loadSettings()
@@ -189,6 +202,7 @@ void Presenter::loadSettings()
 void Presenter::saveSettings()
 {
     SettingsMAS::Instance().save( settings );
+    qDebug() << "saveSettings()" ;
 }
 
 void Presenter::loadMAKit(const QString name)
@@ -201,23 +215,12 @@ void Presenter::saveMAKit(const QString name)
     SettingsMAS::Instance().save( mapKits[name]->configKit );
 }
 
-//void Presenter::loadKits(const QStringList &list)
-//{
-//    foreach( auto &kit, list )
-//        loadMAKit( kit );
-//}
-
-//void Presenter::saveKits(const QStringList &list)
-//{
-//    foreach( auto &kit, list )
-//        saveMAKit( kit );
-//}
-
 void Presenter::updateActionsButtons(const QString name)
 {
     bool actions[5];
     actions[0] = !mapKits[name]->configKit->isRun;//config
-    actions[1] = !mapKits[name]->configKit->isRun;//start training
+    actions[1] = !mapKits[name]->configKit->isRun  ?
+                mapKits[name]->configKit->isReady : false;//start training
     actions[2] = !mapKits[name]->configKit->isRun ?
                 mapKits[name]->configKit->isTrained : false;//start forecasting
     actions[3] = mapKits[name]->configKit->isRun;//stop
@@ -247,7 +250,12 @@ void Presenter::setConnections()
     connect( mainWindow, SIGNAL( stopWorkKit(QString) ),
              this, SLOT( stopWork(QString) ) );
     connect( mainWindow, SIGNAL( closeWindow() ), this, SLOT( closeWindow() ) );
-    connect( kitConfigForm, SIGNAL( saved(QString) ), this, SLOT( updateTab(QString) ) );
+    connect( kitConfigForm, SIGNAL( saved(QString) ),
+             this, SLOT( saveMAKit(QString) ) );
+    connect( kitConfigForm, SIGNAL( savedUpd(QString) ),
+             this, SLOT( updateTab(QString) ) );
+    connect( openKitDialog, SIGNAL( openKit(QString) ),
+             this, SLOT( openMAKit(QString) ) );
 }
 
 void Presenter::setConnections(const QString name)
@@ -272,22 +280,23 @@ void Presenter::deleteConnections(const QString name)
 
 void Presenter::closeWindow()
 {
-    if(QMessageBox::No == QMessageBox::question( mainWindow,
-                                                 tr("Close Market Analysis System?"),
-                                                 tr("Are you sure that you want to close program?"),
-                                                 QMessageBox::Yes,
-                                                 QMessageBox::No ) ) {
+    if( QMessageBox::No == QMessageBox::question( mainWindow,
+                                                  tr("Close Market Analysis System?"),
+                                                  tr("Are you sure that you want to close program?"),
+                                                  QMessageBox::Yes,
+                                                  QMessageBox::No ) ) {
         return;
     }
+    saveSettings();
     QApplication::closeAllWindows();
     QApplication::exit();
 }
 
-Presenter::Trio::Trio(QObject *parent1, MainWindow *parent2, QString name)
+Presenter::Trio::Trio(Presenter *parent1, MainWindow *parent2, QString name)
 {
     configKit = new ConfigMT4( name );
     itemMAKit = new MarketAssayKit( parent1, configKit );
-    tabKit = new MainWindow::KitTabWidget( parent2, name );
+    tabKit = new MainWindow::KitTabWidget( parent2->getTabWidget(), name );
 }
 
 Presenter::Trio::~Trio()

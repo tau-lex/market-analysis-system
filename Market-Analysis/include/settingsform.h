@@ -14,7 +14,7 @@ class SettingsForm : public QDialog
 public:
     explicit SettingsForm(QWidget *parent = 0);
     ~SettingsForm();
-    void setSettingsPtr(Settings *settings);
+    void setSettingsPtr(Settings *sett);
 
 private:
     Ui::SettingsForm *ui;
