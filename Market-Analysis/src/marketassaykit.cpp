@@ -13,6 +13,7 @@ MarketAssayKit::MarketAssayKit(QObject *parent, ConfigMT4 *cfg) :
 MarketAssayKit::~MarketAssayKit()
 {
     maThread.exit();
+    maThread.wait();
 }
 
 void MarketAssayKit::setConnections()
