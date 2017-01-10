@@ -2,7 +2,6 @@
 #include <QApplication>
 #include <QDir>
 
-
 void ConfigMT4::rename(const QString newName) {
     if( nameKit != newName ) {
         renamePath( newName );
@@ -10,9 +9,20 @@ void ConfigMT4::rename(const QString newName) {
     }
 }
 
-void ConfigMT4::remove() {
-    QDir rm( kitPath );
-    rm.removeRecursively();
+void ConfigMT4::removePath(QString path) {
+    QDir dir( path );
+    QStringList lstDirs = dir.entryList( QDir::Dirs|QDir::AllDirs|QDir::NoDotAndDotDot );
+    QStringList lstFiles = dir.entryList(QDir::Files);
+    foreach( QString entry, lstFiles ) {
+        QString entryAbsPath = dir.absolutePath() + "/" + entry;
+        QFile::setPermissions(entryAbsPath, QFile::ReadOwner | QFile::WriteOwner);
+        QFile::remove(entryAbsPath);
+    }
+    foreach (QString entry, lstDirs) {
+        QString entryAbsPath = dir.absolutePath() + "/" + entry;
+        removePath( entryAbsPath );
+    }
+    QDir().rmdir( dir.absolutePath() );
 }
 
 bool ConfigMT4::isTimeSymbol(QString symbol) {
@@ -23,7 +33,6 @@ bool ConfigMT4::isTimeSymbol(QString symbol) {
 }
 
 void ConfigMT4::updateServerParameters() {
-    //setPath();
     setServer();
     setSymbols();
 }
@@ -43,6 +52,7 @@ void ConfigMT4::renamePath(const QString newName) {
     mDir2 += newName;
     if( !QDir().exists(kitPath) )
         QDir().rename( kitPath, mDir2 );
+    removePath( kitPath );
     kitPath = mDir2;
 }
 
@@ -88,13 +98,13 @@ void ConfigMT4::setSymbolsOfTime() {
     symbolsOfTime.append("WEEKDAY");
 }
 
-void ConfigMT4::setModels() {
-    trainingModels.append( "Random Search" );
-    trainingModels.append( "Gradient Descent" );
-    trainingModels.append( "Newton Method" );
-    trainingModels.append( "Conjugate Gradient" );
-    trainingModels.append( "Quasi Newton Method" );
-    trainingModels.append( "Evolutionary Algorithm" );
-    trainingModels.append( "Levenberg Marquardt Algorithm" );
-    trainingModel = "Quasi Newton Method";
+void ConfigMT4::setTrainingMethods() {
+    trainingMethods.append( "Random Search" );
+    trainingMethods.append( "Gradient Descent" );
+    trainingMethods.append( "Newton Method" );
+    trainingMethods.append( "Conjugate Gradient" );
+    trainingMethods.append( "Quasi Newton Method" );
+    trainingMethods.append( "Evolutionary Algorithm" );
+    trainingMethods.append( "Levenberg Marquardt Algorithm" );
+    trainingMethod = "Quasi Newton Method";
 }
