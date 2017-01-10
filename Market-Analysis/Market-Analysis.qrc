@@ -46,5 +46,7 @@
         <file>img/clipboard_pencil_64.png</file>
         <file>img/statistics2_64.png</file>
         <file>img/statistics2_diagram_64.png</file>
+        <file>mql/MAS_Assistant.mq4</file>
+        <file>mql/MAS_Autotrading.mq4</file>
     </qresource>
 </RCC>
