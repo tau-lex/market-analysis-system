@@ -16,40 +16,42 @@ struct Settings {
 
 struct ConfigMT4 {
     ConfigMT4(QString name) : nameKit( name ) {
-        setPath(); setModels(); setSymbolsOfTime();
+        setPath(); setTrainingMethods(); setSymbolsOfTime();
     }
     ~ConfigMT4() { }
     QString         nameKit;
     QString         kitPath;
     QString         mt4Path = "C:/";
     QString         server;
+    QStringList     servers;
+    QStringList     symbols;
+    QStringList     symbolsOfTime;
+    QStringList     trainingMethods;
     QString         historyPath = "/history/"; // default ?
     const QString   configFile = "/MQL4/Files/mas_mt4.conf";
     const QString   newHistoryPath = "/MQL4/Files/MAS_MarketData/h";
     const QString   predictionPath = "/MQL4/Files/MAS_Prediction/p";
+    // Model parameters
     QList<qint32>   periods;
-    bool            volumeIn = false;
     QStringList     input;
     QStringList     output;
+    bool            recurrentModel = false;
+    bool            readVolume = false;
     qint32          depthHistory = 1;
     qint32          depthPrediction = 1;
     qint32          layersCount = 1;
-    qint32          layersSize[10] = { 10 };
-    QString         trainingModel;
-    qint32          divideInstances[3] = { 60, 20, 20 };
+    QList<qint32>   layersSize = { 9, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    QString         trainingMethod;
+    QList<qint32>   divideInstances = { 60, 20, 20 };
     QDateTime       lastTraining;
+    qint32          progress = 0;
     bool            isLoaded = false;
     bool            isReady = false;
     bool            isTrained = false;
     bool            isRun = false;
-    qint32          progress = 0;
-    QStringList     servers;
-    QStringList     symbols;
-    QStringList     symbolsOfTime;
-    QStringList     trainingModels;
 //===========Functions==============================
     void rename(const QString newName);
-    void remove();
+    void removePath(QString path);
     bool isTimeSymbol(QString symbol);
     void updateServerParameters();
 private:
@@ -58,7 +60,7 @@ private:
     void setServer(void);
     void setSymbols(void);
     void setSymbolsOfTime(void);
-    void setModels(void);
+    void setTrainingMethods(void);
 };
 
 #endif // SETTINGSSTRUCT_H

@@ -5,8 +5,6 @@
 #include <QMap>
 #include <QMessageBox>
 
-#include <QDebug>
-
 Presenter::Presenter(QObject *parent) : QObject(parent),
     settings(new Settings),
     mainWindow(new MainWindow),
@@ -26,9 +24,6 @@ Presenter::~Presenter()
     QMapIterator<QString, Trio *> i(mapKits);
     while( i.hasNext() ) {
         i.next();
-        //delete i.value()->configKit;
-        //delete i.value()->itemMAKit;
-        //delete i.value()->tabKit;
         delete i.value();
     }
     delete openKitDialog;
@@ -135,7 +130,13 @@ void Presenter::renameMAKit(const QString oldName, const QString newName)
 void Presenter::deleteMAKit(const QString name)
 {
     SettingsMAS::Instance().deleteMAKit( mapKits[name]->configKit );
-    closeMAKit( name );
+    mainWindow->deleteTabConnections( mapKits[name]->tabKit );
+    deleteConnections( name );
+    delete mapKits[name];
+    mapKits[name] = 0;
+    mapKits.erase( mapKits.find( name ) );
+    settings->session.removeOne( name );
+    settings->savedKits.removeOne( name );
 }
 
 void Presenter::runTraining(const QString name)
@@ -202,7 +203,6 @@ void Presenter::loadSettings()
 void Presenter::saveSettings()
 {
     SettingsMAS::Instance().save( settings );
-    qDebug() << "saveSettings()" ;
 }
 
 void Presenter::loadMAKit(const QString name)
@@ -219,13 +219,21 @@ void Presenter::updateActionsButtons(const QString name)
 {
     bool actions[5];
     actions[0] = !mapKits[name]->configKit->isRun;//config
-    actions[1] = !mapKits[name]->configKit->isRun  ?
+    actions[1] = !mapKits[name]->configKit->isRun ?
                 mapKits[name]->configKit->isReady : false;//start training
     actions[2] = !mapKits[name]->configKit->isRun ?
                 mapKits[name]->configKit->isTrained : false;//start forecasting
     actions[3] = mapKits[name]->configKit->isRun;//stop
     actions[4] = !mapKits[name]->configKit->isRun;//delete
     mainWindow->updateActions( actions );
+}
+
+void Presenter::runTerminal(const QString name)
+{
+    QString terminal;
+    terminal += mapKits[name]->configKit->mt4Path;
+    terminal += "/terminal.exe";
+    // run mt4 + mas_assistant
 }
 
 void Presenter::setConnections()
@@ -254,6 +262,8 @@ void Presenter::setConnections()
              this, SLOT( saveMAKit(QString) ) );
     connect( kitConfigForm, SIGNAL( savedUpd(QString) ),
              this, SLOT( updateTab(QString) ) );
+    connect( kitConfigForm, SIGNAL( updateSymbols(ConfigMT4*) ),
+             &SettingsMAS::Instance(), SLOT( loadMt4Conf(ConfigMT4*) ) );
     connect( openKitDialog, SIGNAL( openKit(QString) ),
              this, SLOT( openMAKit(QString) ) );
 }

@@ -33,6 +33,7 @@ private slots:
     void updateUi(void);
     void checkTerminalPath(void);
     void on_mt4PathButton_clicked();
+    void on_runTerminalButton_clicked();
     void on_addSymbolButton_clicked();
     void on_deleteButton_clicked();
     void on_upButton_clicked();
@@ -40,9 +41,13 @@ private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
     void save(void);
     bool isReady(void);
+    qint32 sumInput(void);  //?
+    qint32 sumOutput(void); //?
     void accept();
 
 signals:
+    void updateSymbols(ConfigMT4 *);
+    void runTerminalBtn(QString);
     void savedUpd(QString);
     void saved(QString);
 };

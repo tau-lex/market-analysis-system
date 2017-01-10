@@ -56,6 +56,7 @@ private slots:
     void loadMAKit(const QString name);
     void saveMAKit(const QString name);
     void updateActionsButtons(const QString name);
+    void runTerminal(const QString name);       // ?
     void setConnections(void);
     void setConnections(const QString name);    // ?
     void deleteConnections(const QString name); // ?

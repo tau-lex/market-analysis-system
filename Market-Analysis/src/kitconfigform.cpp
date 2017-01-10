@@ -49,14 +49,14 @@ void KitConfigForm::setUpComboBoxes(void)
 void KitConfigForm::setUpDinamicComboBoxes(void)
 {
     ui->trainingStrategyCBox->clear();
-    foreach( auto method, configKit->trainingModels )
+    foreach( QString method, configKit->trainingMethods )
         ui->trainingStrategyCBox->addItem( method, method );
-    ui->trainingStrategyCBox->setCurrentText( configKit->trainingModel );
+    ui->trainingStrategyCBox->setCurrentText( configKit->trainingMethod );
     ui->symbolCBox->clear();
-    foreach( auto symbol, configKit->symbols )
+    foreach( QString symbol, configKit->symbols )
         ui->symbolCBox->addItem( symbol, symbol );
     ui->serverCBox->clear();
-    foreach( auto server, configKit->servers )
+    foreach( QString server, configKit->servers )
         ui->serverCBox->addItem( server, server );
     ui->serverCBox->setCurrentText( configKit->server );
 }
@@ -68,39 +68,33 @@ void KitConfigForm::updateUi(void)
     ui->mt4PathEdit->setText( configKit->mt4Path );
     checkTerminalPath();
     setUpDinamicComboBoxes();
-    tempPeriods = configKit->periods;
     ui->dataAllocationLEdit->setText( QString("%1%, %2%, %3%")
                                       .arg( configKit->divideInstances[0] )
                                       .arg( configKit->divideInstances[1] )
                                       .arg( configKit->divideInstances[2] ) );
     ui->layerCountLEdit->setText( QString("%1").arg( configKit->layersCount ) );
     ui->layersSizeLEdit->setText( tr("%1,%2,%3,%4,%5,%6,%7,%8,%9,%10")
-                                  .arg( configKit->layersSize[0] )
-                                  .arg( configKit->layersSize[1] )
-                                  .arg( configKit->layersSize[2] )
-                                  .arg( configKit->layersSize[3] )
-                                  .arg( configKit->layersSize[4] )
-                                  .arg( configKit->layersSize[5] )
-                                  .arg( configKit->layersSize[6] )
-                                  .arg( configKit->layersSize[7] )
-                                  .arg( configKit->layersSize[8] )
-                                  .arg( configKit->layersSize[9] ) );
+                                  .arg( configKit->layersSize.at(0) )
+                                  .arg( configKit->layersSize.at(1) )
+                                  .arg( configKit->layersSize.at(2) )
+                                  .arg( configKit->layersSize.at(3) )
+                                  .arg( configKit->layersSize.at(4) )
+                                  .arg( configKit->layersSize.at(5) )
+                                  .arg( configKit->layersSize.at(6) )
+                                  .arg( configKit->layersSize.at(7) )
+                                  .arg( configKit->layersSize.at(8) )
+                                  .arg( configKit->layersSize.at(9) ) );
+    tempPeriods = configKit->periods;
     ui->inputListWidget->clear();
     ui->inputListWidget->addItems( configKit->input );
     ui->outputListWidget->clear();
     ui->outputListWidget->addItems( configKit->output );
+    ui->recurrentNNChBox->setChecked( configKit->recurrentModel );
+    ui->readVolumeChBox->setChecked( configKit->readVolume );
     ui->depthInLEdit->setText( QString("%1").arg( configKit->depthHistory ) );
-    ui->inputCountLEdit->setText( tr("%1 * %2 = %3")
-                                  .arg( configKit->input.size() )
-                                  .arg( ui->depthInLEdit->text() )
-                                  .arg( configKit->input.size() *
-                                        ui->depthInLEdit->text().toInt() ) );
+    ui->inputCountLEdit->setText( QString("%1").arg( sumInput() ) );
     ui->depthOutLEdit->setText( QString("%1").arg( configKit->depthPrediction ) );
-    ui->outputCountLEdit->setText( tr("%1 * %2 = %3")
-                                   .arg( configKit->output.size() )
-                                   .arg( ui->depthOutLEdit->text() )
-                                   .arg( configKit->output.size() *
-                                         ui->depthOutLEdit->text().toInt() ) );
+    ui->outputCountLEdit->setText( QString("%1").arg( sumOutput() ) );
 }
 
 void KitConfigForm::checkTerminalPath(void)
@@ -110,12 +104,16 @@ void KitConfigForm::checkTerminalPath(void)
     nameFilter << "*.exe";
     QStringList files = path.entryList( nameFilter, QDir::Files );
     QPalette pal = ui->mt4PathEdit->palette();
-    if( files.contains( "terminal.exe" ) )
+    if( files.contains( "terminal.exe" ) && files.contains( "metaeditor.exe" ) ) {
         pal.setColor( QPalette::Text, Qt::darkGreen );
-    else
+        configKit->updateServerParameters();
+        emit updateSymbols( configKit );
+        ui->runTerminalButton->setEnabled( true );
+    } else {
         pal.setColor( QPalette::Text, Qt::darkRed );
+        ui->runTerminalButton->setEnabled( false );
+    }
     ui->mt4PathEdit->setPalette( pal );
-    configKit->updateServerParameters();
 }
 
 void KitConfigForm::on_mt4PathButton_clicked()
@@ -127,7 +125,12 @@ void KitConfigForm::on_mt4PathButton_clicked()
     if( str != "" )
         configKit->mt4Path = str;
     ui->mt4PathEdit->setText( configKit->mt4Path );
-    checkTerminalPath();
+    updateUi();
+}
+
+void KitConfigForm::on_runTerminalButton_clicked()
+{
+    emit runTerminalBtn( configKit->nameKit );
 }
 
 void KitConfigForm::on_addSymbolButton_clicked()
@@ -220,7 +223,7 @@ void KitConfigForm::save(void)
     configKit->mt4Path = ui->mt4PathEdit->text();
     configKit->server = ui->serverCBox->currentText();
     configKit->historyPath = QString("/history/%1/").arg( configKit->server );
-    configKit->trainingModel = ui->trainingStrategyCBox->currentText();
+    configKit->trainingMethod = ui->trainingStrategyCBox->currentText();
     configKit->divideInstances[0] = ui->dataAllocationLEdit->text().mid(0, 2).toInt();
     configKit->divideInstances[1] = ui->dataAllocationLEdit->text().mid(5, 2).toInt();
     configKit->divideInstances[2] = ui->dataAllocationLEdit->text().mid(10, 2).toInt();
@@ -234,6 +237,8 @@ void KitConfigForm::save(void)
     configKit->output.clear();
     for( qint32 i = 0; i < ui->outputListWidget->count(); i++ )
         configKit->output.append( ui->outputListWidget->item( i )->text() );
+    configKit->recurrentModel = ui->recurrentNNChBox->isChecked();
+    configKit->readVolume = ui->readVolumeChBox->isChecked();
     configKit->depthHistory = ui->depthInLEdit->text().toInt();
     configKit->depthPrediction = ui->depthOutLEdit->text().toInt();
     configKit->isReady = isReady();
@@ -257,6 +262,16 @@ bool KitConfigForm::isReady(void)
             configKit->depthPrediction > 0 )
         return true;
     return false;
+}
+
+qint32 KitConfigForm::sumInput()
+{
+
+}
+
+qint32 KitConfigForm::sumOutput()
+{
+
 }
 
 void KitConfigForm::accept()

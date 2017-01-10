@@ -16,36 +16,24 @@ private:
     QSettings *global = 0;
     QSettings *kitFile = 0;
 
-private:
-    struct SettingsKeys {
-        const QString   globalGr = "Global/";
-        const QString   savedKit = globalGr + "Saved_Kits_";
-        const QString   savedSize = savedKit + "Size";
-        const QString   lastKit = globalGr + "Last_Session_";
-        const QString   lastSize = lastKit + "Size";
-        const QString   windowGr = "Window/";
-        const QString   maxTabs = windowGr + "Max_Tabs";
-        const QString   posX = windowGr + "Pos_X";
-        const QString   posY = windowGr + "Pos_Y";
-        const QString   sizeX = windowGr + "Size_X";
-        const QString   sizeY = windowGr + "Size_Y";
-    };
-    struct KitKeys {
-        const QString   mainKitGr;
-        const QString   nnKitGr;
-        const QString   mt4KitGr;
-    };
-    SettingsKeys        _s;
-    KitKeys             _k;
-
 public slots:
     void load(Settings *settings);
     void save(const Settings *settings);
     void load(ConfigMT4 *configKit);
     void save(const ConfigMT4 *configKit);
+    void loadMt4Conf(ConfigMT4 *configKit);
+    void saveMt4Conf(const ConfigMT4 *configKit);
     void deleteMAKit(ConfigMT4 *configKit);
 
 private slots:
+    void readArray(const QString &arrayName, const QString &valueName,
+                   QSettings *setups, QStringList &list);
+    void readArray(const QString &arrayName, const QString &valueName,
+                   QSettings *setups, QList<qint32> &list);
+    void writeArray(const QString &arrayName, const QString &valueName,
+                    QSettings *setups, const QStringList &list);
+    void writeArray(const QString &arrayName, const QString &valueName,
+                    QSettings *setups, const QList<qint32> &list);
     void loadDefault(ConfigMT4 *configKit);
     void clear(void);
 
