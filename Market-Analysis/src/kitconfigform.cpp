@@ -92,9 +92,9 @@ void KitConfigForm::updateUi(void)
     ui->recurrentNNChBox->setChecked( configKit->recurrentModel );
     ui->readVolumeChBox->setChecked( configKit->readVolume );
     ui->depthInLEdit->setText( QString("%1").arg( configKit->depthHistory ) );
-    ui->inputCountLEdit->setText( QString("%1").arg( sumInput() ) );
+    ui->inputCountLEdit->setText( QString("%1").arg( configKit->sumInput() ) );
     ui->depthOutLEdit->setText( QString("%1").arg( configKit->depthPrediction ) );
-    ui->outputCountLEdit->setText( QString("%1").arg( sumOutput() ) );
+    ui->outputCountLEdit->setText( QString("%1").arg( configKit->sumOutput() ) );
 }
 
 void KitConfigForm::checkTerminalPath(void)
@@ -108,7 +108,8 @@ void KitConfigForm::checkTerminalPath(void)
         pal.setColor( QPalette::Text, Qt::darkGreen );
         configKit->updateServerParameters();
         emit updateSymbols( configKit );
-        ui->runTerminalButton->setEnabled( true );
+        if( configKit->mt4Account > 0 )
+            ui->runTerminalButton->setEnabled( true );
     } else {
         pal.setColor( QPalette::Text, Qt::darkRed );
         ui->runTerminalButton->setEnabled( false );
@@ -262,16 +263,6 @@ bool KitConfigForm::isReady(void)
             configKit->depthPrediction > 0 )
         return true;
     return false;
-}
-
-qint32 KitConfigForm::sumInput()
-{
-
-}
-
-qint32 KitConfigForm::sumOutput()
-{
-
 }
 
 void KitConfigForm::accept()

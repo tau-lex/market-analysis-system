@@ -23,6 +23,7 @@ struct ConfigMT4 {
     QString         kitPath;
     QString         mt4Path = "C:/";
     QString         server;
+    qint32          mt4Account = 0;
     QStringList     servers;
     QStringList     symbols;
     QStringList     symbolsOfTime;
@@ -53,7 +54,9 @@ struct ConfigMT4 {
     void rename(const QString newName);
     void removePath(QString path);
     bool isTimeSymbol(QString symbol);
-    void updateServerParameters();
+    void updateServerParameters(void);
+    qint32 sumInput(void);
+    qint32 sumOutput(void);
 private:
     void setPath(void);
     void renamePath(const QString newName);

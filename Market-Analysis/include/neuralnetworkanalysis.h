@@ -16,20 +16,8 @@ public:
     explicit NeuralNetworkAnalysis(QObject *parent = 0);
     ~NeuralNetworkAnalysis();
 
-signals:
-    void trained(QString);
-    void progress(QString, qint32);
-    void message(QString, QString);
-
-public slots:
-    void runTraining();
-    void runPrediction();
-    void stop();
-    void setConfigKit(ConfigMT4 *cfg);
-
 private:
     ConfigMT4                       *config;
-    QString                         nameKit;
     qint32                          rowsDS = 1;
     qint32                          columnsDS = 0;
     qint64                          firstEntryTime;
@@ -39,24 +27,40 @@ private:
     NeuralNetwork                   *neuralNetwork;
     PerformanceFunctional           *performanceFunc;
     TrainingStrategy                *trainingStrategy;
-    Matrix<std::string>             inputsInfo;
-    Matrix<std::string>             targetsInfo;
-    Vector< Statistics<double> >    inputsStatistics;
-    Vector< Statistics<double> >    outputsStatistics;
+
+public slots:
+    void setConfigKit(ConfigMT4 *cfg);
+    void runTraining(void);
+    void runPrediction(void);
+    void stop(void);
 
 private slots:
-    void loadTrainedModel();
+    bool loadTrainedModel(void);
     void prepareDataSet(FileType historyType);
-    void prepareVariablesInfo();
-    void prepareInstances();
-    void prepareNeuralNetwork();
-    void preparePerformanceFunc();
-    void runTrainingNeuralNetwork();
-    void runWorkingProcess();
+    void prepareVariablesInfo(void);
+    void prepareInstances(void);
+    void prepareNeuralNetwork(void);
+    void preparePerformanceFunc(void);
+    void runTrainingNeuralNetwork(void);
+    void saveResultsTraining(void);
+    void runWorkingProcess(void);
 
-    inline bool checkSymbolIsTime(QString &symbol);
-    void getFirstEntryTime(QMap<QString, IMt4Reader *> &readers, qint64 &first, qint64 &last);
+    void loadHistoryFiles(QMap<QString, IMt4Reader *> &readers,
+                          QMap<QString, qint32> &iters,
+                          FileType historyType);
+    void loadDataToMatrixDS(const QMap<QString, IMt4Reader *> &readers,
+                            QMap<QString, qint32> &iters,
+                            Matrix<double> &matrixDS);
+    void getFirstEntryTime(const QMap<QString, IMt4Reader *> &readers,
+                           qint64 &first, qint64 &last);
+    double getDoubleTimeSymbol(const QString &symbol, const qint64 &timeCurrentIter);
     //void parseNNExeption();
+
+signals:
+    void trained(void);
+    void progress(qint32);
+    void message(QString);
+    void pause(qint32);
 };
 
 #endif // NEURALNETWORKANALYSIS_H

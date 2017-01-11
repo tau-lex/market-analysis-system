@@ -37,8 +37,10 @@ public slots:
     void openSettingsForm(void);
     void openKitConfigForm(const QString name);
     void errorMessage(const QString text);
+    void errorMessage(const QString name, const QString text);
     void setCurrentKit(const QString name);
 
+private slots:
     void newMAKit(void);
     void openDialog(void);
     void openMAKit(const QString name);
@@ -48,8 +50,10 @@ public slots:
     void runTraining(const QString name);
     void runWork(const QString name);
     void stopWork(const QString name);
+    void trainDone(const QString name);
+    void progress(const QString name);
+    void writeToConsole(const QString name, const QString text);
 
-private slots:
     void updateTab(const QString name);
     void loadSettings(void);
     void saveSettings(void);
@@ -64,10 +68,6 @@ private slots:
 
 signals:
     void updatedKit(QString);
-    void trainDone(QString);
-    void progress(QString, qint32);
-    void writeToConsole(QString, QString);
-    void error(QString, QString);
 };
 
 #endif // PRESENTER_H

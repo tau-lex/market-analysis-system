@@ -54,6 +54,11 @@ void Presenter::errorMessage(const QString text)
     QMessageBox::warning( mainWindow, tr("Program Error!"), text );
 }
 
+void Presenter::errorMessage(const QString name, const QString text)
+{
+    QMessageBox::warning( mainWindow, tr("Kit %1 Error!").arg( name ), text );
+}
+
 void Presenter::setCurrentKit(const QString name)
 {
     currentKit = name;
@@ -141,23 +146,36 @@ void Presenter::deleteMAKit(const QString name)
 
 void Presenter::runTraining(const QString name)
 {
-    mapKits[name]->configKit->isRun = true;
     emit mapKits[name]->itemMAKit->runTraining();
     updateTab( name );
 }
 
 void Presenter::runWork(const QString name)
 {
-    mapKits[name]->configKit->isRun = true;
     emit mapKits[name]->itemMAKit->runPrediction();
     updateTab( name );
 }
 
 void Presenter::stopWork(const QString name)
 {
-    mapKits[name]->configKit->isRun = false;
     emit mapKits[name]->itemMAKit->stop();
     updateTab( name );
+}
+
+void Presenter::trainDone(const QString name)
+{
+    updateTab( name );
+    //writeToConsole( name, tr("Training done!") );
+}
+
+void Presenter::progress(const QString name)
+{
+    mapKits[name]->tabKit->progressBar->setValue( mapKits[name]->configKit->progress );
+}
+
+void Presenter::writeToConsole(const QString name, const QString text)
+{
+    mapKits[name]->tabKit->consoleTextEdit->appendPlainText( QString("%1\n").arg( text ) );
 }
 
 void Presenter::updateTab(const QString name)
@@ -178,14 +196,8 @@ void Presenter::updateTab(const QString name)
     tab->outputListView->clear();
     tab->outputListView->addItems( config->output );
     // + calculate timeseries bars
-    tab->inputSize->setText( QString("%1 * %2 = %3")
-                             .arg( config->input.size() )
-                             .arg( config->depthHistory )
-                             .arg( config->depthHistory * config->input.size() ) );
-    tab->outputSize->setText( QString("%1 * %2 = %3")
-                              .arg( config->output.size() )
-                              .arg( config->depthPrediction )
-                              .arg( config->depthPrediction * config->output.size() ) );
+    tab->inputSize->setText( QString("%1").arg( config->sumInput() ) );
+    tab->outputSize->setText( QString("%1").arg( config->sumOutput() ) );
     tab->progressBar->setValue( config->progress );
     tab->configurationButton->setEnabled( !config->isRun );
     tab->trainingButton->setEnabled( !config->isRun ? config->isReady : false );
@@ -271,21 +283,21 @@ void Presenter::setConnections()
 void Presenter::setConnections(const QString name)
 {
     connect( mapKits[name]->itemMAKit, SIGNAL( trained(QString) ),
-             this, SIGNAL( trainDone(QString) ) );
-    connect( mapKits[name]->itemMAKit, SIGNAL( progress(QString, qint32) ),
-             this, SIGNAL( progress(QString, qint32) ) );
-    connect( mapKits[name]->itemMAKit, SIGNAL( message(QString,QString) ),
-             this, SIGNAL( writeToConsole(QString,QString) ) );
+             this, SLOT( trainDone(QString) ) );
+    connect( mapKits[name]->itemMAKit, SIGNAL( progress(QString) ),
+             this, SLOT( progress(QString) ) );
+    connect( mapKits[name]->itemMAKit, SIGNAL( message(QString, QString) ),
+             this, SLOT( writeToConsole(QString, QString) ) );
 }
 
 void Presenter::deleteConnections(const QString name)
 {
     disconnect( mapKits[name]->itemMAKit, SIGNAL( trained(QString) ),
-                this, SIGNAL( trainDone(QString) ) );
-    disconnect( mapKits[name]->itemMAKit, SIGNAL( progress(QString, qint32) ),
-                this, SIGNAL( progress(QString, qint32) ) );
-    disconnect( mapKits[name]->itemMAKit, SIGNAL( message(QString,QString) ),
-                this, SIGNAL( writeToConsole(QString,QString) ) );
+                this, SLOT( trainDone(QString) ) );
+    disconnect( mapKits[name]->itemMAKit, SIGNAL( progress(QString) ),
+                this, SLOT( progress(QString) ) );
+    disconnect( mapKits[name]->itemMAKit, SIGNAL( message(QString, QString) ),
+                this, SLOT( writeToConsole(QString, QString) ) );
 }
 
 void Presenter::closeWindow()

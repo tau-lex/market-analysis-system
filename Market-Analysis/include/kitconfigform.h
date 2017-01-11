@@ -41,8 +41,6 @@ private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
     void save(void);
     bool isReady(void);
-    qint32 sumInput(void);  //?
-    qint32 sumOutput(void); //?
     void accept();
 
 signals:

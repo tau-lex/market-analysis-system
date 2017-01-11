@@ -37,6 +37,34 @@ void ConfigMT4::updateServerParameters() {
     setSymbols();
 }
 
+qint32 ConfigMT4::sumInput()
+{
+    qint32 res = 0;
+    foreach( QString in, input ) {
+        if( isTimeSymbol( in ) ) {
+            res += 1;
+        } else {
+            res += recurrentModel ? 4 : 4 * depthHistory;
+            if( readVolume )
+                res += recurrentModel ? 1 : depthHistory;
+        }
+    }
+    return res;
+}
+
+qint32 ConfigMT4::sumOutput()
+{
+    qint32 res = 0;
+    foreach( QString out, output ) {
+        if( isTimeSymbol( out ) ) {
+            res += 1;
+        } else {
+            res += 3 * depthPrediction;
+        }
+    }
+    return res;
+}
+
 void ConfigMT4::setPath() {
     QString mDir = QApplication::applicationDirPath();
     mDir += "/Market Kits/";

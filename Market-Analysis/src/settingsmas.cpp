@@ -69,6 +69,7 @@ void SettingsMAS::load(ConfigMT4 *configKit)
     configKit->nameKit =            kitFile->value( "Kit_Name" ).toString();
     configKit->kitPath =            kitFile->value( "Kit_Path" ).toString();
     configKit->mt4Path =            kitFile->value( "Mt4_Path" ).toString();
+    configKit->mt4Account =         kitFile->value( "Mt4_Account" ).toInt();
     configKit->server =             kitFile->value( "Mt4_Server" ).toString();
     configKit->historyPath =        kitFile->value( "History_Path" ).toString();
     readArray( "Servers", "Srv", kitFile, configKit->servers );
@@ -105,6 +106,7 @@ void SettingsMAS::save(const ConfigMT4 *configKit)
     kitFile->setValue( "Kit_Name",         configKit->nameKit );
     kitFile->setValue( "Kit_Path",         configKit->kitPath );
     kitFile->setValue( "Mt4_Path",         configKit->mt4Path );
+    kitFile->setValue( "Mt4_Account",      configKit->mt4Account );
     kitFile->setValue( "Mt4_Server",       configKit->server );
     kitFile->setValue( "History_Path",     configKit->historyPath );
     writeArray( "Servers", "Srv", kitFile, configKit->servers );
@@ -136,6 +138,7 @@ void SettingsMAS::loadMt4Conf(ConfigMT4 *configKit)
     kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
+    configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
 //    configKit->servers.clear();
 //    readArray( "Servers", "Srv", kitFile, configKit->servers );
     configKit->symbols.clear();
@@ -241,6 +244,7 @@ void SettingsMAS::loadDefault(ConfigMT4 *configKit)
     configKit->input.append( "HOUR" );
     configKit->input.append( "WEEKDAY" );
     configKit->output.append("EURUSD.pro1440");
+    configKit->periods.append( 1440 );
 }
 
 void SettingsMAS::clear()
