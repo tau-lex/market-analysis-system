@@ -110,6 +110,7 @@ void KitConfigForm::checkTerminalPath(void)
         emit updateSymbols( configKit );
         if( configKit->mt4Account > 0 )
             ui->runTerminalButton->setEnabled( true );
+        setUpDinamicComboBoxes();
     } else {
         pal.setColor( QPalette::Text, Qt::darkRed );
         ui->runTerminalButton->setEnabled( false );
@@ -126,7 +127,7 @@ void KitConfigForm::on_mt4PathButton_clicked()
     if( str != "" )
         configKit->mt4Path = str;
     ui->mt4PathEdit->setText( configKit->mt4Path );
-    updateUi();
+    checkTerminalPath();
 }
 
 void KitConfigForm::on_runTerminalButton_clicked()

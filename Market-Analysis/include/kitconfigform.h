@@ -40,7 +40,7 @@ private slots:
     void on_downButton_clicked();
     void on_buttonBox_clicked(QAbstractButton *button);
     void save(void);
-    bool isReady(void);
+    bool isReady(void);             //?
     void accept();
 
 signals:

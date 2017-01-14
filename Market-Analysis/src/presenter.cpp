@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QMap>
 #include <QMessageBox>
+#include <QScrollBar>
 
 Presenter::Presenter(QObject *parent) : QObject(parent),
     settings(new Settings),
@@ -175,7 +176,9 @@ void Presenter::progress(const QString name)
 
 void Presenter::writeToConsole(const QString name, const QString text)
 {
-    mapKits[name]->tabKit->consoleTextEdit->appendPlainText( QString("%1\n").arg( text ) );
+    mapKits[name]->tabKit->consoleTextEdit->appendPlainText( QString("%1").arg( text ) );
+    QScrollBar *v = mapKits[name]->tabKit->consoleTextEdit->verticalScrollBar();
+    v->setValue( v->maximum() );
 }
 
 void Presenter::updateTab(const QString name)
