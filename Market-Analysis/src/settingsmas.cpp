@@ -139,9 +139,7 @@ void SettingsMAS::loadMt4Conf(ConfigMT4 *configKit)
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
     configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
-//    configKit->servers.clear();
 //    readArray( "Servers", "Srv", kitFile, configKit->servers );
-    configKit->symbols.clear();
     readArray( "Symbols", "Smb", kitFile, configKit->symbols );
     kitFile->endGroup();
     delete kitFile;
@@ -194,6 +192,7 @@ void SettingsMAS::deleteMAKit(ConfigMT4 *configKit)
 void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
                             QSettings *setups, QStringList &list)
 {
+    list.clear();
     qint32 size = setups->beginReadArray( arrayName );
     for( qint32 i = 0; i < size; i++ ) {
         setups->setArrayIndex( i );
@@ -205,6 +204,7 @@ void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
 void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
                             QSettings *setups, QList<qint32> &list)
 {
+    list.clear();
     qint32 size = setups->beginReadArray( arrayName );
     for( qint32 i = 0; i < size; i++ ) {
         setups->setArrayIndex( i );
