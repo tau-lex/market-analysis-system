@@ -122,8 +122,8 @@ void KitConfigForm::on_mt4PathButton_clicked()
 {
     QString str = "";
     str = QFileDialog::getExistingDirectory( this,
-                                      tr("Open the folder containing the Meta Trader 4:"),
-                                      configKit->mt4Path );
+                                             tr("Open the folder containing the Meta Trader 4:"),
+                                             configKit->mt4Path );
     if( str != "" )
         configKit->mt4Path = str;
     ui->mt4PathEdit->setText( configKit->mt4Path );

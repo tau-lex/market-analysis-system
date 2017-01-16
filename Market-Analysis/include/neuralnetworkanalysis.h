@@ -5,7 +5,7 @@
 #include "include/settingsstruct.h"
 #include "include/imt4reader.h"
 
-// include nn library
+// include opennn library
 #include "../opennn/opennn.h"
 using namespace OpenNN;
 
