@@ -2,6 +2,10 @@
 #define IMT4READER_H
 
 #include <QObject>
+// include opennn library
+#ifdef __OPENNN_H__
+#include "../opennn/matrix.h"
+#endif
 
 //+----------------TimeSeries Structures--------------------------------------+
 typedef struct Header       // Total 148 bytes
@@ -52,27 +56,31 @@ public:
     ~IMt4Reader();
 
 protected:
-    QString fileName;
-    bool fileExists;
-    FileType fileType;
-    qint32 historySize;
-    qint32 historyVersion;
+    QString         fileName;
+    bool            fileExists;
+    FileType        fileType;
+    Header          *header = 0;
+#ifndef __OPENNN_H__
+    QList<std::vector<double> > *history = 0;
+#else
+    OpenNN::Matrix<double> *history = 0;
+#endif
 
-    Header *header = 0;
-    std::vector<History *> *historyVector = 0;
-
-protected:
-
-public slots:
-    void setFileName(QString fName);
+public:
+    void setFileName(const QString fName);
     QString getFileName() const;
-    qint32 getHistorySize() const;
+    size_t getHistorySize() const;
     qint32 getHistoryVersion() const;
 
-    virtual bool readFromFile() = 0;
-    Header *getHeader();
+    virtual bool readFile() = 0;
+    Header *getHeader() const;
     QString getHeaderString() const;
-    std::vector<History*> *getHistoryVector();
+#ifndef __OPENNN_H__
+    QList<std::vector<double> > *getHistory() const;
+#else
+    OpenNN::Matrix<double> *getHistory() const;
+#endif
+    std::vector<double> getHistory(qint32 position) const;
     QString getHistoryString(qint32 position) const;
 };
 

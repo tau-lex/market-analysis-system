@@ -12,10 +12,10 @@ public:
 
 private:
     Header* readHeader(QFile &f);
-    History* readHistory(QFile &f);
+    std::vector<double> readHistoryLine(QFile &f);
 
-public slots:
-    bool readFromFile();
+public:
+    bool readFile();
 };
 
 #endif // CSVREADER_H

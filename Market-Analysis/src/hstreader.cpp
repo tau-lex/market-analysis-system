@@ -18,20 +18,17 @@ QDataStream& operator>>( QDataStream &out, Header &header )
     out >> header.Digits;
     out >> header.TimeSign;
     out >> header.LastSync;
-    // HeaderBytes.Unused
-    out.skipRawData(13 * 4);
+    out.skipRawData(13 * 4);        // HeaderBytes.Unused
     return out;
 }
 QDataStream& operator>>( QDataStream &out, History &history )
 {
-    out.setFloatingPointPrecision( QDataStream::DoublePrecision );
     out >> history.Time;
     out >> history.Open;
     out >> history.High;
     out >> history.Low;
     out >> history.Close;
     out >> history.Volume;
-    // Skip 12 bytes struct History
     out.skipRawData(12);
     //out >> history.Spread;
     //out >> history.RealVolume;
@@ -39,7 +36,6 @@ QDataStream& operator>>( QDataStream &out, History &history )
 }
 QDataStream& operator>>( QDataStream &out, History400 &history )
 {
-    out.setFloatingPointPrecision( QDataStream::DoublePrecision );
     out >> history.Time;
     out >> history.Open;
     out >> history.Low;
@@ -53,26 +49,40 @@ QDataStream& operator>>( QDataStream &out, History400 &history )
 HstReader::HstReader(QString fName) : IMt4Reader(fName)
 { }
 
-bool HstReader::readFromFile()
+bool HstReader::readFile()
 {
     QFile file(fileName, this);
     if( file.open(QIODevice::ReadOnly) ) {
         fileExists = true;
         QDataStream input(&file);
         input.setByteOrder(QDataStream::LittleEndian);
+        input.setFloatingPointPrecision( QDataStream::DoublePrecision );
         input >> *header;
-        historyVersion = header->Version;
+        quint32 len = header->Version == 400 ? 8 : 4;
+        bool h401 = header->Version == 401;
         while( !file.atEnd() ) {
-            if( historyVersion == 401 ) {
-                History *historyLine = new History;
-                input >> *historyLine;
-                historyVector->push_back( historyLine );
-            } else if( historyVersion == 400 ) {
-                History400 *historyLine = new History400;
-                input >> *historyLine;
-                historyVector400->push_back( historyLine );
-            }
-            historySize++;
+            std::vector<double> newRow;
+            char *buff = new char[8];
+            input.readRawData( buff, len );
+            newRow.push_back( static_cast<double>( static_cast<qint64>(*buff) ) );
+            input.readRawData( buff, 8 );
+            newRow.push_back( static_cast<double>(*buff) );
+            input.readRawData( buff, 8 );
+            newRow.push_back( static_cast<double>(*buff) );
+            input.readRawData( buff, 8 );
+            newRow.push_back( static_cast<double>(*buff) );
+            input.readRawData( buff, 8 );
+            newRow.push_back( static_cast<double>(*buff) );
+            input.readRawData( buff, 8 );
+            if( h401 )
+                newRow.push_back( static_cast<double>( static_cast<qint64>(*buff) ) );
+            else
+                newRow.push_back( static_cast<double>(*buff) );
+#ifndef __OPENNN_H__
+                history->append( newRow );
+#else
+                history->append_row( newRow );
+#endif
         }
         file.close();
         return fileExists;

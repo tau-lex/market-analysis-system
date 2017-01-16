@@ -8,12 +8,7 @@ class HstReader : public IMt4Reader
 {
 public:
     HstReader(QString fName);
-
-private:
-    std::vector<History400*> *historyVector400; // ?
-
-public slots:
-    bool readFromFile();
+    bool readFile();
 };
 
 #endif // HSTREADER_H
