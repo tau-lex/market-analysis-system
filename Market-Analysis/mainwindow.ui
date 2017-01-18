@@ -109,7 +109,6 @@
    </attribute>
    <addaction name="actionNew_Kit"/>
    <addaction name="actionOpen_Kit"/>
-   <addaction name="actionSave_Kit"/>
    <addaction name="separator"/>
    <addaction name="actionTrain_NN"/>
    <addaction name="actionStart_forecasting"/>
