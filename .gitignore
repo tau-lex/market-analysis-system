@@ -4,3 +4,4 @@ build-hst-reader-MinGW_32bit-Debug/
 Market-Analysis/_read bytes.txt
 *.autosave
 build-Market-Analysis-MSVC2015_64bit-Debug/
+build-Market-Analysis-MSVC2015_64bit-Release/
