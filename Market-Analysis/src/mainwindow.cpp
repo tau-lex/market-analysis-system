@@ -190,6 +190,7 @@ void MainWindow::setConnections()
              this, SLOT( delete_Kit() ) );
     connect( ui->actionHelp, SIGNAL( triggered(bool) ), this, SLOT( openHelp() ) );
     connect( ui->actionAbout, SIGNAL( triggered(bool) ), this, SLOT( openAbout() ) );
+    connect( ui->actionAbout_Qt, SIGNAL( triggered() ), qApp, SLOT( aboutQt() ) );
     connect( ui->actionExit, &QAction::triggered, this, &MainWindow::close );
     connect( ui->vTabWidget, SIGNAL( tabCloseRequested(int) ),
              this, SLOT( closeTab(qint32) ) );
