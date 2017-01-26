@@ -78,11 +78,7 @@ bool HstReader::readFile()
                 newRow.push_back( static_cast<double>( static_cast<qint64>(*buff) ) );
             else
                 newRow.push_back( static_cast<double>(*buff) );
-#ifndef __OPENNN_H__
                 history->append( newRow );
-#else
-                history->append_row( newRow );
-#endif
         }
         file.close();
         return fileExists;

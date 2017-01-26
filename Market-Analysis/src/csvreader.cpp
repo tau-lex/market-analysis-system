@@ -3,9 +3,6 @@
 #include <QString>
 #include <QByteArray>
 #include <QList>
-#ifdef __OPENNN_H__
-#include "../opennn/matrix.h"
-#endif
 
 //+---------------------------------------------------------------------------+
 CsvReader::CsvReader(QString fName) : IMt4Reader(fName)
@@ -65,11 +62,7 @@ bool CsvReader::readFile()
         header = readHeader( file );
         std::vector<double> newRow = readHistoryLine( file );
         while( newRow.size() != 0 ) {
-#ifndef __OPENNN_H__
             history->append( newRow );
-#else
-            history->append_row( newRow );
-#endif
             newRow = readHistoryLine( file );
         }
         file.close();

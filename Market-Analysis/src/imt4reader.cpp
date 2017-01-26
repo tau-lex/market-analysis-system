@@ -7,21 +7,13 @@ IMt4Reader::IMt4Reader(QObject *parent) : QObject(parent),
                                             fileName("")
 {
     header = new Header;
-#ifndef __OPENNN_H__
     history = new QList<std::vector<double> >;
-#else
-    history = new OpenNN::Matrix<double>;
-#endif
 }
 
 IMt4Reader::IMt4Reader(QString fName) : fileName(fName)
 {
     header = new Header;
-#ifndef __OPENNN_H__
     history = new QList<std::vector<double> >;
-#else
-    history = new OpenNN::Matrix<double>;
-#endif
 }
 
 IMt4Reader::~IMt4Reader()
@@ -44,11 +36,7 @@ QString IMt4Reader::getFileName() const
 
 size_t IMt4Reader::getHistorySize() const
 {
-#ifndef __OPENNN_H__
     return history->size();
-#else
-    return history->get_rows_number();
-#endif
 }
 
 qint32 IMt4Reader::getHistoryVersion() const
@@ -77,39 +65,22 @@ QString IMt4Reader::getHeaderString() const
     return "File not exists.";
 }
 
-#ifndef __OPENNN_H__
 QList<std::vector<double> > *IMt4Reader::getHistory() const
 {
     return history;
 }
-#else
-OpenNN::Matrix<double> *IMt4Reader::getHistory() const
-{
-    return history;
-}
-#endif
 
 std::vector<double> IMt4Reader::getHistory(qint32 position) const
 {
-#ifndef __OPENNN_H__
     return history->at( position );
-#else
-    return history->arrange_row( position );
-#endif
 }
 
 QString IMt4Reader::getHistoryString(qint32 position) const
 {
     if( fileExists ) {
-#ifndef __OPENNN_H__
         if( position >= history->size() )
             return "Position not valid.";
         std::vector<double> row = history->at( position );
-#else
-        if( position >= history->get_rows_number() )
-            return "Position not valid.";
-        std::vector<double> row = history->arrange_row( position );
-#endif
         QString out = QString("%1, %2, %3, %4, %5, %6")
                 .arg( QDateTime::fromTime_t( static_cast<qint64>(row[0]) )
                             .toString("yyyy.MM.dd hh:mm:ss") )
