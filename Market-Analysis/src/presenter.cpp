@@ -226,7 +226,7 @@ void Presenter::saveSettings()
 
 bool Presenter::loadMAKit(const QString name)
 {
-    bool SettingsMAS::Instance().load( mapKits[name]->configKit );
+    return SettingsMAS::Instance().load( mapKits[name]->configKit );
 }
 
 void Presenter::saveMAKit(const QString name)
