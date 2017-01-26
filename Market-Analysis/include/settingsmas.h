@@ -19,7 +19,7 @@ private:
 public slots:
     void load(Settings *settings);
     void save(const Settings *settings);
-    void load(ConfigMT4 *configKit);
+    bool load(ConfigMT4 *configKit);
     void save(const ConfigMT4 *configKit);
     void loadMt4Conf(ConfigMT4 *configKit);
     void saveMt4Conf(const ConfigMT4 *configKit);

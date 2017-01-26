@@ -46,7 +46,7 @@ void Presenter::openSettingsForm()
 
 void Presenter::openKitConfigForm(const QString name)
 {
-    name;
+    Q_UNUSED(name)
     kitConfigForm->show();
 }
 
@@ -75,13 +75,7 @@ void Presenter::newMAKit(void)
         idx += 1;
         name = tr("New Market Kit (%1)").arg( idx );
     }
-    mapKits[name] = new Trio( this, mainWindow, name );
-    setConnections( name );
-    loadMAKit( name );
-    mainWindow->addNewTab( name, mapKits[name]->tabKit );
-    settings->savedKits.append( name );
-    settings->session.append( name );
-    setCurrentKit( name );
+    openMAKit( name );
 }
 
 void Presenter::openDialog()
@@ -91,11 +85,21 @@ void Presenter::openDialog()
 
 void Presenter::openMAKit(QString name)
 {
-    if( !settings->savedKits.contains( name ) || name == "" )
+    if( name == "" )
+        return;
+    if( !settings->savedKits.contains(name) && !name.contains("New Market Kit") ) {
+        errorMessage( tr("Open %1 kit error! Can't open it.").arg(name) );
+        return;
+    }
+    if( settings->session.contains(name) && mapKits.contains(name) )
         return;
     mapKits[name] = new Trio( this, mainWindow, name );
     setConnections( name );
-    loadMAKit( name );
+    if( !loadMAKit( name ) ) {
+        deleteMAKit( name );
+        errorMessage( name, tr("Open %1 kit error! Config flash.").arg(name) );
+        return;
+    }
     mainWindow->addNewTab( name, mapKits[name]->tabKit );
     if( !settings->savedKits.contains(name) )
         settings->savedKits.append( name );
@@ -220,9 +224,9 @@ void Presenter::saveSettings()
     SettingsMAS::Instance().save( settings );
 }
 
-void Presenter::loadMAKit(const QString name)
+bool Presenter::loadMAKit(const QString name)
 {
-    SettingsMAS::Instance().load( mapKits[name]->configKit );
+    bool SettingsMAS::Instance().load( mapKits[name]->configKit );
 }
 
 void Presenter::saveMAKit(const QString name)

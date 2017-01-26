@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QVariant>
+#include <QDir>
 
 SettingsMAS::SettingsMAS(QObject *parent) : QObject(parent)
 {
@@ -57,14 +58,18 @@ void SettingsMAS::save(const Settings *settings)
     global->endGroup();
 }
 
-void SettingsMAS::load(ConfigMT4 *configKit)
+bool SettingsMAS::load(ConfigMT4 *configKit)
 {
     if( configKit->nameKit.contains( "New Market Kit" ) ) {
         loadDefault( configKit );
-        return;
+        return true;
     }
-    kitFile = new QSettings( QString("%1/%2").arg( configKit->kitPath )
-                             .arg( "config.ini" ), QSettings::IniFormat);
+    QString configFile = QString("%1/%2").arg( configKit->kitPath )
+                                         .arg( "config.ini" );
+    if( !QDir().exists(configFile) ) {
+        return false;
+    }
+    kitFile = new QSettings( configFile, QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
     configKit->nameKit =            kitFile->value( "Kit_Name" ).toString();
     configKit->kitPath =            kitFile->value( "Kit_Path" ).toString();
@@ -96,6 +101,7 @@ void SettingsMAS::load(ConfigMT4 *configKit)
     delete kitFile;
     kitFile = 0;
     loadMt4Conf( configKit );
+    return true;
 }
 
 void SettingsMAS::save(const ConfigMT4 *configKit)
