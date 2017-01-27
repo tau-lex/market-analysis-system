@@ -19,7 +19,7 @@ public:
 private:
     ConfigMT4                       *config;
     qint32                          rowsDS = 1;
-    qint32                          columnsDS = 0;
+    qint32                          columnsDS = 1;
     qint64                          firstEntryTime;
     qint64                          lastEntryTime;
     Matrix<double>                  *matrixDS;
@@ -48,9 +48,8 @@ private slots:
     void loadHistoryFiles(QMap<QString, IMt4Reader *> &readers,
                           QMap<QString, qint32> &iters,
                           FileType historyType);
-    void loadDataToMatrixDS(const QMap<QString, IMt4Reader *> &readers,
-                            QMap<QString, qint32> &iters,
-                            Matrix<double> &matrixDS);
+    void loadDataToDS(const QMap<QString, IMt4Reader *> &readers,
+                            QMap<QString, qint32> &iters);
     void getFirstEntryTime(const QMap<QString, IMt4Reader *> &readers,
                            qint64 &first, qint64 &last);
     double getDoubleTimeSymbol(const QString &symbol, const qint64 &timeCurrentIter);

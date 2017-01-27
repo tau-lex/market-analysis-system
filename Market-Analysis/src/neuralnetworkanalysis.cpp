@@ -46,15 +46,15 @@ void NeuralNetworkAnalysis::runTraining()
         config->isRun = true;
         prepareDataSet( FileType::HST );
         progress( 22 );
-        prepareVariablesInfo();
-        progress( 27 );
-        prepareInstances();
-        prepareNeuralNetwork();
-        preparePerformanceFunc();
-        progress( 32 );
-        runTrainingNeuralNetwork();
-        progress( 98 );
-        saveResultsTraining();
+//        prepareVariablesInfo();
+//        progress( 27 );
+//        prepareInstances();
+//        prepareNeuralNetwork();
+//        preparePerformanceFunc();
+//        progress( 32 );
+//        runTrainingNeuralNetwork();
+//        progress( 98 );
+//        saveResultsTraining();
         progress( 100 );
         config->isRun = false;
     } catch(qint32 e) {
@@ -120,6 +120,7 @@ void NeuralNetworkAnalysis::prepareDataSet(FileType historyType)
     matrixDS = new Matrix<double>;
 //==========Load history data=============================
     loadHistoryFiles( readers, iters, historyType );
+    progress( 5 );
     getFirstEntryTime( readers, firstEntryTime, lastEntryTime );
     message( tr("The data set belongs to the interval of time:\n \
                  \t%1 (%2 sec.) - %3 (%4 sec.)")
@@ -132,13 +133,13 @@ void NeuralNetworkAnalysis::prepareDataSet(FileType historyType)
     qint32 minPeriod = *std::min_element( config->periods.begin(), config->periods.end() );
     columnsDS = config->sumInput() + config->sumOutput();
     rowsDS = ( lastEntryTime - firstEntryTime ) / ( 60 * minPeriod );
-    matrixDS->set( rowsDS, columnsDS );
-    loadDataToMatrixDS( readers, iters, *matrixDS );
+//    loadDataToDS( readers, iters );
 //==========Save dataset & Clean readers================
-    if( matrixDS->get_rows_number() != rowsDS )
-        throw 23;
-    dataSet = new DataSet( matrixDS->get_rows_number(), matrixDS->get_columns_number() );
-    dataSet->set_data( *matrixDS );
+//    if( matrixDS->get_rows_number() != rowsDS )
+        message( tr("%1; %2.").arg( rowsDS ).arg( matrixDS->get_rows_number() ) );
+        //throw 23;
+//    dataSet = new DataSet( matrixDS->get_rows_number(), matrixDS->get_columns_number() );
+//    dataSet->set_data( *matrixDS );
     QMapIterator<QString, IMt4Reader *> i(readers);
     while( i.hasNext() ) {
         i.next();
@@ -357,7 +358,7 @@ void NeuralNetworkAnalysis::loadHistoryFiles(QMap<QString, IMt4Reader *> &reader
                                              .arg( config->mt4Path )
                                              .arg( config->newHistoryPath )
                                              .arg( symbol ) );
-        if( readers[symbol]->readFromFile() ) {
+        if( readers[symbol]->readFile() ) {
             message( tr("History file \"%1\" succeful loaded.")
                      .arg( readers[symbol]->getFileName() ) );
         } else {
@@ -366,12 +367,10 @@ void NeuralNetworkAnalysis::loadHistoryFiles(QMap<QString, IMt4Reader *> &reader
             throw 20;
         }
     }
-    progress( 5 );
 }
 
-void NeuralNetworkAnalysis::loadDataToMatrixDS(const QMap<QString, IMt4Reader *> &readers,
-                                               QMap<QString, qint32> &iters,
-                                               Matrix<double> &matrixDS)
+void NeuralNetworkAnalysis::loadDataToDS(const QMap<QString, IMt4Reader *> &readers,
+                                               QMap<QString, qint32> &iters)
 {
     qint32 idx, idxSym;
     qint32 sizeHist = config->recurrentModel ? 1 : config->depthHistory;
@@ -385,14 +384,14 @@ void NeuralNetworkAnalysis::loadDataToMatrixDS(const QMap<QString, IMt4Reader *>
             if( readers.contains(symbol) ) { //timeseries
                 for( idx = 0; idx < sizeHist; idx++ ) {
                     idxSym = (iters[symbol] - idx) >= 0 ? iters[symbol] - idx : 0;
-                    newRow.push_back( (*readers[symbol]->getHistoryVector())[idxSym]->Open );
-                    newRow.push_back( (*readers[symbol]->getHistoryVector())[idxSym]->High );
-                    newRow.push_back( (*readers[symbol]->getHistoryVector())[idxSym]->Low );
-                    newRow.push_back( (*readers[symbol]->getHistoryVector())[idxSym]->Close );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][1] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][2] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][3] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][4] );
                     if( config->readVolume )
-                        newRow.push_back( static_cast<double>((*readers[symbol]->getHistoryVector())[idxSym]->Volume) );
+                        newRow.push_back( static_cast<double>((*readers[symbol]->getHistory())[idxSym][5]) );
                 }
-                if( (*readers[symbol]->getHistoryVector())[iters[symbol]]->Time <= timeCurrentIter )
+                if( (*readers[symbol]->getHistory())[iters[symbol]][0] <= timeCurrentIter )
                     iters[symbol]++;
             } else if( config->isTimeSymbol(symbol) ) {
                 newRow.push_back( getDoubleTimeSymbol( symbol, timeCurrentIter ) );
@@ -404,9 +403,9 @@ void NeuralNetworkAnalysis::loadDataToMatrixDS(const QMap<QString, IMt4Reader *>
             if( readers.contains(symbol) ) { //timeseries
                 for( idx = 0; idx < sizePred; idx++ ) {
                     idxSym = iters[symbol] + idx; //?
-                    newRow.push_back( (*readers[symbol]->getHistoryVector())[idxSym]->High );
-                    newRow.push_back( (*readers[symbol]->getHistoryVector())[idxSym]->Low );
-                    newRow.push_back( (*readers[symbol]->getHistoryVector())[idxSym]->Close );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][2] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][3] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][4] );
                 }
                 if( ( iters[symbol] + sizePred ) > ( readers[symbol]->getHistorySize() - 1 ) )
                     nextIteration = false;
@@ -417,7 +416,7 @@ void NeuralNetworkAnalysis::loadDataToMatrixDS(const QMap<QString, IMt4Reader *>
             }
         }
         if( newRow.size() == columnsDS )
-            matrixDS.append_row( newRow );
+            ;//matrixDS.append_row( newRow );
         else
             throw 22;                   // !err row.size != columns
         timeCurrentIter += iterPeriod; // + 1 bar
@@ -436,10 +435,10 @@ void NeuralNetworkAnalysis::getFirstEntryTime(const QMap<QString, IMt4Reader *> 
     while( i.hasNext() ) {
         i.next();
         if( i.value()->getHistorySize() > 0 ) {
-            if( (*i.value()->getHistoryVector())[0]->Time < first )
-                first = (*i.value()->getHistoryVector())[0]->Time;
-            if( (*i.value()->getHistoryVector())[i.value()->getHistorySize()-1]->Time > last )
-                last = (*i.value()->getHistoryVector())[i.value()->getHistorySize()-1]->Time;
+            if( (*i.value()->getHistory())[0][0] < first )
+                first = (*i.value()->getHistory())[0][0];
+            if( (*i.value()->getHistory())[i.value()->getHistorySize()-1][0] > last )
+                last = (*i.value()->getHistory())[i.value()->getHistorySize()-1][0];
         }
     }
 }
