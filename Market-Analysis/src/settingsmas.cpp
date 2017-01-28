@@ -40,6 +40,10 @@ void SettingsMAS::load(Settings *settings)
     settings->winSizeX = global->value( "Size_X" ).toInt();
     settings->winSizeY = global->value( "Size_Y" ).toInt();
     global->endGroup();
+    QString mDir = qApp->applicationDirPath();
+    mDir += "/Market Kits";
+    if( !QDir().exists(mDir) )
+        QDir().mkdir(mDir);
 }
 
 void SettingsMAS::save(const Settings *settings)
@@ -243,12 +247,11 @@ void SettingsMAS::writeArray(const QString &arrayName, const QString &valueName,
 
 void SettingsMAS::loadDefault(ConfigMT4 *configKit)
 {
-    configKit->input.append("EURUSD.pro1440");
     configKit->input.append( "YEAR" );
     configKit->input.append( "MONTH" );
     configKit->input.append( "DAY" );
-    configKit->input.append( "HOUR" );
     configKit->input.append( "WEEKDAY" );
+    configKit->input.append("EURUSD.pro1440");
     configKit->output.append("EURUSD.pro1440");
     configKit->periods.append( 1440 );
 }
