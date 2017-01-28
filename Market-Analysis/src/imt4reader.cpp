@@ -34,7 +34,7 @@ QString IMt4Reader::getFileName() const
     return fileName;
 }
 
-size_t IMt4Reader::getHistorySize() const
+qint32 IMt4Reader::getHistorySize() const
 {
     return history->size();
 }
