@@ -22,7 +22,6 @@ private:
     qint32                          columnsDS = 1;
     qint64                          firstEntryTime;
     qint64                          lastEntryTime;
-    Matrix<double>                  *matrixDS;
     DataSet                         *dataSet;
     NeuralNetwork                   *neuralNetwork;
     PerformanceFunctional           *performanceFunc;
@@ -35,7 +34,6 @@ public slots:
     void stop(void);
 
 private slots:
-    bool loadTrainedModel(void);
     void prepareDataSet(FileType historyType);
     void prepareVariablesInfo(void);
     void prepareInstances(void);
@@ -50,9 +48,10 @@ private slots:
                           FileType historyType);
     void loadDataToDS(const QMap<QString, IMt4Reader *> &readers,
                             QMap<QString, qint32> &iters);
-    void getFirstEntryTime(const QMap<QString, IMt4Reader *> &readers,
+    void getEntryTime(const QMap<QString, IMt4Reader *> &readers,
                            qint64 &first, qint64 &last);
     double getDoubleTimeSymbol(const QString &symbol, const qint64 &timeCurrentIter);
+    bool loadTrainedModel(void);
     //void parseNNExeption();
 
 signals:

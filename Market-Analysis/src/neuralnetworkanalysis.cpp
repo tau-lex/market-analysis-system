@@ -9,7 +9,6 @@
 #include <QDebug>
 
 NeuralNetworkAnalysis::NeuralNetworkAnalysis(QObject *parent) : QObject(parent),
-    matrixDS(nullptr),
     dataSet(nullptr),
     neuralNetwork(nullptr),
     performanceFunc(nullptr),
@@ -28,8 +27,6 @@ NeuralNetworkAnalysis::~NeuralNetworkAnalysis()
         delete neuralNetwork;
     if( dataSet )
         delete dataSet;
-    if( matrixDS )
-        delete matrixDS;
 }
 
 void NeuralNetworkAnalysis::setConfigKit(ConfigMT4 *cfg)
@@ -45,13 +42,13 @@ void NeuralNetworkAnalysis::runTraining()
         progress( 0 );
         config->isRun = true;
         prepareDataSet( FileType::HST );
-        progress( 22 );
+        progress( 32 );
 //        prepareVariablesInfo();
-//        progress( 27 );
+//        progress( 33 );
 //        prepareInstances();
 //        prepareNeuralNetwork();
 //        preparePerformanceFunc();
-//        progress( 32 );
+//        progress( 34 );
 //        runTrainingNeuralNetwork();
 //        progress( 98 );
 //        saveResultsTraining();
@@ -99,47 +96,33 @@ void NeuralNetworkAnalysis::stop()
                  .arg( QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss") ) );
 }
 
-bool NeuralNetworkAnalysis::loadTrainedModel()
-{
-    if( !config->isTrained )
-        return false;
-    if( !neuralNetwork )
-        neuralNetwork = new NeuralNetwork();
-    neuralNetwork->load( QString("%1/neuralNetwork.xml")
-                         .arg( config->kitPath ).toStdString() );
-    config->isReady = true;
-    message( tr("The Neural Network model of %1 kit loaded.").arg( config->nameKit ) );
-    return true;
-}
-
 void NeuralNetworkAnalysis::prepareDataSet(FileType historyType)
 {
     message( tr("Loading data set...") );
     QMap<QString, IMt4Reader *> readers;
     QMap<QString, qint32> iters;
-    matrixDS = new Matrix<double>;
 //==========Load history data=============================
     loadHistoryFiles( readers, iters, historyType );
     progress( 5 );
-    getFirstEntryTime( readers, firstEntryTime, lastEntryTime );
-    message( tr("The data set belongs to the interval of time:\n \
-                 \t%1 (%2 sec.) - %3 (%4 sec.)")
-                .arg( QDateTime::fromTime_t( firstEntryTime )
-                      .toString("yyyy.MM.dd hh:mm:ss") )
-                .arg( firstEntryTime )
-                .arg( QDateTime::fromTime_t( lastEntryTime )
-                      .toString("yyyy.MM.dd hh:mm:ss") )
-                .arg( lastEntryTime ));
+    getEntryTime( readers, firstEntryTime, lastEntryTime );
+    message( tr("The data set belongs to the interval of time:\n"
+                "\t%1 (%2 sec.) - %3 (%4 sec.)")
+             .arg( QDateTime::fromTime_t( firstEntryTime ).toString("yyyy.MM.dd hh:mm:ss") )
+             .arg( firstEntryTime )
+             .arg( QDateTime::fromTime_t( lastEntryTime ).toString("yyyy.MM.dd hh:mm:ss") )
+             .arg( lastEntryTime ));
     qint32 minPeriod = *std::min_element( config->periods.begin(), config->periods.end() );
     columnsDS = config->sumInput() + config->sumOutput();
     rowsDS = ( lastEntryTime - firstEntryTime ) / ( 60 * minPeriod );
-//    loadDataToDS( readers, iters );
+    dataSet = new DataSet( rowsDS, columnsDS );
+    loadDataToDS( readers, iters );
 //==========Save dataset & Clean readers================
-//    if( matrixDS->get_rows_number() != rowsDS )
-        message( tr("%1; %2.").arg( rowsDS ).arg( matrixDS->get_rows_number() ) );
-        //throw 23;
-//    dataSet = new DataSet( matrixDS->get_rows_number(), matrixDS->get_columns_number() );
-//    dataSet->set_data( *matrixDS );
+    if( dataSet->get_data().get_rows_number() != rowsDS )
+        message( tr("History size = %1; DataSet size = %2.")
+                 .arg( rowsDS )
+                 .arg( dataSet->get_data().get_rows_number() ) );
+    dataSet->get_data().save_csv( QString("%1/dataSet-data.csv")
+                                  .arg( config->kitPath ).toStdString());
     QMapIterator<QString, IMt4Reader *> i(readers);
     while( i.hasNext() ) {
         i.next();
@@ -294,49 +277,49 @@ void NeuralNetworkAnalysis::saveResultsTraining()
 
 void NeuralNetworkAnalysis::runWorkingProcess()
 {
-    qint64 timeCurrentIter = firstEntryTime;
-    QMap<QString, CsvWriter *> predictionWriters;
-    foreach( QString symbolWithPeriod, config->output ) {
-        QString symbol;
-        foreach( qint32 i, config->periods )
-            if( symbolWithPeriod.contains( i ) )
-                symbol = symbolWithPeriod;
-        predictionWriters[symbol] = new CsvWriter( QString("%1%2%3.csv")
-                                                   .arg( config->mt4Path )
-                                                   .arg( config->predictionPath )
-                                                   .arg( symbol ) );
-        HeaderWr *header = predictionWriters[symbol]->getHeader();
-        header->Symbol = QString(symbol);
-        header->Period = config->periods[0];
-        header->Digits = 4;
-        header->Depth = 1;
-    }
-    Matrix<double> inputMatrix( dataSet->arrange_input_data() );
-    Matrix<double> outputMatrix( neuralNetwork->calculate_output_data( inputMatrix ) );
-    for( qint32 i = 0; i < outputMatrix.get_rows_number(); i++ ) {
-        timeCurrentIter += ( 60 * config->periods[0] );
-        while( QDateTime::fromTime_t(timeCurrentIter).date().dayOfWeek() >= 6 )
-            timeCurrentIter += ( 60 * config->periods[0] );
-        foreach( QString symbol, config->output ) {
-            std::vector<Forecast *> *forecast = predictionWriters[symbol]->
-                                                getForecastVector();
-            Forecast *newFLine = new Forecast;
-            newFLine->Time = timeCurrentIter;
-            newFLine->High[0] = outputMatrix.arrange_row( i )[0];
-            newFLine->Low[0] = outputMatrix.arrange_row( i )[1];
-            newFLine->Close[0] = outputMatrix.arrange_row( i )[2];
-            forecast->push_back( newFLine );
-            predictionWriters[symbol]->setSize( i );
-        }
-    }
-    foreach( QString symbol, config->output )
-        predictionWriters[symbol]->writeFile();
-    // clean prediction writers
-    QMapIterator<QString, CsvWriter *> i(predictionWriters);
-    while( i.hasNext() ) {
-        i.next();
-        delete i.value();
-    }
+//    qint64 timeCurrentIter = firstEntryTime;
+//    QMap<QString, CsvWriter *> predictionWriters;
+//    foreach( QString symbolWithPeriod, config->output ) {
+//        QString symbol;
+//        foreach( qint32 i, config->periods )
+//            if( symbolWithPeriod.contains( i ) )
+//                symbol = symbolWithPeriod;
+//        predictionWriters[symbol] = new CsvWriter( QString("%1%2%3.csv")
+//                                                   .arg( config->mt4Path )
+//                                                   .arg( config->predictionPath )
+//                                                   .arg( symbol ) );
+//        HeaderWr *header = predictionWriters[symbol]->getHeader();
+//        header->Symbol = QString(symbol);
+//        header->Period = config->periods[0];
+//        header->Digits = 4;
+//        header->Depth = 1;
+//    }
+//    Matrix<double> inputMatrix( dataSet->arrange_input_data() );
+//    Matrix<double> outputMatrix( neuralNetwork->calculate_output_data( inputMatrix ) );
+//    for( qint32 i = 0; i < outputMatrix.get_rows_number(); i++ ) {
+//        timeCurrentIter += ( 60 * config->periods[0] );
+//        while( QDateTime::fromTime_t(timeCurrentIter).date().dayOfWeek() >= 6 )
+//            timeCurrentIter += ( 60 * config->periods[0] );
+//        foreach( QString symbol, config->output ) {
+//            std::vector<Forecast *> *forecast = predictionWriters[symbol]->
+//                                                getForecastVector();
+//            Forecast *newFLine = new Forecast;
+//            newFLine->Time = timeCurrentIter;
+//            newFLine->High[0] = outputMatrix.arrange_row( i )[0];
+//            newFLine->Low[0] = outputMatrix.arrange_row( i )[1];
+//            newFLine->Close[0] = outputMatrix.arrange_row( i )[2];
+//            forecast->push_back( newFLine );
+//            predictionWriters[symbol]->setSize( i );
+//        }
+//    }
+//    foreach( QString symbol, config->output )
+//        predictionWriters[symbol]->writeFile();
+//    // clean prediction writers
+//    QMapIterator<QString, CsvWriter *> i(predictionWriters);
+//    while( i.hasNext() ) {
+//        i.next();
+//        delete i.value();
+//    }
     message( tr("Prediction write done.") );
 }
 
@@ -372,61 +355,64 @@ void NeuralNetworkAnalysis::loadHistoryFiles(QMap<QString, IMt4Reader *> &reader
 void NeuralNetworkAnalysis::loadDataToDS(const QMap<QString, IMt4Reader *> &readers,
                                                QMap<QString, qint32> &iters)
 {
-    qint32 idx, idxSym;
-    qint32 sizeHist = config->recurrentModel ? 1 : config->depthHistory;
-    qint32 sizePred = config->depthPrediction;
+    qint32 idxRow, idxDepth, idxSymb;
+    qint32 sizeDepthHist = config->recurrentModel ? 1 : config->depthHistory;
+    qint32 sizeDepthPred = config->depthPrediction;
     qint32 iterPeriod = 60 * *std::min_element( config->periods.begin(), config->periods.end() );
-    qint64 timeCurrentIter = firstEntryTime;
-    bool nextIteration = true;
-    while( nextIteration ) {
+    qint64 iterTime = firstEntryTime;
+    qint64 iterEnd = lastEntryTime - iterPeriod * sizeDepthPred;
+    for( idxRow = 0; iterTime < iterEnd; iterTime += iterPeriod ) {
+        if( QDateTime::fromTime_t( iterTime ).date().dayOfWeek() == 6 ||
+                QDateTime::fromTime_t( iterTime ).date().dayOfWeek() == 7 )
+            continue;
         Vector<double> newRow;
         foreach( QString symbol, config->input ) {
             if( readers.contains(symbol) ) { //timeseries
-                for( idx = 0; idx < sizeHist; idx++ ) {
-                    idxSym = (iters[symbol] - idx) >= 0 ? iters[symbol] - idx : 0;
-                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][1] );
-                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][2] );
-                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][3] );
-                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][4] );
+                for( idxDepth = 0; idxDepth < sizeDepthHist; idxDepth++ ) {
+                    idxSymb = (iters[symbol] - idxDepth) >= 0 ? iters[symbol] - idxDepth : 0;
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][1] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][2] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][3] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][4] );
                     if( config->readVolume )
-                        newRow.push_back( static_cast<double>((*readers[symbol]->getHistory())[idxSym][5]) );
+                        newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][5] );
                 }
-                if( (*readers[symbol]->getHistory())[iters[symbol]][0] <= timeCurrentIter )
+                if( (*readers[symbol]->getHistory())[iters[symbol]][0] <= iterTime )
                     iters[symbol]++;
             } else if( config->isTimeSymbol(symbol) ) {
-                newRow.push_back( getDoubleTimeSymbol( symbol, timeCurrentIter ) );
+                newRow.push_back( getDoubleTimeSymbol( symbol, iterTime ) );
             } else {
                 throw 21;               // !err symbol not be find
             }
         }
         foreach( QString symbol, config->output ) {
             if( readers.contains(symbol) ) { //timeseries
-                for( idx = 0; idx < sizePred; idx++ ) {
-                    idxSym = iters[symbol] + idx; //?
-                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][2] );
-                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][3] );
-                    newRow.push_back( (*readers[symbol]->getHistory())[idxSym][4] );
+                for( idxDepth = 0; idxDepth < sizeDepthPred; idxDepth++ ) {
+                    idxSymb = iters[symbol] + idxDepth; //?
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][2] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][3] );
+                    newRow.push_back( (*readers[symbol]->getHistory())[idxSymb][4] );
                 }
-                if( ( iters[symbol] + sizePred ) > ( readers[symbol]->getHistorySize() - 1 ) )
-                    nextIteration = false;
+                if( (iters[symbol] + sizeDepthPred) > (readers[symbol]->getHistorySize() - 1) )
+                    throw 22;           // !err index out of range
             } else if( config->isTimeSymbol(symbol) ) {
-                newRow.push_back( getDoubleTimeSymbol( symbol, timeCurrentIter ) );
+                newRow.push_back( getDoubleTimeSymbol( symbol, iterTime ) );
             } else {
                 throw 21;               // !err symbol not be find
             }
         }
         if( newRow.size() == columnsDS )
-            ;//matrixDS.append_row( newRow );
+            dataSet->set_instance( (size_t)idxRow, newRow );
         else
-            throw 22;                   // !err row.size != columns
-        timeCurrentIter += iterPeriod; // + 1 bar
-        if( timeCurrentIter >= lastEntryTime )
-            nextIteration = false;
-        progress( static_cast<qint32>(lastEntryTime / timeCurrentIter * 16 + 5) );
+            throw 23;                   // !err row.size != columns
+        idxRow += 1;
+        progress( static_cast<qint32>((iterTime - firstEntryTime) /
+                                      (lastEntryTime - firstEntryTime) * 27 + 5) );
     }
+    dataSet->set( idxRow + 1, columnsDS );
 }
 
-void NeuralNetworkAnalysis::getFirstEntryTime(const QMap<QString, IMt4Reader *> &readers,
+void NeuralNetworkAnalysis::getEntryTime(const QMap<QString, IMt4Reader *> &readers,
                                               qint64 &first, qint64 &last)
 {
     first = std::numeric_limits<qint64>::max();
@@ -462,5 +448,18 @@ double NeuralNetworkAnalysis::getDoubleTimeSymbol(const QString &symbol,
         return static_cast<double>(QDateTime::fromTime_t( timeCurrentIter ).date().dayOfWeek());
     else throw 25;                      // !err not timeSymbol
     return -1.00;
+}
+
+bool NeuralNetworkAnalysis::loadTrainedModel()
+{
+    if( !config->isTrained )
+        return false;
+    if( !neuralNetwork )
+        neuralNetwork = new NeuralNetwork();
+    neuralNetwork->load( QString("%1/neuralNetwork.xml")
+                         .arg( config->kitPath ).toStdString() );
+    config->isReady = true;
+    message( tr("The Neural Network model of %1 kit loaded.").arg( config->nameKit ) );
+    return true;
 }
 
