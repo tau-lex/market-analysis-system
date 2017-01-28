@@ -6,31 +6,20 @@
 
 CsvWriter::CsvWriter(QObject *parent) : QObject(parent),
                                         fileName(""),
-                                        forecastSize(0)
-{
-    header = new HeaderWr;
-    forecastVector = new std::vector<Forecast *>;
-}
+                                        data(nullptr)
+{}
 
 CsvWriter::CsvWriter(QString fName) : fileName(fName),
-                                        forecastSize(0)
-{
-    header = new HeaderWr;
-    forecastVector = new std::vector<Forecast *>;
-}
+                                      data(nullptr)
+{}
 
 CsvWriter::~CsvWriter()
 {
-    if( header )
-        delete header;
-    if( forecastVector ) {
-        for( qint32 i = 0; i < forecastSize; i++ )
-            delete (*forecastVector)[i];
-        delete forecastVector;
-    }
+    if( data )
+        delete data;
 }
 
-void CsvWriter::setFileName(QString fName)
+void CsvWriter::setFileName(const QString fName)
 {
     fileName = fName;
 }
@@ -40,85 +29,66 @@ QString CsvWriter::getFileName() const
     return fileName;
 }
 
-void CsvWriter::setSize(qint32 size)
-{
-    forecastSize = size;
-}
-
 qint32 CsvWriter::getSize() const
 {
-    return forecastSize;
+    return data->size();
 }
 
-qint32 CsvWriter::getDepth() const
+void CsvWriter::setZeroColumnIsTime(const bool isTime)
 {
-    return header->Depth;
+    zeroColumnIsTime = isTime;
 }
 
-HeaderWr *CsvWriter::getHeader()
+bool CsvWriter::getZeroColumnIsTime() const
 {
-    return header;
+    return zeroColumnIsTime;
 }
 
-std::vector<Forecast *> *CsvWriter::getForecastVector()
+void CsvWriter::setPrecision(const qint32 prec)
 {
-    return forecastVector;
+    precision = prec;
 }
 
-void CsvWriter::writeFile()
+qint32 CsvWriter::getPrecision() const
 {
+    return precision;
+}
+
+QList<std::vector<double> > *CsvWriter::getDataPtr(void)
+{
+    if( data == nullptr )
+        data = new QList<std::vector<double> >;
+    return data;
+}
+
+void CsvWriter::writeFile(void)
+{
+    if( fileName == "" )
+        return;
+    if( !fileName.contains(".csv") )
+        fileName += ".csv";
     QFile file(fileName, this);
     if( file.open(QIODevice::WriteOnly) ) {
-        QTextStream output(&file);
-        // Write header
-        QString headerStr = QString("%1;%2;%3;%4;%5;%6;%7;%8\n")
-                .arg( header->Version )
-                .arg( header->Copyright )
-                .arg( header->Symbol )
-                .arg( header->Period )
-                .arg( header->Digits )
-                .arg( QDateTime::fromTime_t( header->TimeSign )
-                      .toString("yyyy.MM.dd hh:mm:ss") )
-                .arg( QDateTime::fromTime_t( header->LastSync )
-                      .toString("yyyy.MM.dd hh:mm:ss") )
-                .arg( header->Depth );
-        output << headerStr;
-        // Write prediction
-        QString buffer;
-        for( qint32 i = 0; i < forecastSize; i++ ) {
-            buffer = QDateTime::fromTime_t( (*forecastVector)[i]->Time )
-                    .toString("yyyy.MM.dd hh:mm:ss");
-            for( qint32 j = 0; j < header->Depth; j++ ) {
-                buffer += ';';
-                buffer += QString::number( (*forecastVector)[i]->High[j],
-                                           'f', header->Digits );
-            }
-            buffer += '\n';
-            output << buffer;
-            buffer = QDateTime::fromTime_t( (*forecastVector)[i]->Time )
-                    .toString("yyyy.MM.dd hh:mm:ss");
-            for( qint32 j = 0; j < header->Depth; j++ ) {
-                buffer += ';';
-                buffer += QString::number( (*forecastVector)[i]->Low[j],
-                                           'f', header->Digits );
-            }
-            buffer += '\n';
-            output << buffer;
-            buffer = QDateTime::fromTime_t( (*forecastVector)[i]->Time )
-                    .toString("yyyy.MM.dd hh:mm:ss");
-            for( qint32 j = 0; j < header->Depth; j++ ) {
-                buffer += ';';
-                buffer += QString::number( (*forecastVector)[i]->Close[j],
-                                           'f', header->Digits );
-            }
-            buffer += '\n';
+        QTextStream output( &file );
+        QString buffer = "";
+        for( qint32 idx = 0; idx < data->size(); idx++ ) {
+            if( zeroColumnIsTime )
+                buffer = QDateTime::fromTime_t( static_cast<qint32>((*data)[idx][0]) )
+                         .toString("yyyy.MM.dd hh:mm:ss");
+            else
+                buffer = QString("%1").arg( static_cast<qint32>((*data)[idx][0]) );
+            buffer += QString(",%1").arg( (*data)[idx][1], 0, 'f', precision );
+            buffer += QString(",%1").arg( (*data)[idx][2], 0, 'f', precision );
+            buffer += QString(",%1").arg( (*data)[idx][3], 0, 'f', precision );
+            buffer += QString(",%1").arg( (*data)[idx][4], 0, 'f', precision );
+            buffer += QString(",%1\n").arg( static_cast<qint32>((*data)[idx][5]) );
             output << buffer;
         }
         file.close();
     }
 }
 
-void CsvWriter::writeFile(QString fName)
+void CsvWriter::writeFile(const QString fName)
 {
     fileName = fName;
     writeFile();

@@ -3,27 +3,6 @@
 
 #include <QObject>
 
-//+----------------TimeSeries Structures--------------------------------------+
-typedef struct HeaderWr
-{
-    qint32      Version = 411;
-    QString     Copyright = {"Copyright 2016, Terentew Aleksey"};
-    QString     Symbol;
-    qint32      Period;
-    qint32      Digits;
-    qint32      TimeSign;
-    qint32      LastSync;
-    qint32      Depth;      // forecast timeseries length [0 - 10]
-} HeaderWr;
-typedef struct Forecast
-{
-    qint32      Time;       // open time of first bar in forecast [0]
-    double      High[11];
-    double      Low[11];
-    double      Close[11];
-} Forecast;
-
-//+----------------Class CsvWriter--------------------------------------------+
 class CsvWriter : public QObject
 {
     Q_OBJECT
@@ -32,24 +11,24 @@ public:
     CsvWriter(QString fName);
     ~CsvWriter();
 
+protected:
+    QString                     fileName;
 private:
-    QString fileName;
-    qint32 forecastSize;
+    QList<std::vector<double> > *data;
+    bool                        zeroColumnIsTime;
+    qint32                      precision = 4;
 
-    HeaderWr *header;
-    std::vector<Forecast *> *forecastVector;
-
-public slots:
-    void setFileName(QString fName);
-    QString getFileName() const;
-    void setSize(qint32 size);
-    qint32 getSize() const;
-    qint32 getDepth() const;
-
-    HeaderWr *getHeader();
-    std::vector<Forecast *> *getForecastVector();
-    void writeFile();
-    void writeFile(QString fName);
+public:
+    void setFileName(const QString fName);
+    QString getFileName(void) const;
+    qint32 getSize(void) const;
+    void setZeroColumnIsTime(const bool isTime);
+    bool getZeroColumnIsTime(void) const;
+    void setPrecision(const qint32 prec);
+    qint32 getPrecision(void) const;
+    QList<std::vector<double> > *getDataPtr(void);
+    void writeFile(void);
+    void writeFile(const QString fName);
 };
 
 #endif // CSVWRITER_H
