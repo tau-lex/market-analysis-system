@@ -114,7 +114,7 @@ void NeuralNetworkAnalysis::prepareDataSet(FileType historyType)
     qint32 minPeriod = *std::min_element( config->periods.begin(), config->periods.end() );
     columnsDS = config->sumInput() + config->sumOutput();
     rowsDS = ( lastEntryTime - firstEntryTime ) / ( 60 * minPeriod );
-    dataSet = new DataSet( rowsDS, columnsDS );
+    dataSet = new DataSet( columnsDS, rowsDS );
     loadDataToDS( readers, iters );
 //==========Save dataset & Clean readers================
     if( dataSet->get_data().get_rows_number() != rowsDS )
@@ -135,58 +135,58 @@ void NeuralNetworkAnalysis::prepareVariablesInfo()
     message( tr("Set variables information...") );
     Variables* variablesPtr = dataSet->get_variables_pointer();
     Vector<Variables::Item> varItems( columnsDS );
-    qint32 idx = 0, idxH;
+    qint32 idxVars = 0, idxDepth;
     qint32 sizeHist = config->recurrentModel ? 1 : config->depthHistory;
     qint32 sizePred = config->depthPrediction;
     qint32 sizeTsIn = !config->readVolume ? 4 : 5;
     qint32 sizeTsOut = 3; // !config->readVolume ? 3 : 4;
     foreach( QString symbol, config->input ) {
         if( !config->isTimeSymbol(symbol) ) {
-            for( idxH = 0; idxH < sizeHist; idxH++ ) {
+            for( idxDepth = 0; idxDepth < sizeHist; idxDepth++ ) {
                 for( qint32 i = 0; i < sizeTsIn; i++ ) {
-                    varItems[idx].name = symbol.toStdString();
+                    varItems[idxVars].name = symbol.toStdString();
                     switch( i ) {
-                    case 0: varItems[idx].units = "Open"; break;
-                    case 1: varItems[idx].units = "High"; break;
-                    case 2: varItems[idx].units = "Low"; break;
-                    case 3: varItems[idx].units = "Close"; break;
-                    case 4: varItems[idx].units = "Volume";
+                    case 0: varItems[idxVars].units = "Open"; break;
+                    case 1: varItems[idxVars].units = "High"; break;
+                    case 2: varItems[idxVars].units = "Low"; break;
+                    case 3: varItems[idxVars].units = "Close"; break;
+                    case 4: varItems[idxVars].units = "Volume";
                     default: ;
                     }
-                    varItems[idx].use = Variables::Input;
-                    idx += 1;
+                    varItems[idxVars].use = Variables::Input;
+                    idxVars += 1;
                 }
             }
         } else {
-            varItems[idx].name = symbol.toStdString();
-            varItems[idx].units = "Time";
-            varItems[idx].use = Variables::Input;
-            idx += 1;
+            varItems[idxVars].name = symbol.toStdString();
+            varItems[idxVars].units = "Time";
+            varItems[idxVars].use = Variables::Input;
+            idxVars += 1;
         }
     }
     foreach( QString symbol, config->output ) {
         if( !config->isTimeSymbol(symbol) ) {
-            for( idxH = 0; idxH < sizePred; idxH++ ) {
+            for( idxDepth = 0; idxDepth < sizePred; idxDepth++ ) {
                 for( qint32 i = 0; i < sizeTsOut; i++ ) {
-                    varItems[idx].name = symbol.toStdString();
+                    varItems[idxVars].name = symbol.toStdString();
                     switch( i ) {
-                    case 0: varItems[idx].units = "High"; break;
-                    case 1: varItems[idx].units = "Low"; break;
-                    case 2: varItems[idx].units = "Close"; break;
+                    case 0: varItems[idxVars].units = "High"; break;
+                    case 1: varItems[idxVars].units = "Low"; break;
+                    case 2: varItems[idxVars].units = "Close"; break;
                     default: ;
                     }
-                    varItems[idx].use = Variables::Target;
-                    idx += 1;
+                    varItems[idxVars].use = Variables::Target;
+                    idxVars += 1;
                 }
             }
         } else {
-            varItems[idx].name = symbol.toStdString();
-            varItems[idx].units = "Time";
-            varItems[idx].use = Variables::Target;
-            idx += 1;
+            varItems[idxVars].name = symbol.toStdString();
+            varItems[idxVars].units = "Time";
+            varItems[idxVars].use = Variables::Target;
+            idxVars += 1;
         }
     }
-    if( idx > columnsDS )
+    if( idxVars != columnsDS )
         throw 24;
     variablesPtr->set_items( varItems );
 }
@@ -402,14 +402,14 @@ void NeuralNetworkAnalysis::loadDataToDS(const QMap<QString, IMt4Reader *> &read
             }
         }
         if( newRow.size() == columnsDS )
-            dataSet->set_instance( (size_t)idxRow, newRow );
+            dataSet->set_instance( static_cast<size_t>(idxRow), newRow );
         else
             throw 23;                   // !err row.size != columns
         idxRow += 1;
         progress( static_cast<qint32>((iterTime - firstEntryTime) /
                                       (lastEntryTime - firstEntryTime) * 27 + 5) );
     }
-    dataSet->set( idxRow + 1, columnsDS );
+    dataSet->set( columnsDS, idxRow + 1 );
 }
 
 void NeuralNetworkAnalysis::getEntryTime(const QMap<QString, IMt4Reader *> &readers,
