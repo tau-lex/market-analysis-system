@@ -161,12 +161,11 @@ void SettingsMAS::saveMt4Conf(const ConfigMT4 *configKit)
     kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
-    qint32 size = kitFile->beginReadArray( "Kit_Names" );
-    kitFile->endArray();
-    kitFile->beginWriteArray( "Kit_Names" );
-    kitFile->setArrayIndex( size );
-    kitFile->setValue( "Kit", configKit->nameKit );
-    kitFile->endArray();
+    QStringList temp;
+    readArray( "Kit_Names", "Kit", kitFile, temp );
+    if( !temp.contains( configKit->nameKit ) )
+        temp.append( configKit->nameKit );
+    writeArray( "Kit_Names", "Kit", kitFile, temp );
     kitFile->endGroup();
     kitFile->beginGroup( configKit->nameKit );
     kitFile->setValue( "Depth_Prediction", configKit->depthPrediction );
@@ -179,7 +178,8 @@ void SettingsMAS::saveMt4Conf(const ConfigMT4 *configKit)
 
 void SettingsMAS::deleteMAKit(ConfigMT4 *configKit)
 {
-    kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
+    kitFile = new QSettings( QString("%1%2")
+                             .arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
     QStringList temp;
@@ -189,10 +189,8 @@ void SettingsMAS::deleteMAKit(ConfigMT4 *configKit)
     kitFile->endGroup();
     kitFile->beginGroup( configKit->nameKit );
     kitFile->remove( "Depth_Prediction" );
-    while( kitFile->contains( "Input" ) )
-        kitFile->remove( "Input" );
-    while( kitFile->contains( "Output" ) )
-        kitFile->remove( "Output" );
+    kitFile->remove( "Input" );
+    kitFile->remove( "Output" );
     kitFile->endGroup();
     delete kitFile;
     kitFile = 0;
