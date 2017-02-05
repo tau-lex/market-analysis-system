@@ -149,7 +149,6 @@ void SettingsMAS::loadMt4Conf(ConfigMT4 *configKit)
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
     configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
-//    readArray( "Servers", "Srv", kitFile, configKit->servers );
     readArray( "Symbols", "Smb", kitFile, configKit->symbols );
     kitFile->endGroup();
     delete kitFile;
@@ -200,13 +199,9 @@ void SettingsMAS::deleteMAKit(ConfigMT4 *configKit)
 void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
                             QSettings *setups, QStringList &list)
 {
+    Q_UNUSED(valueName);
     list.clear();
-    qint32 size = setups->beginReadArray( arrayName );
-    for( qint32 i = 0; i < size; i++ ) {
-        setups->setArrayIndex( i );
-        list.append( setups->value( valueName ).toString() );
-    }
-    setups->endArray();
+    list = setups->value( arrayName ).toString().split( ";", QString::SkipEmptyParts );
 }
 
 void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
@@ -224,12 +219,13 @@ void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
 void SettingsMAS::writeArray(const QString &arrayName, const QString &valueName,
                              QSettings *setups, const QStringList &list)
 {
-    setups->beginWriteArray( arrayName );
-    for( qint32 i = 0; i < list.size(); i++) {
-        setups->setArrayIndex( i );
-        setups->setValue( valueName, list[i] );
+    Q_UNUSED(valueName);
+    QString tmp = "";
+    foreach( QString str, list ) {
+        tmp += str; tmp += ";";
     }
-    setups->endArray();
+    tmp.remove( tmp.size() - 1, 1);
+    setups->setValue( arrayName, tmp );
 }
 
 void SettingsMAS::writeArray(const QString &arrayName, const QString &valueName,
@@ -249,8 +245,8 @@ void SettingsMAS::loadDefault(ConfigMT4 *configKit)
     configKit->input.append( "MONTH" );
     configKit->input.append( "DAY" );
     configKit->input.append( "WEEKDAY" );
-    configKit->input.append("EURUSD.pro1440");
-    configKit->output.append("EURUSD.pro1440");
+    configKit->input.append( "EURUSD.pro1440" );
+    configKit->output.append( "EURUSD.pro1440" );
     configKit->periods.append( 1440 );
 }
 
