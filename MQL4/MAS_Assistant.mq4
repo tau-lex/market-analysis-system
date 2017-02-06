@@ -5,11 +5,12 @@
 //+------------------------------------------------------------------+
 #property copyright     "Copyright 2016, Terentew Aleksey"
 #property link          "https://www.mql5.com/ru/users/terentjew23"
-#property description   ""
-#property version       "1.3.0-alpha"
+#property description   "This indicator is a modul in the Market Analysis System programm complex."
+#property description   "MAS_Assistant save history and read forecast for Market Assay Kit."
+#property version       "1.3.3"
 #property strict
 #include                <MAS_Include.mqh>
-//---------------------Indicators------------------------------------+
+//---------------------Indicators---------------------------------------------+
 #property indicator_chart_window
 #property indicator_buffers 3
 #property indicator_plots   3
@@ -32,91 +33,124 @@
 #property indicator_style3  STYLE_DASH
 #property indicator_width3  1
 //#property indicator_style3  STYLE_DOT | STYLE_DASH
-//--- indicator buffers
-double  fHigh_Buffer[];
-double  fLow_Buffer[];
-double  fClose_Buffer[];
+#ifndef MAS_INCLUDE
+    double  fHigh_Buffer[];
+    double  fLow_Buffer[];
+    double  fClose_Buffer[];
+#endif
 
-//-----------------Global variables----------------------------------+
-const string Copyright = "Copyright 2016, Terentew Aleksey";
-const char  csvChar = ';';
-// File parameters
-string      mainSavePath;
-string      mainReadPath;
-string      configFile;
-string      saveFileName;
-string      readFileName;
+//-----------------Global variables-------------------------------------------+
+const string    Copyright = "Copyright 2016, Terentew Aleksey";
+const string    comment = "MAS_Assistant v1.3.3";
+input string    configFile = "mas.conf";
+input char      csvChar = ';';
+UiAssistant     ui;
 // Configuration
-bool        onePeriod;
-int         periods[3];
+bool        isReady = false;
+bool        configIsReaded = false;
+bool        symbolsIsWrited = false;
+string      kitList[][64];
+string      inputSymbols[];
+string      outputSymbols[];
+string      kitName = "none";
+string      outputSymbol;
+int         depthForecast;
+//int         thisSymbolId;
 
 
-
-//+------------------------------------------------------------------+
-//| Custom indicator initialization function                         |
-//+------------------------------------------------------------------+
+//+---------------------------------------------------------------------------+
 int OnInit()
 {
-    // Indicator buffers mapping
-    SetIndexBuffer(0, fHigh_Buffer);
-    SetIndexShift(0, 0);
-    SetIndexBuffer( 1, fLow_Buffer);
-    SetIndexShift(1, 0);
-    SetIndexBuffer( 2, fClose_Buffer);
-    SetIndexShift(2, 0);
-    // Set File parameters
-    configFile = "mas_mt4.conf";
-    mainSavePath = "MAS_MarketData/";
-    mainReadPath = "MAS_Prediction/";
-    //saveFileName = StringConcatenate( mainSavePath, "/", _Symbol, "/", currentYM, "-", _Period );
-    //readFileName = StringConcatenate( mainReadPath, "/", _Symbol, "/", currentYM, "-", _Period );
-    // Set Configuration
-    SetConfigs();
-    // Set status MAS modules
-    assistState = true;
-    autotraderState = false;
-    
-    return(INIT_SUCCEEDED);
+#ifndef MAS_INCLUDE
+Print( "Arrays from main file." );
+#endif
+    Comment( comment );
+    ArraysClear();
+    SetIndexBuffer( 0, fHigh_Buffer );
+    SetIndexShift(  0, 0 );
+    SetIndexBuffer( 1, fLow_Buffer );
+    SetIndexShift(  1, 0 );
+    SetIndexBuffer( 2, fClose_Buffer );
+    SetIndexShift(  2, 0 );
+    tickCount = 0;
+    configIsReaded = ReadConfig( configFile, kitList, symbolsIsWrited );
+    if( configIsReaded && ArraySize( kitList ) > 0 ) {
+        kitName = kitList[0][0];
+        ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
+        outputSymbol = outputSymbols[0];
+        if( outputSymbol == _Symbol )
+            isReady = true;
+        ui.SetMAKit( kitName );
+        ui.SetMASymbol( outputSymbol );
+    }
+    ui.Run( ChartID(), ChartWindowFind() );
+    return( INIT_SUCCEEDED );
 }
 
-
-
-//+------------------------------------------------------------------+
-//| Main function. Called with tick                                  |
-//+------------------------------------------------------------------+
-int OnCalculate( const int rates_total,
-                     const int prev_calculated,
-                     const datetime &time[],
-                     const double &open[],
-                     const double &high[],
-                     const double &low[],
-                     const double &close[],
-                     const long &tick_volume[],
-                     const long &volume[],
-                     const int &spread[] )
+//+---------------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
 {
+    tickCount++;
     if( isReady ) {
-        if( NewBar() ) {
-            SaveHistoryFiles( inputList );
+        if( NewBar( _Period ) ) {
+            for( int idx = 0; idx < ArraySize(inputSymbols); idx++ )
+                SaveHistory( inputSymbols[idx] );
         }
-        if( NewBar() || NewForecast() ) {
-            ReadForecastFile( outputSymbol );
+        if( NewForecast( outputSymbol ) ) {
+            datetime controlBars[]; 
+            ReadForecastBarSeries( outputSymbol, controlBars );
+            ui.SetControlBars( controlBars );
         }
-        UiUpdate();
     } else {
         if( !configIsReaded ) {
-            WriteConfigFile( configFile );
-            ReadConfigFile( configFile );
+            configIsReaded = ReadConfig( configFile, kitList, symbolsIsWrited );
+            if( configIsReaded && ArraySize( kitList ) > 0 ) {
+                kitName = kitList[0][0];
+                ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
+                outputSymbol = outputSymbols[0];
+                if( outputSymbol == _Symbol )
+                    isReady = true;
+                ui.SetMAKit( kitName );
+                ui.SetMASymbol( outputSymbol );
+            }
         }
-        if( ConfigKit ) {
-            if( _Symbol == outputSymbol ) {
+        if( configIsReaded && ArraySize( kitList ) > 0 ) {
+            if( StringFind( outputSymbol, _Symbol ) >= 0 ) {
                 isReady = true;
+                //string glVarOut = StringConcatenate( "MAS_", kitName, thisSymbolId );
+                //GlobalVariableSet( glVarOut, 12.34 ); // <- id Window
             } else {
-                OpenNewWindow( outputSymbol );
-                //CloseThisWindow();
+                for( int idx = 0; idx < ArraySize( outputSymbols ); idx++ )
+                    OpenNewWindow( outputSymbols[idx] );
+                //if( thisWindowClose? )
+                //    CloseThisWindow();
             }
         }
     }
     return( rates_total );
 }
 
+//+---------------------------------------------------------------------------+
+void OnChartEvent(const int id,
+                  const long &lparam,
+                  const double &dparam,
+                  const string &sparam)
+{
+    ui.OnEvent( id, lparam, dparam, sparam );
+}
+
+//+---------------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    ui.Deinit();
+    Comment( "" );
+}
