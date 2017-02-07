@@ -7,7 +7,7 @@
 #property link          "https://www.mql5.com/ru/users/terentjew23"
 #property description   "This indicator is a modul in the Market Analysis System programm complex."
 #property description   "MAS_Assistant save history and read forecast for Market Assay Kit."
-#property version       "1.3.3"
+#property version       "1.3.4"
 #property strict
 #include                <MAS_Include.mqh>
 //---------------------Indicators---------------------------------------------+
@@ -41,8 +41,9 @@
 
 //-----------------Global variables-------------------------------------------+
 const string    Copyright = "Copyright 2016, Terentew Aleksey";
-const string    comment = "MAS_Assistant v1.3.3";
+const string    comment = "MAS_Assistant v1.3.4";
 input string    configFile = "mas.conf";
+input bool      messagesOn = true;
 input char      csvChar = ';';
 UiAssistant     ui;
 // Configuration
@@ -50,8 +51,8 @@ bool        isReady = false;
 bool        configIsReaded = false;
 bool        symbolsIsWrited = false;
 string      kitList[][64];
-string      inputSymbols[];
-string      outputSymbols[];
+string      inputSymbols[][64];
+string      outputSymbols[][64];
 string      kitName = "none";
 string      outputSymbol;
 int         depthForecast;
@@ -77,8 +78,8 @@ Print( "Arrays from main file." );
     if( configIsReaded && ArraySize( kitList ) > 0 ) {
         kitName = kitList[0][0];
         ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
-        outputSymbol = outputSymbols[0];
-        if( outputSymbol == _Symbol )
+        outputSymbol = outputSymbols[0][0];
+        if( StringFind( outputSymbol, _Symbol ) >= 0 )
             isReady = true;
         ui.SetMAKit( kitName );
         ui.SetMASymbol( outputSymbol );
@@ -102,8 +103,9 @@ int OnCalculate(const int rates_total,
     tickCount++;
     if( isReady ) {
         if( NewBar( _Period ) ) {
-            for( int idx = 0; idx < ArraySize(inputSymbols); idx++ )
-                SaveHistory( inputSymbols[idx] );
+            Print( "New Bar Emit." );
+            for( int idx = 0; idx < ArrayRange( inputSymbols, 0 ); idx++ )
+                SaveHistory( inputSymbols[idx][0], Copyright );
         }
         if( NewForecast( outputSymbol ) ) {
             datetime controlBars[]; 
@@ -113,24 +115,25 @@ int OnCalculate(const int rates_total,
     } else {
         if( !configIsReaded ) {
             configIsReaded = ReadConfig( configFile, kitList, symbolsIsWrited );
-            if( configIsReaded && ArraySize( kitList ) > 0 ) {
+            if( configIsReaded && ArrayRange( kitList, 0 ) > 0 ) {
                 kitName = kitList[0][0];
                 ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
-                outputSymbol = outputSymbols[0];
-                if( outputSymbol == _Symbol )
+                outputSymbol = outputSymbols[0][0];
+                if( StringFind( outputSymbol, _Symbol ) >= 0 )
                     isReady = true;
                 ui.SetMAKit( kitName );
                 ui.SetMASymbol( outputSymbol );
             }
         }
-        if( configIsReaded && ArraySize( kitList ) > 0 ) {
+        if( configIsReaded && ArrayRange( kitList, 0 ) > 0 ) {
             if( StringFind( outputSymbol, _Symbol ) >= 0 ) {
+                Print( "Assistant ready." );
                 isReady = true;
                 //string glVarOut = StringConcatenate( "MAS_", kitName, thisSymbolId );
                 //GlobalVariableSet( glVarOut, 12.34 ); // <- id Window
             } else {
-                for( int idx = 0; idx < ArraySize( outputSymbols ); idx++ )
-                    OpenNewWindow( outputSymbols[idx] );
+                for( int idx = 0; idx < ArrayRange( outputSymbols, 0 ); idx++ )
+                    OpenNewWindow( outputSymbols[idx][0] );
                 //if( thisWindowClose? )
                 //    CloseThisWindow();
             }
