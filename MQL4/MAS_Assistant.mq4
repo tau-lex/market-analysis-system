@@ -7,46 +7,37 @@
 #property link          "https://www.mql5.com/ru/users/terentjew23"
 #property description   "This indicator is a modul in the Market Analysis System programm complex."
 #property description   "MAS_Assistant save history and read forecast for Market Assay Kit."
-#property version       "1.3.4"
+#property description   "License GNU LGPL v.3"
+#property version       "1.3.5"
 #property strict
-#include                <MAS_Include.mqh>
+#include                <MAS_MasterWindows.mqh>
 //---------------------Indicators---------------------------------------------+
 #property indicator_chart_window
 #property indicator_buffers 3
-#property indicator_plots   3
 //--- plot Forecast_High
-#property indicator_label1  "Forecast_High"
+#property indicator_label1  "Forecast High"
 #property indicator_type1   DRAW_LINE
-#property indicator_color1  clrOrangeRed
-#property indicator_style1  STYLE_DOT
+#property indicator_color1  clrLime
+//#property indicator_style1  STYLE_DASH
 #property indicator_width1  1
 //--- plot Forecast_Low
-#property indicator_label2  "Forecast_Low"
+#property indicator_label2  "Forecast Low"
 #property indicator_type2   DRAW_LINE
-#property indicator_color2  clrFireBrick
-#property indicator_style2  STYLE_DOT
+#property indicator_color2  clrLime
+//#property indicator_style2  STYLE_DASH
 #property indicator_width2  1
 //--- plot Forecast_Close
-#property indicator_label3  "Forecast_Close"
+#property indicator_label3  "Forecast Close"
 #property indicator_type3   DRAW_LINE
-#property indicator_color3  clrMediumSpringGreen
-#property indicator_style3  STYLE_DASH
+#property indicator_color3  clrLimeGreen
+//#property indicator_style3  STYLE_SOLID
 #property indicator_width3  1
-//#property indicator_style3  STYLE_DOT | STYLE_DASH
-#ifndef MAS_INCLUDE
-    double  fHigh_Buffer[];
-    double  fLow_Buffer[];
-    double  fClose_Buffer[];
-#endif
-
 //-----------------Global variables-------------------------------------------+
 const string    Copyright = "Copyright 2016, Terentew Aleksey";
-const string    comment = "MAS_Assistant v1.3.4";
+const string    comment = "MAS_Assistant v1.3.5";
 input string    configFile = "mas.conf";
 input bool      messagesOn = true;
-input char      csvChar = ';';
-UiAssistant     ui;
-// Configuration
+//input string    csvSeparator = ";";
 bool        isReady = false;
 bool        configIsReaded = false;
 bool        symbolsIsWrited = false;
@@ -56,38 +47,153 @@ string      outputSymbols[][64];
 string      kitName = "none";
 string      outputSymbol;
 int         depthForecast;
-//int         thisSymbolId;
+string      mainSavePath = "MAS_MarketData/";
+string      mainReadPath = "MAS_Prediction/";
+ulong       tickCount;
+double                      HighBuffer[];
+double                      LowBuffer[];
+double                      CloseBuffer[];
+//+--------------------UserInterface Class------------------------------------+
+#ifdef MAS_MASTERWINDOWS
+int Mint[][3] =     { { 1, 0,   0  },
+                      { 2, 100, 0  },
+                      { 4, 100, 50 } };
+string Mstr[][3] =  { { "MAS_Assistant", "",               "" },
+                      { "Kit name",      "none",           "" },
+                      { "Control Bar",   "hh:mm dd.MM.yy", "" } };
+class UiAssistant : public CWin
+{
+private:
+    long            Y_hide;
+    long            Y_obj;
+    long            H_obj;
+    long            idChart;
+    int             idWind;
+    string          nameMAKit;
+    string          symbol;
+    datetime        controlBars[];
+    int             idx;
+private:
+    void Redraw(const int line, const string text) {
+        string lineName = StringConcatenate( "MAS_Assistant.Exp.STR", line );
+        int Y = w_ypos + line * (Property.H + DELTA);
+        if( line == 1 )
+            STR1.Draw( lineName, w_xpos, Y, w_bsize, 100, "Kit name", text );
+        else
+            STR2.Draw( lineName, w_xpos, Y, w_bsize, 100, "Control Bar", text );
+    }
+public:
+    void UiAssistant() { on_event = false; }
+    void Run(const long chId, const int wId)
+    {
+        idChart = chId; idWind = wId;
+        ObjectsDeleteAll( idChart, idWind, EMPTY );
+        SetWin( "MAS_Assistant.Exp", 30, 40, 300, CORNER_RIGHT_UPPER );
+        Draw( Mint, Mstr, 2 );
+    }
+    void SetMAKit(const string tmp) 
+    { 
+        nameMAKit = tmp;
+        Redraw( 1, nameMAKit );
+    }
+    void SetMAOutSymbol(const string tmp) { symbol = tmp; }
+    void SetControlBars(const datetime &bars[])
+    {
+        ArrayFree( controlBars ); ArrayResize( controlBars, ArraySize( bars ) );
+        for( int i = 0; i < ArraySize(bars); i++ )
+            controlBars[i] = bars[i];
+        Redraw( 2, TimeToString( controlBars[0] ) );
+        ReadForecast( symbol, controlBars[0] );
+        idx = 0;
+    }
+    void Hide() { }
+    void Deinit() 
+    {
+        ObjectsDeleteAll( idChart, idWind, EMPTY );
+        ChartIndicatorDelete( 0, 0, "MAS_Assistant" );
+    }
+    virtual void OnEvent(const int id, const long &lparam, const double &dparam, const string &sparam)
+    {
+        if( on_event && StringFind(sparam, "MAS_Assistant.Exp", 0) >= 0 ) {
+            STR0.OnEvent( id, lparam, dparam, sparam );
+            STR1.OnEvent( id, lparam, dparam, sparam );
+            STR2.OnEvent( id, lparam, dparam, sparam );
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_CREATE ) {
+                if( ArraySize( controlBars ) > 0 )
+                    ReadForecast( symbol, controlBars[idx] );
+            }
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_ENDEDIT
+                            && StringFind(sparam, ".STR1", 0) > 0 ) {
+                Redraw( 1, nameMAKit );
+            }
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_CLICK
+                            && StringFind(sparam, ".STR2", 0) > 0
+                            && StringFind(sparam, ".Button3", 0) > 0 ) {
+                if( idx > 0 ) {
+                    idx = 0;
+                    Redraw( 2, TimeToString( controlBars[idx] ) );
+                    ReadForecast( symbol, controlBars[idx] );
+                }
+            }
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_CLICK
+                            && StringFind(sparam, ".STR2", 0) > 0
+                            && StringFind(sparam, ".Button4", 0) > 0 ) {
+                if( idx > 0 ) {
+                    idx--;
+                    Redraw( 2, TimeToString( controlBars[idx] ) );
+                    ReadForecast( symbol, controlBars[idx] );
+                }
+            }
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_CLICK
+                            && StringFind(sparam, ".STR2", 0) > 0
+                            && StringFind(sparam, ".Button5", 0) > 0 ) {
+                if( idx < (ArraySize( controlBars ) - 1) ) {
+                    idx++;
+                    Redraw( 2, TimeToString( controlBars[idx] ) );
+                    ReadForecast( symbol, controlBars[idx] );
+                }
+            }
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_CLICK
+                            && StringFind(sparam, ".STR2", 0) > 0
+                            && StringFind(sparam, ".Button6", 0) > 0 ) {
+                if( idx < (ArraySize( controlBars ) - 1) ) {
+                    idx = ArraySize( controlBars ) - 1;
+                    Redraw( 2, TimeToString( controlBars[idx] ) );
+                    ReadForecast( symbol, controlBars[idx] );
+                }
+            }
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_CLICK
+                            && StringFind(sparam, ".Button0", 0) > 0 ) {
+                Hide();
+            }
+            if( (ENUM_CHART_EVENT)id == CHARTEVENT_OBJECT_CLICK
+                            && StringFind(sparam, ".Button1", 0) > 0 ) {
+                Deinit();
+                ExpertRemove();
+            }
+        }
+    }
+};
+#endif // MAS_MASTERWINDOWS
 
-
+//+------------------------UI-------------------------------------------------+
+UiAssistant     ui;
 //+---------------------------------------------------------------------------+
 int OnInit()
 {
-#ifndef MAS_INCLUDE
-Print( "Arrays from main file." );
-#endif
     Comment( comment );
-    ArraysClear();
-    SetIndexBuffer( 0, fHigh_Buffer );
-    SetIndexShift(  0, 0 );
-    SetIndexBuffer( 1, fLow_Buffer );
-    SetIndexShift(  1, 0 );
-    SetIndexBuffer( 2, fClose_Buffer );
-    SetIndexShift(  2, 0 );
+    SetIndexShift( 0, 0 );
+    SetIndexShift( 1, 0 );
+    SetIndexShift( 2, 0 );
+    SetIndexBuffer( 0, HighBuffer );
+    SetIndexBuffer( 1, LowBuffer );
+    SetIndexBuffer( 2, CloseBuffer );
     tickCount = 0;
-    configIsReaded = ReadConfig( configFile, kitList, symbolsIsWrited );
-    if( configIsReaded && ArraySize( kitList ) > 0 ) {
-        kitName = kitList[0][0];
-        ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
-        outputSymbol = outputSymbols[0][0];
-        if( StringFind( outputSymbol, _Symbol ) >= 0 )
-            isReady = true;
-        ui.SetMAKit( kitName );
-        ui.SetMASymbol( outputSymbol );
-    }
+    if( GlobalVariableCheck( "glSymbolsWrited" ) )
+        symbolsIsWrited = (bool)GlobalVariableGet( "glSymbolsWrited" );
     ui.Run( ChartID(), ChartWindowFind() );
     return( INIT_SUCCEEDED );
 }
-
 //+---------------------------------------------------------------------------+
 int OnCalculate(const int rates_total,
                 const int prev_calculated,
@@ -103,45 +209,65 @@ int OnCalculate(const int rates_total,
     tickCount++;
     if( isReady ) {
         if( NewBar( _Period ) ) {
-            Print( "New Bar Emit." );
-            for( int idx = 0; idx < ArrayRange( inputSymbols, 0 ); idx++ )
-                SaveHistory( inputSymbols[idx][0], Copyright );
+            if( messagesOn )
+                Print( "msg: New bar." );
+            for( int idx = 0; idx < ArrayRange( inputSymbols, 0 ); idx++ ) {
+                if( SaveHistory( inputSymbols[idx][0], Copyright ) && messagesOn )
+                    PrintFormat( "msg: History file %s.csv saved.", inputSymbols[idx][0] );
+            }
         }
-        if( NewForecast( outputSymbol ) ) {
+        if( NewForecast( 0, outputSymbol ) ) {
+            if( messagesOn )
+                PrintFormat( "msg: New forecast %s.", outputSymbol );
             datetime controlBars[]; 
             ReadForecastBarSeries( outputSymbol, controlBars );
             ui.SetControlBars( controlBars );
+            PrintFormat( "Readed forcast file %s.csv.", outputSymbol );
         }
     } else {
-        if( !configIsReaded ) {
+        if( !configIsReaded || ArrayRange( kitList, 0 ) <= 0 ) {
             configIsReaded = ReadConfig( configFile, kitList, symbolsIsWrited );
             if( configIsReaded && ArrayRange( kitList, 0 ) > 0 ) {
                 kitName = kitList[0][0];
                 ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
-                outputSymbol = outputSymbols[0][0];
-                if( StringFind( outputSymbol, _Symbol ) >= 0 )
+                if( messagesOn )
+                    PrintFormat( "msg: Kit %s readed. In0=%s, Out0=%s, Depth_frcst=%d", kitName,
+                                    inputSymbols[0][0], outputSymbols[0][0], depthForecast );
+                if( StringFind( outputSymbols[0][0], _Symbol ) >= 0 ) {
+                    outputSymbol = outputSymbols[0][0];
+                    PrintFormat( "Assistant for %s is ready.", outputSymbol );
                     isReady = true;
+                }
                 ui.SetMAKit( kitName );
-                ui.SetMASymbol( outputSymbol );
+                ui.SetMAOutSymbol( outputSymbol );
             }
         }
         if( configIsReaded && ArrayRange( kitList, 0 ) > 0 ) {
-            if( StringFind( outputSymbol, _Symbol ) >= 0 ) {
-                Print( "Assistant ready." );
-                isReady = true;
-                //string glVarOut = StringConcatenate( "MAS_", kitName, thisSymbolId );
-                //GlobalVariableSet( glVarOut, 12.34 ); // <- id Window
+            if( ArrayRange( outputSymbols, 0 ) > 0 ) {
+                for( int idx = 0; idx < ArrayRange( outputSymbols, 0 ); idx++ ) {
+                    if( SymbolIsTime( outputSymbols[idx][0] ) )
+                        continue;
+                    if( StringFind( outputSymbols[idx][0], _Symbol ) >= 0 && !isReady ) {
+                        outputSymbol = outputSymbols[idx][0];
+                        PrintFormat( "Assistant for %s is ready.", outputSymbol );
+                        isReady = true;
+                        continue;
+                    }
+                    if( StringFind( outputSymbols[idx][0], _Symbol ) < 0 &&
+                            OpenNewWindow( outputSymbols[idx][0] ) > 0 )
+                        if( messagesOn ) PrintFormat( "msg: Open %s chart.", outputSymbols[idx][0] );
+                    else
+                        PrintFormat( "err: Open aborted %s chart. %d", outputSymbols[idx][0], GetLastError() );
+                }
+                if( !isReady )
+                    CloseThisWindow();
             } else {
-                for( int idx = 0; idx < ArrayRange( outputSymbols, 0 ); idx++ )
-                    OpenNewWindow( outputSymbols[idx][0] );
-                //if( thisWindowClose? )
-                //    CloseThisWindow();
+                Print( "Assistant not found output symbols." );
             }
         }
     }
     return( rates_total );
 }
-
 //+---------------------------------------------------------------------------+
 void OnChartEvent(const int id,
                   const long &lparam,
@@ -150,10 +276,438 @@ void OnChartEvent(const int id,
 {
     ui.OnEvent( id, lparam, dparam, sparam );
 }
-
 //+---------------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
-    ui.Deinit();
     Comment( "" );
+    ui.Deinit();
+    ChartIndicatorDelete( 0, 0, "MAS_Assistant" );
 }
+//+---------------------------------------------------------------------------+
+struct ForecastHeader {
+    int         Version;
+    string      Copyright;
+    string      SymbolF;
+    int         PeriodF;
+    int         DigitsF;
+    datetime    StartTS;
+    datetime    EndTS;
+    int         Depth;
+};
+//+---------------------------------------------------------------------------+
+//| Functions                                                                 |
+//+---------------------------------------------------------------------------+
+bool NewBar(const int tf, const string symb = "")
+{
+    static datetime lastTime = 0;
+    bool condition = false;
+    if( lastTime != TimeCurrent() ) {
+        condition = ( ( TimeCurrent() - lastTime >= PeriodSeconds(tf) ) || 
+                      ( TimeCurrent() % PeriodSeconds(tf) == 0 ) );
+        if( condition ) {
+            lastTime  = TimeCurrent();
+        }
+    } 
+    return condition;
+};
+
+bool NewForecast(const int tf, const string symb)
+{
+    static datetime lastTime = 0;
+    bool condition = false;
+    if( lastTime != TimeCurrent() ) {
+        condition = ( ( TimeCurrent() - lastTime >= PeriodSeconds(tf) ) || 
+                      ( TimeCurrent() % PeriodSeconds(tf) == 0 ) );
+        if( condition ) {
+            lastTime  = TimeCurrent();
+        }
+    } 
+    return condition;
+};
+
+bool SaveHistory(const string symb, const string copy, const char csvSep = ';')
+{
+    if( SymbolIsTime( symb ) )
+        return false;
+    string  symbol, saveFile;
+    int     timeframe = 0, limit, csvFile;
+    SeparateMasSymbol( symb, symbol, timeframe );
+    saveFile = StringConcatenate( mainSavePath, symb, ".csv" );
+    limit = GetIndexFirstBar( timeframe );
+    csvFile = FileOpen( saveFile, FILE_WRITE | FILE_CSV, csvSep );
+    FileWrite( csvFile, 401, copy, symbol, timeframe, (int)MarketInfo( symbol, MODE_DIGITS ), 
+                iTime( symbol, timeframe, limit - 1 ), iTime( symbol, timeframe, 0 ) );
+    for( int i = limit - 1; i >= 0; i-- ) {
+        FileSeek( csvFile, 0, SEEK_END );
+        FileWrite( csvFile, iTime( symbol, timeframe, i ), 
+                            DoubleToStr( iOpen(  symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
+                            DoubleToStr( iHigh(  symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
+                            DoubleToStr( iLow(   symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
+                            DoubleToStr( iClose( symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
+                            iVolume(_Symbol, timeframe, i) );
+    }
+    FileClose( csvFile );
+    return true;
+};
+
+bool ReadConfig(const string file, string &list[][64], bool &symbolsWrited)
+{
+    string fileBuffer[100][256], symbolsString;
+    int size, idx = 0;
+    ushort sep = StringGetChar( ";", 0 );
+    if( !symbolsWrited )
+        GetSymbolsString( true, symbolsString );
+    int config = FileOpen( file, FILE_READ | FILE_SHARE_READ | FILE_TXT );
+    if( config != INVALID_HANDLE ) {
+        while( !FileIsEnding( config ) ) {
+            fileBuffer[idx][0] = FileReadString( config );
+            idx++;
+            //Print( "read - " + fileBuffer[idx-1][0]);
+            if( idx >= ArraySize( fileBuffer ) )
+                ArrayResize( fileBuffer, idx + 100 );
+        }
+        FileClose( config );
+    } else {
+        PrintFormat( "err: Config file not open. %d", GetLastError() );
+        return false;
+    }
+    size = idx; idx = 0;
+    while( idx < size ) {
+        if( StringFind( fileBuffer[idx][0], "[Main]" ) >= 0 ) {
+            idx++;
+            if( StringFind( fileBuffer[idx][0], "Kit_Names=" ) >= 0 ) {
+			    string tmp = StringSubstr( fileBuffer[idx][0], 10 );
+			    StringReplace( tmp, "\"", "" );
+                StringSplitMAS( tmp, ';', list );
+            }
+            if( StringFind( fileBuffer[idx+1][0], "Symbols=" ) >= 0 &&
+                    StringLen( fileBuffer[idx+1][0] ) <= 20 ) {
+                fileBuffer[idx+1][0] = ""; fileBuffer[idx+2][0] = "";
+            }
+            if( StringFind( fileBuffer[idx+1][0], "Symbols=" ) < 0 ) {
+                StringAdd( fileBuffer[idx+1][0], "Symbols=" + symbolsString + 
+                                               "\r\nMt4_Account=" + IntegerToString(AccountNumber()) );
+                symbolsWrited = true;
+                GlobalVariableSet( "glSymbolsWrited", (double)symbolsWrited );
+                break;
+            }
+        }
+        idx++;
+    }
+    config = FileOpen( file, FILE_WRITE | FILE_TXT );
+    if( config != INVALID_HANDLE ) {
+        for( idx = 0; idx < size; idx++ )
+            FileWriteString( config, fileBuffer[idx][0] + "\r\n" );
+        FileClose( config );
+    } else {
+        PrintFormat( "err: Config file not opened for write. %d", GetLastError() );
+        return false;
+    }
+    if( ArraySize(list) <= 0 )
+        return false;
+    return true;
+};
+
+void ReadKitConfig(const string file, const string kit,
+                    string &inputList[][64], string &outputList[][64], int &depth)
+{
+    string tmpString, section = StringConcatenate( "[", kit, "]" );
+    int config = FileOpen( file, FILE_READ | FILE_SHARE_READ | FILE_TXT );
+    if( config != INVALID_HANDLE ) {
+        while( !FileIsEnding( config ) ) {
+            tmpString = FileReadString( config );
+            if( StringFind( tmpString, section ) >= 0 ) {
+                tmpString = FileReadString( config );
+                if( StringFind( tmpString, "Depth_Prediction=" ) >= 0 ) {
+                    depth = (int)StringToInteger( StringTrimRight( StringSubstr( tmpString, 17 ) ) );
+                    tmpString = FileReadString( config );
+                }
+                if( StringFind( tmpString, "Input=" ) >= 0 ) {
+                    StringReplace( tmpString, "\"", "" );
+                    StringSplitMAS( StringTrimRight( StringSubstr( tmpString, 6 ) ), ';', inputList );
+                    tmpString = FileReadString( config );
+                }
+                if( StringFind( tmpString, "Output=" ) >= 0 ) {
+                    StringReplace( tmpString, "\"", "" );
+                    StringSplitMAS( StringTrimRight( StringSubstr( tmpString, 7 ) ), ';', outputList );
+                    tmpString = FileReadString( config );
+                }
+            }
+        }
+        FileClose( config );
+    } else {
+        PrintFormat( "err: Config file not open. %d", GetLastError() );
+    }
+};
+
+void ReadForecastBarSeries(const string symb, datetime &seriesControlBars[], const char csvSep = ';')
+{
+    int idx = 0;
+    ForecastHeader header;
+    string readFile = StringConcatenate( mainReadPath, symb, ".csv" );
+    int forecastFile = FileOpen( readFile, FILE_READ | FILE_SHARE_READ | FILE_CSV, csvSep );
+    if( forecastFile != INVALID_HANDLE ) {
+        if( ReadHeader( forecastFile, header ) ) {
+            while( !FileIsEnding( forecastFile ) ) {
+                if( idx >= ArraySize( seriesControlBars ) )
+                    ArrayResize( seriesControlBars, ArraySize( seriesControlBars ) + 1 );
+                seriesControlBars[idx] = ReadForcastBar( forecastFile, header.Depth );
+                idx++;
+            }
+        } else 
+            Print( "err: Wrong header of file! Reading is stopped." );
+        FileClose( forecastFile );
+    } else
+        Print( "err: File not open! ", readFile, "; ", GetLastError() );
+};
+
+void ReadForecast(const string symb, const datetime controlBar, const char csvSep = ';')
+{
+    ForecastHeader header;
+    string readFile = StringConcatenate( mainReadPath, symb, ".csv" );
+    int forecastFile = FileOpen( readFile, FILE_READ | FILE_SHARE_READ | FILE_CSV, csvSep );
+    if( forecastFile != INVALID_HANDLE ) {
+        if( ReadHeader( forecastFile, header ) ) {
+            while( !FileIsEnding( forecastFile ) ) {
+                if( ReadForcastTS( forecastFile, header, controlBar ) )
+                    break;
+            }
+        } else 
+            Print( "err: Wrong header of file! Reading is stopped." );
+        FileClose( forecastFile );
+    } else
+        Print( "err: File not open! ", readFile, "; ", GetLastError() );
+};
+
+bool ReadHeader(const int handle, ForecastHeader &fcst)
+{
+    bool ready = true;
+    fcst.Version =   (int)StringToInteger( FileReadString( handle ) );
+    fcst.Copyright = FileReadString( handle );
+    fcst.SymbolF =   FileReadString( handle );
+    fcst.PeriodF =   (int)StringToInteger( FileReadString( handle ) );
+    fcst.DigitsF =   (int)StringToInteger( FileReadString( handle ) );
+    fcst.StartTS =   StringToTime( FileReadString( handle ) );
+    fcst.EndTS =     StringToTime( FileReadString( handle ) );
+    fcst.Depth =     (int)StringToInteger( FileReadString( handle ) );
+    if( fcst.SymbolF != _Symbol ) ready = false;
+    return ready;
+};
+
+datetime ReadForcastBar(const int handle, const int depth)
+{
+    datetime bar = 0, tmp;
+    for( int thr = 1; thr <= 3; thr++ ) {
+        bar = StringToTime( FileReadString( handle ) );
+        for( int i = 0; i < depth; i++ )
+            tmp = StringToTime( FileReadString( handle ) );
+    }
+    return bar;
+};
+
+bool ReadForcastTS(const int handle, const ForecastHeader &head, const datetime bar)
+{
+    datetime tmpBar;
+    string sbuffer[11];
+    double buffer[11]; ArrayInitialize( buffer, 0.0 );
+    int idx = 0;
+    tmpBar = StringToTime( FileReadString( handle ) );
+    if( tmpBar != bar ) {
+        int trLine = head.Depth * 3 + 2;
+        for( idx = 0; idx < trLine; idx++ )
+            FileReadString( handle );
+        return false;
+    } else {
+        int ctrlBarIdx = GetIndexFromTime( bar );
+        ArraysClear( GetIndexFirstBar( _Period ) );
+        //ArraySetAsSeries( HighBuffer, true );
+        for( idx = 0; idx < head.Depth; idx++ ) {
+            HighBuffer[ctrlBarIdx - idx] = StrToDouble( FileReadString( handle ) );
+        }
+        //ArraySetAsSeries( HighBuffer, false );
+        FileReadString( handle ); //time
+        for( idx = 0; idx < head.Depth; idx++ ) {
+            LowBuffer[ctrlBarIdx - idx] = StrToDouble( FileReadString( handle ) );
+        }
+        FileReadString( handle ); //time
+        for( idx = 0; idx < head.Depth; idx++ ) {
+            CloseBuffer[ctrlBarIdx - idx] = StrToDouble( FileReadString( handle ) );
+        }
+        return true;
+    }
+};
+
+void ArraysClear(const int depth = 50)
+{
+    for( int i = 0; i < depth; i++ )
+        HighBuffer[i] = EMPTY_VALUE;
+    for( int i = 0; i < depth; i++ )
+        LowBuffer[i] = EMPTY_VALUE;
+    for( int i = 0; i < depth; i++ )
+        CloseBuffer[i] = EMPTY_VALUE;
+};
+
+long OpenNewWindow(const string symb)
+{
+    string symbol;
+    int period;
+    SeparateMasSymbol( symb, symbol, period );
+    return ChartOpen( symbol, period );
+};
+
+void CloseThisWindow()
+{
+    ChartClose();
+};
+
+int GetSymbolsList(const bool selected, string &symbols[])
+{
+    string symbolsFileName;
+    int symbolsNumber, offset;
+    if( selected ) 
+        symbolsFileName = "symbols.sel";
+    else
+        symbolsFileName = "symbols.raw";
+    int hFile = FileOpenHistory( symbolsFileName, FILE_BIN|FILE_READ );
+    if( hFile < 0 ) 
+        return -1;
+    if( selected ) {
+        symbolsNumber = ( (int)FileSize(hFile) - 4 ) / 128;
+        offset = 116;
+    } else { 
+        symbolsNumber = (int)FileSize(hFile) / 1936;
+        offset = 1924;
+    }
+    ArrayResize( symbols, symbolsNumber );
+    if( selected )
+        FileSeek( hFile, 4, SEEK_SET );
+    for( int i = 0; i < symbolsNumber; i++ ) {
+        symbols[i] = FileReadString( hFile, 12 );
+        FileSeek( hFile, offset, SEEK_CUR );
+    }
+    FileClose( hFile );
+    return symbolsNumber;
+};
+
+int GetSymbolsString(const bool selected, string &symbols)
+{
+    string symbolsList[];
+    int size = GetSymbolsList( selected, symbolsList );
+    if( size >= 1 ) {
+        symbols = symbolsList[0];
+        for( int i = 1; i < size; i++ )
+            symbols = StringConcatenate( symbols, ";", symbolsList[i] );
+    }
+    return size;
+};
+
+int StringSplitMAS(const string string_value, const ushort separator, string &result[][64])
+{
+    if( StringLen( string_value ) <= 0 || string_value == NULL )
+        return 0;
+    int lastChar = 0, currentChar = 0, size = StringLen(string_value), sizeRes = 0, sepIdxs[50];
+    ArrayInitialize( sepIdxs, 0 );
+    for( int idx = 0; idx < size; idx++) {
+        if( StringGetChar(string_value, idx) == separator ) {
+            sepIdxs[sizeRes] = idx;
+            sizeRes += 1;
+            if( sizeRes >= ArraySize(sepIdxs) )
+                ArrayResize( sepIdxs, ArraySize(sepIdxs) + 50 );
+        }
+    }
+    ArrayResize( result, sizeRes + 1 );
+    if( sizeRes == 0 ) {
+        result[sizeRes][0] = string_value;
+        return sizeRes + 1;
+    }
+    for( int idx = 0; idx <= sizeRes; idx++) {
+        if( idx == 0 ) {
+            result[idx][0] = StringSubstr( string_value, 0, sepIdxs[idx] );
+            continue;
+        }
+        result[idx][0] = StringSubstr( string_value, sepIdxs[idx-1] + 1, 
+                                                     sepIdxs[idx] - sepIdxs[idx-1] - 1 );
+    }
+    return sizeRes + 1;
+};
+
+double StrToDbl(const string str)
+{
+    int i, k = 1;
+    double r = 0, p = 1;
+    for( i = 0; i < StringLen(str); i++ ) {
+        if( k < 0 )
+			p = p * 10;
+        if( StringGetChar( str, i ) == '.' )
+            k = -k;
+        else
+            r = r * 10 + ( StringGetChar( str, i ) - '0' );
+    }
+    return r / p;
+}
+
+void SeparateMasSymbol(const string masSymbol, string &symbol, int &period)
+{
+    int periods[] = {PERIOD_MN1, PERIOD_W1, PERIOD_D1, PERIOD_H4, PERIOD_H1,
+                        PERIOD_M30, PERIOD_M15, PERIOD_M5, PERIOD_M1};
+    int idx = 0;
+    while( StringFind( masSymbol, IntegerToString(periods[idx]), 0 ) < 0 ) {
+        idx++;
+        if( idx > 8 ) {
+            idx = -1;
+            break;
+        }
+    }
+    if( idx >= 0 ) {
+        symbol = masSymbol;
+        StringReplace( symbol, IntegerToString(periods[idx]), "" );
+        period = periods[idx];
+    } else {
+        symbol = "";
+        period = -1;
+    }
+};
+
+int GetIndexFromTime(const datetime time, const int timeframe = 0)
+{
+    int index = 0;
+    while( iTime( _Symbol, timeframe, index ) >= time )
+        index++;
+    return index;
+};
+
+int GetIndexFirstBar(int timeframe = 0)
+{
+    if( timeframe == PERIOD_D1 )
+        return 60;
+    else if( timeframe == PERIOD_H4 )
+        return 60;
+    else if( timeframe == PERIOD_H1 )
+        return 60;
+    else if( timeframe == PERIOD_M30 )
+        return 180;
+    else if( timeframe == PERIOD_M15 )
+        return 360;
+    else if( timeframe == PERIOD_M5 )
+        return 360;
+    else if( timeframe == PERIOD_M1 )
+        return 360;
+    else if( timeframe == PERIOD_MN1 )
+        return 20;
+    return 0;
+};
+
+bool SymbolIsTime(const string symb)
+{
+    if( (symb == "YEAR") || (symb == "MONTH") || (symb == "DAY") || 
+        (symb == "YEARDAY") || (symb == "WEEKDAY") || 
+        (symb == "HOUR") || (symb == "MINUTE") )
+        return true;
+    return false;
+};
+
+void SetMyTemplate()
+{
+    //ChartApplyTemplate( 0, "MAS_Template.tpl" );
+};
+
