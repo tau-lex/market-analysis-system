@@ -148,8 +148,8 @@ void SettingsMAS::loadMt4Conf(ConfigMT4 *configKit)
     kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
-    configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
     readArray( "Symbols", "Smb", kitFile, configKit->symbols );
+    configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
     kitFile->endGroup();
     delete kitFile;
     kitFile = 0;
@@ -201,7 +201,8 @@ void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
 {
     Q_UNUSED(valueName);
     list.clear();
-    list = setups->value( arrayName ).toString().split( ";", QString::SkipEmptyParts );
+    foreach(QString item, setups->value( arrayName ).toString().split( ";", QString::SkipEmptyParts ) )
+        list.append( item );
 }
 
 void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
