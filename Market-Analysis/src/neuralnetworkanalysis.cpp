@@ -114,7 +114,7 @@ void NeuralNetworkAnalysis::prepareDataSet(FileType historyType)
     qint32 minPeriod = *std::min_element( config->periods.begin(), config->periods.end() );
     columnsDS = config->sumInput() + config->sumOutput();
     rowsDS = ( lastEntryTime - firstEntryTime ) / ( 60 * minPeriod );
-    dataSet = new DataSet( columnsDS, rowsDS );
+    dataSet = new DataSet( rowsDS, columnsDS );
     loadDataToDS( readers, iters );
 //==========Save dataset & Clean readers================
     if( dataSet->get_data().get_rows_number() != rowsDS )
@@ -409,7 +409,7 @@ void NeuralNetworkAnalysis::loadDataToDS(const QMap<QString, IMt4Reader *> &read
         progress( static_cast<qint32>((iterTime - firstEntryTime) /
                                       (lastEntryTime - firstEntryTime) * 27 + 5) );
     }
-    dataSet->set( columnsDS, idxRow + 1 );
+    dataSet->set( idxRow + 1, columnsDS );
 }
 
 void NeuralNetworkAnalysis::getEntryTime(const QMap<QString, IMt4Reader *> &readers,
