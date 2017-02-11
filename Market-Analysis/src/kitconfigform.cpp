@@ -112,11 +112,31 @@ void KitConfigForm::checkTerminalPath(void)
         if( configKit->mt4Account > 0 )
             ui->runTerminalButton->setEnabled( true );
         setUpDinamicComboBoxes();
+        copyMqlScripts( configKit->mt4Path );
     } else {
         pal.setColor( QPalette::Text, Qt::darkRed );
         ui->runTerminalButton->setEnabled( false );
     }
     ui->mt4PathEdit->setPalette( pal );
+}
+
+void KitConfigForm::copyMqlScripts(QString path)
+{
+    QFile assist( QString("%1/MQL4/Indicators/MAS_Assistant.ex4").arg( path ) );
+    if( !assist.exists() ) {
+        QFile::copy( ":/mql/MAS_Assistant.ex4",
+                     QString("%1/MQL4/Indicators/MAS_Assistant.ex4").arg( path ) );
+        QFile::copy( ":/mql/MAS_Template.tpl",
+                     QString("%1/templates/MAS_Template.tpl").arg( path ) );
+    }
+//    QFile::copy( ":/mql/MAS_Assistant.mq4",
+//                 QString("%1/MQL4/Indicators/MAS_Assistant.mq4").arg( path ) );
+//    QFile::copy( ":/mql/MAS_Autotrading.mq4",
+//                 QString("%1/MQL4/Experts/MAS_Autotrading.mq4").arg( path ) );
+//    QFile::copy( ":/mql/MAS_MasterWindows.mqh",
+//                 QString("%1/MQL4/Include/MAS_MasterWindows.mqh").arg( path ) );
+//    QFile::copy( ":/mql/MAS_Template.tpl",
+//                 QString("%1/templates/MAS_Template.tpl").arg( path ) );
 }
 
 void KitConfigForm::on_mt4PathButton_clicked()
