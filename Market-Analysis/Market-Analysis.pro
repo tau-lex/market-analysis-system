@@ -1,8 +1,14 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2016-11-09T20:17:40
-#
-#-------------------------------------------------
+###############################################################################
+#                                                                             #
+#   Market Analysis System                                                    #
+#   https://www.mql5.com/ru/users/terentjew23                                 #
+#                                                                             #
+#   M A R K E T   A N A L Y S I S   P R O G R A M                             #
+#                                                                             #
+#   Aleksey Terentew                                                          #
+#   terentew.aleksey@ya.ru                                                    #
+#                                                                             #
+###############################################################################
 
 QT      += core gui
 
@@ -13,8 +19,7 @@ TEMPLATE  = app
 CONFIG   += c++11
 
 RC_FILE   = Market-Analysis.rc
-RESOURCES += \
-        Market-Analysis.qrc
+RESOURCES += Market-Analysis.qrc
 
 SOURCES += src/main.cpp \
         src/mainwindow.cpp \
@@ -29,7 +34,8 @@ SOURCES += src/main.cpp \
         src/imt4reader.cpp \
         src/hstreader.cpp \
         src/csvreader.cpp \
-        src/csvwriter.cpp
+        src/csvwriter.cpp \
+        src/csvpredictionwriter.cpp
 
 HEADERS += include/mainwindow.h \
         include/settingsform.h \
@@ -43,7 +49,8 @@ HEADERS += include/mainwindow.h \
         include/imt4reader.h \
         include/hstreader.h \
         include/csvreader.h \
-        include/csvwriter.h
+        include/csvwriter.h \
+        include/csvpredictionwriter.h
 
 FORMS += mainwindow.ui \
         settingsform.ui \
