@@ -8,7 +8,7 @@
 #property description   "This indicator is a modul in the Market Analysis System programm complex."
 #property description   "MAS_Assistant save history and read forecast for Market Assay Kit."
 #property description   "License GNU LGPL v.3"
-#property version       "1.3.5"
+#property version       "1.3.6"
 #property strict
 #include                <MAS_MasterWindows.mqh>
 //---------------------Indicators---------------------------------------------+
@@ -34,10 +34,10 @@
 #property indicator_width3  1
 //-----------------Global variables-------------------------------------------+
 const string    Copyright = "Copyright 2016, Terentew Aleksey";
-const string    comment = "MAS_Assistant v1.3.5";
+const string    comment = "MAS_Assistant v1.3.6";
 input string    configFile = "mas.conf";
 input bool      messagesOn = true;
-//input string    csvSeparator = ";";
+input string    csvSeparator = ";";
 bool        isReady = false;
 bool        configIsReaded = false;
 bool        symbolsIsWrited = false;
@@ -189,8 +189,8 @@ int OnInit()
     SetIndexBuffer( 1, LowBuffer );
     SetIndexBuffer( 2, CloseBuffer );
     tickCount = 0;
-    if( GlobalVariableCheck( "glSymbolsWrited" ) )
-        symbolsIsWrited = (bool)GlobalVariableGet( "glSymbolsWrited" );
+    //if( GlobalVariableCheck( "glSymbolsWrited" ) )
+    //    symbolsIsWrited = (bool)GlobalVariableGet( "glSymbolsWrited" );
     ui.Run( ChartID(), ChartWindowFind() );
     return( INIT_SUCCEEDED );
 }
@@ -226,12 +226,12 @@ int OnCalculate(const int rates_total,
         }
     } else {
         if( !configIsReaded || ArrayRange( kitList, 0 ) <= 0 ) {
-            configIsReaded = ReadConfig( configFile, kitList, symbolsIsWrited );
+            configIsReaded = ReadConfig( configFile, kitList );
             if( configIsReaded && ArrayRange( kitList, 0 ) > 0 ) {
                 kitName = kitList[0][0];
                 ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
                 if( messagesOn )
-                    PrintFormat( "msg: Kit %s readed. In0=%s, Out0=%s, Depth_frcst=%d", kitName,
+                    PrintFormat( "msg: Kit %s readed. In0=%s, Out0=%s, Depth forecast=%d", kitName,
                                     inputSymbols[0][0], outputSymbols[0][0], depthForecast );
                 if( StringFind( outputSymbols[0][0], _Symbol ) >= 0 ) {
                     outputSymbol = outputSymbols[0][0];
@@ -240,6 +240,9 @@ int OnCalculate(const int rates_total,
                 }
                 ui.SetMAKit( kitName );
                 ui.SetMAOutSymbol( outputSymbol );
+                datetime controlBars[]; 
+                ReadForecastBarSeries( outputSymbol, controlBars );
+                ui.SetControlBars( controlBars );
             }
         }
         if( configIsReaded && ArrayRange( kitList, 0 ) > 0 ) {
@@ -350,54 +353,66 @@ bool SaveHistory(const string symb, const string copy, const char csvSep = ';')
     return true;
 };
 
-bool ReadConfig(const string file, string &list[][64], bool &symbolsWrited)
+bool ReadConfig(const string file, string &list[][64] )
 {
-    string fileBuffer[100][256], symbolsString;
-    int size, idx = 0;
-    ushort sep = StringGetChar( ";", 0 );
-    if( !symbolsWrited )
+    bool mainSection = false;
+    string fileBuffer[5][256], symbolsString, tmp;
+    int size = 0, idx = 0, kitIdx = -1;
+    ushort sep = StringGetChar( csvSeparator, 0 );
+    if( !symbolsIsWrited )
         GetSymbolsString( true, symbolsString );
     int config = FileOpen( file, FILE_READ | FILE_SHARE_READ | FILE_TXT );
     if( config != INVALID_HANDLE ) {
         while( !FileIsEnding( config ) ) {
-            fileBuffer[idx][0] = FileReadString( config );
-            idx++;
-            //Print( "read - " + fileBuffer[idx-1][0]);
-            if( idx >= ArraySize( fileBuffer ) )
-                ArrayResize( fileBuffer, idx + 100 );
+            fileBuffer[size][0] = FileReadString( config );
+            size++;
+            if( size >= ArrayRange( fileBuffer, 0 ) )
+                ArrayResize( fileBuffer, size + 5 );
         }
         FileClose( config );
     } else {
         PrintFormat( "err: Config file not open. %d", GetLastError() );
         return false;
     }
-    size = idx; idx = 0;
     while( idx < size ) {
         if( StringFind( fileBuffer[idx][0], "[Main]" ) >= 0 ) {
-            idx++;
-            if( StringFind( fileBuffer[idx][0], "Kit_Names=" ) >= 0 ) {
-			    string tmp = StringSubstr( fileBuffer[idx][0], 10 );
-			    StringReplace( tmp, "\"", "" );
-                StringSplitMAS( tmp, ';', list );
-            }
-            if( StringFind( fileBuffer[idx+1][0], "Symbols=" ) >= 0 &&
-                    StringLen( fileBuffer[idx+1][0] ) <= 20 ) {
-                fileBuffer[idx+1][0] = ""; fileBuffer[idx+2][0] = "";
-            }
-            if( StringFind( fileBuffer[idx+1][0], "Symbols=" ) < 0 ) {
-                StringAdd( fileBuffer[idx+1][0], "Symbols=" + symbolsString + 
-                                               "\r\nMt4_Account=" + IntegerToString(AccountNumber()) );
-                symbolsWrited = true;
-                GlobalVariableSet( "glSymbolsWrited", (double)symbolsWrited );
-                break;
-            }
+            mainSection = true;
+        }
+        if( StringFind( fileBuffer[idx][0], "Kit_Names=" ) >= 0 && mainSection ) {
+		    tmp = StringSubstr( fileBuffer[idx][0], 10 );
+		    StringReplace( tmp, "\"", "" );
+            StringSplitMAS( tmp, ';', list );
+            kitIdx = idx;
+        }
+        if( StringFind( fileBuffer[idx][0], "Symbols=" ) >= 0 && mainSection ) {
+            tmp = StringSubstr( fileBuffer[idx][0], 8 );
+            if( StringLen( tmp ) <= 10 )
+                fileBuffer[idx][0] = StringConcatenate( "Symbols=\"", symbolsString, "\"" );
+            symbolsIsWrited = true;
+            GlobalVariableSet( "glSymbolsWrited", (double)symbolsIsWrited );
+        }
+        if( StringFind( fileBuffer[idx][0], "Mt4_Account=" ) >= 0 && mainSection ) {
+            tmp = StringSubstr( fileBuffer[idx][0], 12 );
+            if( StringToInteger( tmp ) != AccountNumber() )
+                fileBuffer[idx][0] = "Mt4_Account=" + IntegerToString( AccountNumber() );
+        }
+        if( !symbolsIsWrited && kitIdx >= 1 && idx >= 2 ) {
+            tmp = StringConcatenate( "Symbols=\"" + symbolsString + 
+                                     "\"\r\nMt4_Account=" + IntegerToString(AccountNumber()) );
+            fileBuffer[kitIdx][0] = StringConcatenate( fileBuffer[kitIdx][0], "\r\n", tmp );
+            symbolsIsWrited = true;
+            GlobalVariableSet( "glSymbolsWrited", (double)symbolsIsWrited );
         }
         idx++;
     }
     config = FileOpen( file, FILE_WRITE | FILE_TXT );
     if( config != INVALID_HANDLE ) {
-        for( idx = 0; idx < size; idx++ )
-            FileWriteString( config, fileBuffer[idx][0] + "\r\n" );
+        for( idx = 0; idx < size; idx++ ) {
+            FileWriteString( config, fileBuffer[idx][0] );
+            if( fileBuffer[idx][0] == "" && fileBuffer[idx-1][0] == "" ) 
+                continue;
+            FileWriteString( config, "\r\n" );
+        }
         FileClose( config );
     } else {
         PrintFormat( "err: Config file not opened for write. %d", GetLastError() );
