@@ -11,7 +11,7 @@
 NeuralNetworkAnalysis::NeuralNetworkAnalysis(QObject *parent) : QObject(parent),
     dataSet(nullptr),
     neuralNetwork(nullptr),
-    performanceFunc(nullptr),
+    lossIndex(nullptr),
     trainingStrategy(nullptr)
 {
     srand((unsigned)time(NULL));
@@ -21,8 +21,8 @@ NeuralNetworkAnalysis::~NeuralNetworkAnalysis()
 {
     if( trainingStrategy )
         delete trainingStrategy;
-    if( performanceFunc )
-        delete performanceFunc;
+    if( lossIndex )
+        delete lossIndex;
     if( neuralNetwork )
         delete neuralNetwork;
     if( dataSet )
@@ -47,7 +47,7 @@ void NeuralNetworkAnalysis::runTraining()
 //        progress( 33 );
 //        prepareInstances();
 //        prepareNeuralNetwork();
-//        preparePerformanceFunc();
+//        preparelossIndex();
 //        progress( 34 );
 //        runTrainingNeuralNetwork();
 //        progress( 98 );
@@ -114,6 +114,7 @@ void NeuralNetworkAnalysis::prepareDataSet(FileType historyType)
     qint32 minPeriod = *std::min_element( config->periods.begin(), config->periods.end() );
     columnsDS = config->sumInput() + config->sumOutput();
     rowsDS = ( lastEntryTime - firstEntryTime ) / ( 60 * minPeriod );
+    rowsDS = rowsDS / 7 * 5 + 3;
     dataSet = new DataSet( rowsDS, columnsDS );
     loadDataToDS( readers, iters );
 //==========Save dataset & Clean readers================
@@ -232,18 +233,18 @@ void NeuralNetworkAnalysis::prepareNeuralNetwork()
     unscalingLayerPtr->set_unscaling_method( UnscalingLayer::NoUnscaling );
 }
 
-void NeuralNetworkAnalysis::preparePerformanceFunc()
+void NeuralNetworkAnalysis::prepareLossIndex()
 {
     message( tr("Set performance functional...") );
-    performanceFunc = new PerformanceFunctional( neuralNetwork, dataSet);
-    performanceFunc->set_regularization_type( PerformanceFunctional::NEURAL_PARAMETERS_NORM ); //need?
+    lossIndex = new LossIndex( neuralNetwork, dataSet);
+    lossIndex->set_regularization_type( LossIndex::NEURAL_PARAMETERS_NORM ); //need?
     message( tr("Set training strategy...") );
-    trainingStrategy = new TrainingStrategy( performanceFunc );
+    trainingStrategy = new TrainingStrategy( lossIndex );
     QuasiNewtonMethod* quasiNewtonMethodPtr = trainingStrategy->get_quasi_Newton_method_pointer();
     quasiNewtonMethodPtr->set_maximum_iterations_number(1000);
     quasiNewtonMethodPtr->set_display_period(10);
-    quasiNewtonMethodPtr->set_minimum_performance_increase(1.0e-6);
-    quasiNewtonMethodPtr->set_reserve_performance_history(true);
+    quasiNewtonMethodPtr->set_minimum_loss_increase(1.0e-6);
+    quasiNewtonMethodPtr->set_reserve_loss_history(true);
 }
 
 void NeuralNetworkAnalysis::runTrainingNeuralNetwork()
@@ -272,7 +273,7 @@ void NeuralNetworkAnalysis::saveResultsTraining()
     dataSet->save( QString("%1/dataSet.xml").arg( config->kitPath ).toStdString() );
     neuralNetwork->save( QString("%1/neuralNetwork.xml").arg( config->kitPath ).toStdString() );
     neuralNetwork->save_expression( QString("%1/nnExpression.txt").arg( config->kitPath ).toStdString() );
-    performanceFunc->save( QString("%1/performanceFunctional.xml").arg( config->kitPath ).toStdString() );
+    lossIndex->save( QString("%1/lossIndex.xml").arg( config->kitPath ).toStdString() );
 }
 
 void NeuralNetworkAnalysis::runWorkingProcess()
@@ -355,6 +356,7 @@ void NeuralNetworkAnalysis::loadHistoryFiles(QMap<QString, IMt4Reader *> &reader
 void NeuralNetworkAnalysis::loadDataToDS(const QMap<QString, IMt4Reader *> &readers,
                                                QMap<QString, qint32> &iters)
 {
+    bool lastBarInTS = false;
     qint32 idxRow, idxDepth, idxSymb;
     qint32 sizeDepthHist = config->recurrentModel ? 1 : config->depthHistory;
     qint32 sizeDepthPred = config->depthPrediction;
@@ -379,6 +381,8 @@ void NeuralNetworkAnalysis::loadDataToDS(const QMap<QString, IMt4Reader *> &read
                 }
                 if( (*readers[symbol]->getHistory())[iters[symbol]][0] <= iterTime )
                     iters[symbol]++;
+                if( readers[symbol]->getHistorySize() == iters[symbol] )
+                    lastBarInTS = true;
             } else if( config->isTimeSymbol(symbol) ) {
                 newRow.push_back( getDoubleTimeSymbol( symbol, iterTime ) );
             } else {
@@ -406,10 +410,12 @@ void NeuralNetworkAnalysis::loadDataToDS(const QMap<QString, IMt4Reader *> &read
         else
             throw 23;                   // !err row.size != columns
         idxRow += 1;
+        if( lastBarInTS )
+            break;
         progress( static_cast<qint32>((iterTime - firstEntryTime) /
                                       (lastEntryTime - firstEntryTime) * 27 + 5) );
     }
-    dataSet->set( idxRow + 1, columnsDS );
+//    dataSet->set( idxRow + 1, columnsDS );
 }
 
 void NeuralNetworkAnalysis::getEntryTime(const QMap<QString, IMt4Reader *> &readers,

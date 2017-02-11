@@ -24,7 +24,7 @@ private:
     qint64                          lastEntryTime;
     DataSet                         *dataSet;
     NeuralNetwork                   *neuralNetwork;
-    PerformanceFunctional           *performanceFunc;
+    LossIndex                       *lossIndex;
     TrainingStrategy                *trainingStrategy;
 
 public slots:
@@ -38,7 +38,7 @@ private slots:
     void prepareVariablesInfo(void);
     void prepareInstances(void);
     void prepareNeuralNetwork(void);
-    void preparePerformanceFunc(void);
+    void prepareLossIndex(void);
     void runTrainingNeuralNetwork(void);
     void saveResultsTraining(void);
     void runWorkingProcess(void);
