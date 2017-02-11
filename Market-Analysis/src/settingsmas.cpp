@@ -6,9 +6,8 @@
 
 SettingsMAS::SettingsMAS(QObject *parent) : QObject(parent)
 {
-    global = new QSettings( QApplication::organizationName(),
-                            QApplication::applicationName(),
-                            this );
+    global = new QSettings( qApp->organizationName(),
+                            qApp->applicationName(), this );
 }
 
 SettingsMAS::~SettingsMAS()
@@ -111,7 +110,7 @@ bool SettingsMAS::load(ConfigMT4 *configKit)
 void SettingsMAS::save(const ConfigMT4 *configKit)
 {
     kitFile = new QSettings( QString("%1/%2").arg( configKit->kitPath )
-                             .arg( "config.ini" ), QSettings::IniFormat);
+                             .arg( "config.ini" ), QSettings::IniFormat );
     kitFile->beginGroup( "Main" );
     kitFile->setValue( "Kit_Name",         configKit->nameKit );
     kitFile->setValue( "Kit_Path",         configKit->kitPath );

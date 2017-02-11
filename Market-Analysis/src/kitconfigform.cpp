@@ -107,7 +107,8 @@ void KitConfigForm::checkTerminalPath(void)
     if( files.contains( "terminal.exe" ) && files.contains( "metaeditor.exe" ) ) {
         pal.setColor( QPalette::Text, Qt::darkGreen );
         configKit->updateServerParameters();
-        emit updateSymbols( configKit );
+        if( configKit->symbols.size() == 0 )
+            emit updateSymbols( configKit );
         if( configKit->mt4Account > 0 )
             ui->runTerminalButton->setEnabled( true );
         setUpDinamicComboBoxes();
