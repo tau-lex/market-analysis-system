@@ -10,6 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Market-Analysis
 TEMPLATE = app
+CONFIG += c++11
 
 RESOURCES += \
         Market-Analysis.qrc
@@ -54,6 +55,16 @@ win32-g++{
     QMAKE_LFLAGS += -static
 }
 
+# OpenMP library
+
+win32:!win32-g++{
+    QMAKE_CXXFLAGS += -openmp
+    QMAKE_LFLAGS   += -openmp
+}else{
+    QMAKE_CXXFLAGS += -fopenmp
+    QMAKE_LFLAGS   += -fopenmp
+}
+
 # OpenNN library
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../OpenNN/opennn/release/ -lopennn
@@ -74,6 +85,7 @@ else:unix: PRE_TARGETDEPS += $$OUT_PWD/../opennn/libopennn.a
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../OpenNN/tinyxml2/release/ -ltinyxml2
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../OpenNN/tinyxml2/debug/ -ltinyxml2
 else:unix: LIBS += -L$$OUT_PWD/../tinyxml2/ -ltinyxml2
+
 INCLUDEPATH += $$PWD/../../OpenNN/tinyxml2
 DEPENDPATH += $$PWD/../../OpenNN/tinyxml2
 
