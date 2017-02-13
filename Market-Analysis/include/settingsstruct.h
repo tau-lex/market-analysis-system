@@ -45,6 +45,7 @@ struct ConfigMT4 {
     QString         trainingMethod;
     QList<qint32>   divideInstances = { 60, 20, 20 };
     QDateTime       lastTraining;
+    QDateTime       lastChange;
     qint32          progress = 0;
     bool            isLoaded = false;
     bool            isReady = false;

@@ -21,6 +21,7 @@ private:
     Settings            *settings;
     ConfigMT4           *configKit;
     QList<qint32>       tempPeriods;
+    QDateTime           tempLastChange;
 
 public slots:
     void setSettingsPtr(Settings *sett);

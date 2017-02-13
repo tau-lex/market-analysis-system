@@ -28,6 +28,7 @@ void KitConfigForm::setConfigMt4Ptr(ConfigMT4 *config)
 
 void KitConfigForm::show(void)
 {
+    tempLastChange = configKit->lastChange;
     updateUi();
     QDialog::show();
 }
@@ -145,8 +146,11 @@ void KitConfigForm::on_mt4PathButton_clicked()
     str = QFileDialog::getExistingDirectory( this,
                                              tr("Open the folder containing the Meta Trader 4:"),
                                              configKit->mt4Path );
-    if( str != "" )
+    if( str != "" ) {
+        if( str != configKit->mt4Path )
+            tempLastChange = QDateTime::currentDateTime();
         configKit->mt4Path = str;
+    }
     ui->mt4PathEdit->setText( configKit->mt4Path );
     checkTerminalPath();
 }
@@ -168,6 +172,7 @@ void KitConfigForm::on_addSymbolButton_clicked()
     }
     if( !tempPeriods.contains( ui->periodCBox->currentData().toString().toInt() ) )
         tempPeriods.append( ui->periodCBox->currentData().toString().toInt() );
+    tempLastChange = QDateTime::currentDateTime();
 }
 
 void KitConfigForm::on_deleteButton_clicked()
@@ -180,8 +185,10 @@ void KitConfigForm::on_deleteButton_clicked()
     }
     if( widget ) {
         QListWidgetItem* item = widget->currentItem();
-        if( item )
+        if( item ) {
             delete item;
+            tempLastChange = QDateTime::currentDateTime();
+        }
     }
     if( ui->inputListWidget->count() == 0 && ui->outputListWidget->count() == 0 )
         tempPeriods.clear();
@@ -201,6 +208,7 @@ void KitConfigForm::on_upButton_clicked()
             widget->insertItem( (widget->currentRow() - 1), item->text() );
             widget->setCurrentRow( widget->currentRow() - 2 );
             delete item;
+            tempLastChange = QDateTime::currentDateTime();
         }
     }
 }
@@ -219,6 +227,7 @@ void KitConfigForm::on_downButton_clicked()
             widget->insertItem( (widget->currentRow() + 2), item->text() );
             widget->setCurrentRow( widget->currentRow() + 2 );
             delete item;
+            tempLastChange = QDateTime::currentDateTime();
         }
     }
 }
@@ -244,13 +253,19 @@ void KitConfigForm::save(void)
         oldName = configKit->nameKit;
     configKit->rename( ui->nameKitEdit->text() );
     configKit->mt4Path = ui->mt4PathEdit->text();
-    configKit->server = ui->serverCBox->currentText();
+    if( configKit->server != ui->serverCBox->currentText() ) {
+        configKit->server = ui->serverCBox->currentText();
+        tempLastChange = QDateTime::currentDateTime();
+    }
     configKit->historyPath = QString("/history/%1/").arg( configKit->server );
     configKit->trainingMethod = ui->trainingStrategyCBox->currentText();
     configKit->divideInstances[0] = ui->dataAllocationLEdit->text().mid(0, 2).toInt();
     configKit->divideInstances[1] = ui->dataAllocationLEdit->text().mid(5, 2).toInt();
     configKit->divideInstances[2] = ui->dataAllocationLEdit->text().mid(10, 2).toInt();
-    configKit->layersCount = ui->layerCountLEdit->text().toInt();
+    if( configKit->layersCount = ui->layerCountLEdit->text().toInt() ) {
+        configKit->layersCount = ui->layerCountLEdit->text().toInt();
+        tempLastChange = QDateTime::currentDateTime();
+    }
     for( auto i = 0; i < configKit->layersCount; i++ )
         configKit->layersSize[i] = ui->layersSizeLEdit->text().section( ",", i, i).toInt();
     configKit->periods = tempPeriods;
@@ -262,8 +277,17 @@ void KitConfigForm::save(void)
         configKit->output.append( ui->outputListWidget->item( i )->text() );
     configKit->recurrentModel = ui->recurrentNNChBox->isChecked();
     configKit->readVolume = ui->readVolumeChBox->isChecked();
-    configKit->depthHistory = ui->depthInLEdit->text().toInt();
-    configKit->depthPrediction = ui->depthOutLEdit->text().toInt();
+    if( configKit->depthHistory = ui->depthInLEdit->text().toInt() ) {
+        configKit->depthHistory = ui->depthInLEdit->text().toInt();
+        tempLastChange = QDateTime::currentDateTime();
+    }
+    if( configKit->depthPrediction = ui->depthOutLEdit->text().toInt() ) {
+        configKit->depthPrediction = ui->depthOutLEdit->text().toInt();
+        tempLastChange = QDateTime::currentDateTime();
+    }
+    configKit->lastChange = tempLastChange;
+    if( configKit->lastChange > configKit->lastTraining )
+        configKit->isTrained = false;
     configKit->isReady = isReady();
     if( oldName == "" ) {
         emit savedUpd( configKit->nameKit );
