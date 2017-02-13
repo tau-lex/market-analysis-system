@@ -29,9 +29,9 @@ struct ConfigMT4 {
     QStringList     symbolsOfTime;
     QStringList     trainingMethods;
     QString         historyPath = "/history/"; // default ?
-    const QString   configFile = "/MQL4/Files/mas_mt4.conf";
-    const QString   newHistoryPath = "/MQL4/Files/MAS_MarketData/h";
-    const QString   predictionPath = "/MQL4/Files/MAS_Prediction/p";
+    const QString   configFile = "/MQL4/Files/mas.conf";
+    const QString   newHistoryPath = "/MQL4/Files/MAS_MarketData/";
+    const QString   predictionPath = "/MQL4/Files/MAS_Prediction/";
     // Model parameters
     QList<qint32>   periods;
     QStringList     input;
@@ -45,6 +45,7 @@ struct ConfigMT4 {
     QString         trainingMethod;
     QList<qint32>   divideInstances = { 60, 20, 20 };
     QDateTime       lastTraining;
+    QDateTime       lastChange;
     qint32          progress = 0;
     bool            isLoaded = false;
     bool            isReady = false;

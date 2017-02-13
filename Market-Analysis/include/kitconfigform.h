@@ -21,17 +21,24 @@ private:
     Settings            *settings;
     ConfigMT4           *configKit;
     QList<qint32>       tempPeriods;
+    QDateTime           tempLastChange;
 
 public slots:
     void setSettingsPtr(Settings *sett);
     void setConfigMt4Ptr(ConfigMT4 *config);
     void show(void);
 
-private slots:
+private:
     void setUpComboBoxes(void);
     void setUpDinamicComboBoxes(void);
     void updateUi(void);
     void checkTerminalPath(void);
+    void copyMqlScripts(QString path);
+    void save(void);
+    bool isReady(void);             //?
+    void accept();
+
+private slots:
     void on_mt4PathButton_clicked();
     void on_runTerminalButton_clicked();
     void on_addSymbolButton_clicked();
@@ -39,9 +46,6 @@ private slots:
     void on_upButton_clicked();
     void on_downButton_clicked();
     void on_buttonBox_clicked(QAbstractButton *button);
-    void save(void);
-    bool isReady(void);
-    void accept();
 
 signals:
     void updateSymbols(ConfigMT4 *);

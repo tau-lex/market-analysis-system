@@ -1,18 +1,25 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2016-11-09T20:17:40
-#
-#-------------------------------------------------
+###############################################################################
+#                                                                             #
+#   Market Analysis System                                                    #
+#   https://www.mql5.com/ru/users/terentjew23                                 #
+#                                                                             #
+#   M A R K E T   A N A L Y S I S   P R O G R A M                             #
+#                                                                             #
+#   Aleksey Terentew                                                          #
+#   terentew.aleksey@ya.ru                                                    #
+#                                                                             #
+###############################################################################
 
 QT      += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = Market-Analysis
-TEMPLATE = app
+TARGET    = Market-Analysis
+TEMPLATE  = app
+CONFIG   += c++11
 
-RESOURCES += \
-        Market-Analysis.qrc
+RC_FILE   = Market-Analysis.rc
+RESOURCES += Market-Analysis.qrc
 
 SOURCES += src/main.cpp \
         src/mainwindow.cpp \
@@ -27,7 +34,8 @@ SOURCES += src/main.cpp \
         src/imt4reader.cpp \
         src/hstreader.cpp \
         src/csvreader.cpp \
-        src/csvwriter.cpp
+        src/csvwriter.cpp \
+        src/csvpredictionwriter.cpp
 
 HEADERS += include/mainwindow.h \
         include/settingsform.h \
@@ -41,7 +49,8 @@ HEADERS += include/mainwindow.h \
         include/imt4reader.h \
         include/hstreader.h \
         include/csvreader.h \
-        include/csvwriter.h
+        include/csvwriter.h \
+        include/csvpredictionwriter.h
 
 FORMS += mainwindow.ui \
         settingsform.ui \
@@ -52,6 +61,16 @@ win32-g++{
     QMAKE_LFLAGS += -static-libgcc
     QMAKE_LFLAGS += -static-libstdc++
     QMAKE_LFLAGS += -static
+}
+
+# OpenMP library
+
+win32:!win32-g++{
+    QMAKE_CXXFLAGS += -openmp
+    QMAKE_LFLAGS   += -openmp
+}else{
+    QMAKE_CXXFLAGS += -fopenmp
+    QMAKE_LFLAGS   += -fopenmp
 }
 
 # OpenNN library
@@ -74,6 +93,7 @@ else:unix: PRE_TARGETDEPS += $$OUT_PWD/../opennn/libopennn.a
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../OpenNN/tinyxml2/release/ -ltinyxml2
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../OpenNN/tinyxml2/debug/ -ltinyxml2
 else:unix: LIBS += -L$$OUT_PWD/../tinyxml2/ -ltinyxml2
+
 INCLUDEPATH += $$PWD/../../OpenNN/tinyxml2
 DEPENDPATH += $$PWD/../../OpenNN/tinyxml2
 

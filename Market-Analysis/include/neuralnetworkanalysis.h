@@ -5,7 +5,7 @@
 #include "include/settingsstruct.h"
 #include "include/imt4reader.h"
 
-// include nn library
+// include opennn library
 #include "../opennn/opennn.h"
 using namespace OpenNN;
 
@@ -19,13 +19,13 @@ public:
 private:
     ConfigMT4                       *config;
     qint32                          rowsDS = 1;
-    qint32                          columnsDS = 0;
+    qint32                          columnsDS = 1;
     qint64                          firstEntryTime;
     qint64                          lastEntryTime;
-    Matrix<double>                  *matrixDS;
+    std::vector<qint64>             timeIndexes;
     DataSet                         *dataSet;
     NeuralNetwork                   *neuralNetwork;
-    PerformanceFunctional           *performanceFunc;
+    LossIndex                       *lossIndex;
     TrainingStrategy                *trainingStrategy;
 
 public slots:
@@ -35,12 +35,11 @@ public slots:
     void stop(void);
 
 private slots:
-    bool loadTrainedModel(void);
     void prepareDataSet(FileType historyType);
     void prepareVariablesInfo(void);
     void prepareInstances(void);
     void prepareNeuralNetwork(void);
-    void preparePerformanceFunc(void);
+    void prepareLossIndex(void);
     void runTrainingNeuralNetwork(void);
     void saveResultsTraining(void);
     void runWorkingProcess(void);
@@ -48,12 +47,13 @@ private slots:
     void loadHistoryFiles(QMap<QString, IMt4Reader *> &readers,
                           QMap<QString, qint32> &iters,
                           FileType historyType);
-    void loadDataToMatrixDS(const QMap<QString, IMt4Reader *> &readers,
+    void loadDataToDS(const QMap<QString, IMt4Reader *> &readers,
                             QMap<QString, qint32> &iters,
-                            Matrix<double> &matrixDS);
-    void getFirstEntryTime(const QMap<QString, IMt4Reader *> &readers,
+                            bool isToForecast = false );
+    void getEntryTime(const QMap<QString, IMt4Reader *> &readers,
                            qint64 &first, qint64 &last);
     double getDoubleTimeSymbol(const QString &symbol, const qint64 &timeCurrentIter);
+    bool loadTrainedModel(void);
     //void parseNNExeption();
 
 signals:

@@ -68,6 +68,7 @@
     <addaction name="actionHelp"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
+    <addaction name="actionAbout_Qt"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -243,6 +244,14 @@
    </property>
    <property name="text">
     <string>Close Kit</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About &amp;Qt</string>
+   </property>
+   <property name="toolTip">
+    <string>About Qt Framework</string>
    </property>
   </action>
  </widget>

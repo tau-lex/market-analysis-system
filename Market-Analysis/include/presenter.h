@@ -57,7 +57,7 @@ private slots:
     void updateTab(const QString name);
     void loadSettings(void);
     void saveSettings(void);
-    void loadMAKit(const QString name);
+    bool loadMAKit(const QString name);
     void saveMAKit(const QString name);
     void updateActionsButtons(const QString name);
     void runTerminal(const QString name);       // ?

@@ -48,5 +48,8 @@
         <file>img/statistics2_diagram_64.png</file>
         <file>mql/MAS_Assistant.mq4</file>
         <file>mql/MAS_Autotrading.mq4</file>
+        <file>mql/MAS_MasterWindows.mqh</file>
+        <file>mql/MAS_Template.tpl</file>
+        <file>mql/MAS_Assistant.ex4</file>
     </qresource>
 </RCC>

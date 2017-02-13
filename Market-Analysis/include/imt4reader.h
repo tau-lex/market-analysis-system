@@ -52,27 +52,23 @@ public:
     ~IMt4Reader();
 
 protected:
-    QString fileName;
-    bool fileExists;
-    FileType fileType;
-    qint32 historySize;
-    qint32 historyVersion;
+    QString                     fileName;
+    bool                        fileExists;
+    FileType                    fileType;
+    Header                      *header = 0;
+    QList<std::vector<double> > *history = 0;
 
-    Header *header = 0;
-    std::vector<History *> *historyVector = 0;
-
-protected:
-
-public slots:
-    void setFileName(QString fName);
+public:
+    void setFileName(const QString fName);
     QString getFileName() const;
     qint32 getHistorySize() const;
     qint32 getHistoryVersion() const;
 
-    virtual bool readFromFile() = 0;
-    Header *getHeader();
+    virtual bool readFile() = 0;
+    Header *getHeader() const;
     QString getHeaderString() const;
-    std::vector<History*> *getHistoryVector();
+    QList<std::vector<double> > *getHistory() const;
+    std::vector<double> getHistory(qint32 position) const;
     QString getHistoryString(qint32 position) const;
 };
 

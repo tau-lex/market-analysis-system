@@ -2,12 +2,12 @@
 #include <QApplication>
 #include <QSettings>
 #include <QVariant>
+#include <QDir>
 
 SettingsMAS::SettingsMAS(QObject *parent) : QObject(parent)
 {
-    global = new QSettings( QApplication::organizationName(),
-                            QApplication::applicationName(),
-                            this );
+    global = new QSettings( qApp->organizationName(),
+                            qApp->applicationName(), this );
 }
 
 SettingsMAS::~SettingsMAS()
@@ -39,6 +39,10 @@ void SettingsMAS::load(Settings *settings)
     settings->winSizeX = global->value( "Size_X" ).toInt();
     settings->winSizeY = global->value( "Size_Y" ).toInt();
     global->endGroup();
+    QString mDir = qApp->applicationDirPath();
+    mDir += "/Market Kits";
+    if( !QDir().exists(mDir) )
+        QDir().mkdir(mDir);
 }
 
 void SettingsMAS::save(const Settings *settings)
@@ -57,14 +61,18 @@ void SettingsMAS::save(const Settings *settings)
     global->endGroup();
 }
 
-void SettingsMAS::load(ConfigMT4 *configKit)
+bool SettingsMAS::load(ConfigMT4 *configKit)
 {
     if( configKit->nameKit.contains( "New Market Kit" ) ) {
         loadDefault( configKit );
-        return;
+        return true;
     }
-    kitFile = new QSettings( QString("%1/%2").arg( configKit->kitPath )
-                             .arg( "config.ini" ), QSettings::IniFormat);
+    QString configFile = QString("%1/%2").arg( configKit->kitPath )
+                                         .arg( "config.ini" );
+    if( !QDir().exists(configFile) ) {
+        return false;
+    }
+    kitFile = new QSettings( configFile, QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
     configKit->nameKit =            kitFile->value( "Kit_Name" ).toString();
     configKit->kitPath =            kitFile->value( "Kit_Path" ).toString();
@@ -88,6 +96,7 @@ void SettingsMAS::load(ConfigMT4 *configKit)
     configKit->trainingMethod =     kitFile->value( "Training_Method" ).toString();
     readArray( "Training_Allocation", "Part", kitFile, configKit->divideInstances );
     configKit->lastTraining.fromTime_t( kitFile->value( "Last_Training" ).toInt() );
+    configKit->lastChange.fromTime_t( kitFile->value( "Last_Change" ).toInt() );
     configKit->isReady =            kitFile->value( "Is_Ready" ).toBool();
     configKit->isTrained =          kitFile->value( "Is_Trained" ).toBool();
     if( configKit->isTrained )
@@ -96,12 +105,13 @@ void SettingsMAS::load(ConfigMT4 *configKit)
     delete kitFile;
     kitFile = 0;
     loadMt4Conf( configKit );
+    return true;
 }
 
 void SettingsMAS::save(const ConfigMT4 *configKit)
 {
     kitFile = new QSettings( QString("%1/%2").arg( configKit->kitPath )
-                             .arg( "config.ini" ), QSettings::IniFormat);
+                             .arg( "config.ini" ), QSettings::IniFormat );
     kitFile->beginGroup( "Main" );
     kitFile->setValue( "Kit_Name",         configKit->nameKit );
     kitFile->setValue( "Kit_Path",         configKit->kitPath );
@@ -125,6 +135,7 @@ void SettingsMAS::save(const ConfigMT4 *configKit)
     kitFile->setValue( "Training_Method",  configKit->trainingMethod );
     writeArray( "Training_Allocation", "Part", kitFile, configKit->divideInstances );
     kitFile->setValue( "Last_Training",    configKit->lastTraining.toTime_t() );
+    kitFile->setValue( "Last_Change",      configKit->lastChange.toTime_t() );
     kitFile->setValue( "Is_Ready",         configKit->isReady );
     kitFile->setValue( "Is_Trained",       configKit->isTrained );
     kitFile->endGroup();
@@ -138,11 +149,8 @@ void SettingsMAS::loadMt4Conf(ConfigMT4 *configKit)
     kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
-    configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
-//    configKit->servers.clear();
-//    readArray( "Servers", "Srv", kitFile, configKit->servers );
-    configKit->symbols.clear();
     readArray( "Symbols", "Smb", kitFile, configKit->symbols );
+    configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
     kitFile->endGroup();
     delete kitFile;
     kitFile = 0;
@@ -153,12 +161,11 @@ void SettingsMAS::saveMt4Conf(const ConfigMT4 *configKit)
     kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
-    qint32 size = kitFile->beginReadArray( "Kit_Names" );
-    kitFile->endArray();
-    kitFile->beginWriteArray( "Kit_Names" );
-    kitFile->setArrayIndex( size );
-    kitFile->setValue( "Kit", configKit->nameKit );
-    kitFile->endArray();
+    QStringList temp;
+    readArray( "Kit_Names", "Kit", kitFile, temp );
+    if( !temp.contains( configKit->nameKit ) )
+        temp.append( configKit->nameKit );
+    writeArray( "Kit_Names", "Kit", kitFile, temp );
     kitFile->endGroup();
     kitFile->beginGroup( configKit->nameKit );
     kitFile->setValue( "Depth_Prediction", configKit->depthPrediction );
@@ -171,7 +178,8 @@ void SettingsMAS::saveMt4Conf(const ConfigMT4 *configKit)
 
 void SettingsMAS::deleteMAKit(ConfigMT4 *configKit)
 {
-    kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
+    kitFile = new QSettings( QString("%1%2")
+                             .arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
     QStringList temp;
@@ -181,10 +189,8 @@ void SettingsMAS::deleteMAKit(ConfigMT4 *configKit)
     kitFile->endGroup();
     kitFile->beginGroup( configKit->nameKit );
     kitFile->remove( "Depth_Prediction" );
-    while( kitFile->contains( "Input" ) )
-        kitFile->remove( "Input" );
-    while( kitFile->contains( "Output" ) )
-        kitFile->remove( "Output" );
+    kitFile->remove( "Input" );
+    kitFile->remove( "Output" );
     kitFile->endGroup();
     delete kitFile;
     kitFile = 0;
@@ -194,17 +200,16 @@ void SettingsMAS::deleteMAKit(ConfigMT4 *configKit)
 void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
                             QSettings *setups, QStringList &list)
 {
-    qint32 size = setups->beginReadArray( arrayName );
-    for( qint32 i = 0; i < size; i++ ) {
-        setups->setArrayIndex( i );
-        list.append( setups->value( valueName ).toString() );
-    }
-    setups->endArray();
+    Q_UNUSED(valueName);
+    list.clear();
+    foreach(QString item, setups->value( arrayName ).toString().split( ";", QString::SkipEmptyParts ) )
+        list.append( item );
 }
 
 void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
                             QSettings *setups, QList<qint32> &list)
 {
+    list.clear();
     qint32 size = setups->beginReadArray( arrayName );
     for( qint32 i = 0; i < size; i++ ) {
         setups->setArrayIndex( i );
@@ -216,12 +221,13 @@ void SettingsMAS::readArray(const QString &arrayName, const QString &valueName,
 void SettingsMAS::writeArray(const QString &arrayName, const QString &valueName,
                              QSettings *setups, const QStringList &list)
 {
-    setups->beginWriteArray( arrayName );
-    for( qint32 i = 0; i < list.size(); i++) {
-        setups->setArrayIndex( i );
-        setups->setValue( valueName, list[i] );
+    Q_UNUSED(valueName);
+    QString tmp = "";
+    foreach( QString str, list ) {
+        tmp += str; tmp += ";";
     }
-    setups->endArray();
+    tmp.remove( tmp.size() - 1, 1);
+    setups->setValue( arrayName, tmp );
 }
 
 void SettingsMAS::writeArray(const QString &arrayName, const QString &valueName,
@@ -237,13 +243,12 @@ void SettingsMAS::writeArray(const QString &arrayName, const QString &valueName,
 
 void SettingsMAS::loadDefault(ConfigMT4 *configKit)
 {
-    configKit->input.append("EURUSD.pro1440");
     configKit->input.append( "YEAR" );
     configKit->input.append( "MONTH" );
     configKit->input.append( "DAY" );
-    configKit->input.append( "HOUR" );
     configKit->input.append( "WEEKDAY" );
-    configKit->output.append("EURUSD.pro1440");
+    configKit->input.append( "EURUSD.pro1440" );
+    configKit->output.append( "EURUSD.pro1440" );
     configKit->periods.append( 1440 );
 }
 

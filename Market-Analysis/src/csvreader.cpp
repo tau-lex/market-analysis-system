@@ -2,6 +2,7 @@
 #include <QDateTime>
 #include <QString>
 #include <QByteArray>
+#include <QList>
 
 //+---------------------------------------------------------------------------+
 CsvReader::CsvReader(QString fName) : IMt4Reader(fName)
@@ -27,41 +28,42 @@ Header *CsvReader::readHeader(QFile &f)
     header->LastSync =
             QDateTime::fromString( buffer.section( ';', 6, 6 ),
                                    "yyyy.MM.dd hh:mm:ss" ).toMSecsSinceEpoch()/1000;
-
     return header;
 }
 
-History *CsvReader::readHistory(QFile &f)
+std::vector<double> CsvReader::readHistoryLine(QFile &f)
 {
-    QByteArray byteArr = f.readLine();
-    QString buffer = byteArr.data();
+    QString buffer = f.readLine().data();
+    std::vector<double> newRow;
     if( buffer == "" )
-        return nullptr;
-    History *history = new History;
-    history->Time =
-            QDateTime::fromString( buffer.section( ';', 0, 0 ),
-                                   "yyyy.MM.dd hh:mm:ss" ).toMSecsSinceEpoch()/1000;
-    history->Open =  buffer.section( ';', 1, 1 ).toDouble();
-    history->High =  buffer.section( ';', 2, 2 ).toDouble();
-    history->Low =   buffer.section( ';', 3, 3 ).toDouble();
-    history->Close = buffer.section( ';', 4, 4 ).toDouble();
-    history->Volume = buffer.section( ';', 5, 5 ).toInt();
-
-    return history;
+        return newRow;
+    double time = static_cast<double>( QDateTime::fromString( buffer.section( ';', 0, 0 ),
+                                         "yyyy.MM.dd hh:mm:ss" ).toTime_t() );
+    newRow.push_back( time );
+    newRow.push_back( buffer.section( ';', 1, 1 ).toDouble() );
+    newRow.push_back( buffer.section( ';', 2, 2 ).toDouble() );
+    newRow.push_back( buffer.section( ';', 3, 3 ).toDouble() );
+    newRow.push_back( buffer.section( ';', 4, 4 ).toDouble() );
+    if( header->Version == 401 ) {
+        qint64 volume = buffer.section( ';', 5, 5 ).toInt();
+        newRow.push_back( static_cast<double>( volume ) );
+    }
+    else if( header->Version == 400 ) {
+        newRow.push_back( buffer.section( ';', 5, 5 ).toDouble() );
+    }
+    return newRow;
 }
 
-bool CsvReader::readFromFile()
+bool CsvReader::readFile()
 {
     QFile file(fileName, this);
     if(file.open(QIODevice::ReadOnly)) {
         fileExists = true;
         header = readHeader( file );
-        historyVersion = header->Version;
-        History *historyLine = readHistory( file );
-        while( historyLine != nullptr ) {
-            historyVector->push_back( historyLine );
-            historySize++;
-            historyLine = readHistory( file );
+        std::vector<double> newRow = readHistoryLine( file );
+        while( newRow.size() != 0 ) {
+            history->append( newRow );
+            newRow = readHistoryLine( file );
         }
         file.close();
         return fileExists;

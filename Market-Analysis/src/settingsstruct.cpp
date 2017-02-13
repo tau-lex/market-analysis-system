@@ -34,7 +34,7 @@ bool ConfigMT4::isTimeSymbol(QString symbol) {
 
 void ConfigMT4::updateServerParameters() {
     setServer();
-    setSymbols();
+//    setSymbols();
 }
 
 qint32 ConfigMT4::sumInput()
@@ -103,17 +103,7 @@ void ConfigMT4::setServer() {
 }
 
 void ConfigMT4::setSymbols() {
-    symbols.clear();
-    // read mas_mt4.conf
-    symbols.append("EURUSD.pro");
-    symbols.append("GBPUSD.pro");
-    symbols.append("USDJPY.pro");
-    symbols.append("AUDUSD.pro");
-    symbols.append("S&P500");
-    symbols.append("DAX");
-    symbols.append("FTSE100");
-    symbols.append("BRENT");
-    symbols.append("XAUUSD.pro");
+
 }
 
 void ConfigMT4::setSymbolsOfTime() {
