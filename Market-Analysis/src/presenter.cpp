@@ -170,7 +170,7 @@ void Presenter::stopWork(const QString name)
 void Presenter::trainDone(const QString name)
 {
     updateTab( name );
-    //writeToConsole( name, tr("Training done!") );
+    saveMAKit( name );
 }
 
 void Presenter::progress(const QString name)
@@ -259,7 +259,7 @@ void Presenter::setConnections()
 {
     connect( mainWindow, SIGNAL( settings() ), this, SLOT( openSettingsForm() ) );
     connect( mainWindow, SIGNAL( kitConfigs(QString) ),
-            this, SLOT( openKitConfigForm(QString) ) );
+             this, SLOT( openKitConfigForm(QString) ) );
     connect( mainWindow, SIGNAL( currentTab(QString) ),
              this, SLOT( setCurrentKit(QString) ) );
     connect( mainWindow, SIGNAL( addNewKit() ), this, SLOT( newMAKit() ) );

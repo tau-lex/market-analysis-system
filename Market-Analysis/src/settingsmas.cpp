@@ -96,6 +96,7 @@ bool SettingsMAS::load(ConfigMT4 *configKit)
     configKit->trainingMethod =     kitFile->value( "Training_Method" ).toString();
     readArray( "Training_Allocation", "Part", kitFile, configKit->divideInstances );
     configKit->lastTraining.fromTime_t( kitFile->value( "Last_Training" ).toInt() );
+    configKit->lastChange.fromTime_t( kitFile->value( "Last_Change" ).toInt() );
     configKit->isReady =            kitFile->value( "Is_Ready" ).toBool();
     configKit->isTrained =          kitFile->value( "Is_Trained" ).toBool();
     if( configKit->isTrained )
@@ -134,6 +135,7 @@ void SettingsMAS::save(const ConfigMT4 *configKit)
     kitFile->setValue( "Training_Method",  configKit->trainingMethod );
     writeArray( "Training_Allocation", "Part", kitFile, configKit->divideInstances );
     kitFile->setValue( "Last_Training",    configKit->lastTraining.toTime_t() );
+    kitFile->setValue( "Last_Change",      configKit->lastChange.toTime_t() );
     kitFile->setValue( "Is_Ready",         configKit->isReady );
     kitFile->setValue( "Is_Trained",       configKit->isTrained );
     kitFile->endGroup();
