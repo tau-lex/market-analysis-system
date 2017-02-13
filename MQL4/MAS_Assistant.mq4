@@ -8,7 +8,7 @@
 #property description   "This indicator is a modul in the Market Analysis System programm complex."
 #property description   "MAS_Assistant save history and read forecast for Market Assay Kit."
 #property description   "License GNU LGPL v.3"
-#property version       "1.3.6"
+#property version       "1.3.7"
 #property strict
 #include                <MAS_MasterWindows.mqh>
 //---------------------Indicators---------------------------------------------+
@@ -17,13 +17,13 @@
 //--- plot Forecast_High
 #property indicator_label1  "Forecast High"
 #property indicator_type1   DRAW_LINE
-#property indicator_color1  clrLime
+#property indicator_color1  clrBlue
 //#property indicator_style1  STYLE_DASH
 #property indicator_width1  1
 //--- plot Forecast_Low
 #property indicator_label2  "Forecast Low"
 #property indicator_type2   DRAW_LINE
-#property indicator_color2  clrLime
+#property indicator_color2  clrRed
 //#property indicator_style2  STYLE_DASH
 #property indicator_width2  1
 //--- plot Forecast_Close
@@ -34,7 +34,7 @@
 #property indicator_width3  1
 //-----------------Global variables-------------------------------------------+
 const string    Copyright = "Copyright 2016, Terentew Aleksey";
-const string    comment = "MAS_Assistant v1.3.6";
+const string    comment = "MAS_Assistant v1.3.7";
 input string    configFile = "mas.conf";
 input bool      messagesOn = true;
 input string    csvSeparator = ";";
@@ -212,7 +212,7 @@ int OnCalculate(const int rates_total,
             if( messagesOn )
                 Print( "msg: New bar." );
             for( int idx = 0; idx < ArrayRange( inputSymbols, 0 ); idx++ ) {
-                if( SaveHistory( inputSymbols[idx][0], Copyright ) && messagesOn )
+                if( SaveHistory( inputSymbols[idx][0] ) && messagesOn )
                     PrintFormat( "msg: History file %s.csv saved.", inputSymbols[idx][0] );
             }
         }
@@ -220,9 +220,10 @@ int OnCalculate(const int rates_total,
             if( messagesOn )
                 PrintFormat( "msg: New forecast %s.", outputSymbol );
             datetime controlBars[]; 
-            ReadForecastBarSeries( outputSymbol, controlBars );
-            ui.SetControlBars( controlBars );
-            PrintFormat( "Readed forcast file %s.csv.", outputSymbol );
+            if( ReadForecastBarSeries( outputSymbol, controlBars ) == 0 ) {
+                ui.SetControlBars( controlBars );
+                PrintFormat( "Readed forcast file %s.csv.", outputSymbol );
+            }
         }
     } else {
         if( !configIsReaded || ArrayRange( kitList, 0 ) <= 0 ) {
@@ -231,8 +232,9 @@ int OnCalculate(const int rates_total,
                 kitName = kitList[0][0];
                 ReadKitConfig( configFile, kitName, inputSymbols, outputSymbols, depthForecast );
                 if( messagesOn )
-                    PrintFormat( "msg: Kit %s readed. In0=%s, Out0=%s, Depth forecast=%d", kitName,
-                                    inputSymbols[0][0], outputSymbols[0][0], depthForecast );
+                    PrintFormat( "msg: Kit %s readed. In=%s...%s, Out0=%s, Depth forecast=%d", kitName,
+                                    inputSymbols[0][0], inputSymbols[ArrayRange(inputSymbols,0)-1][0], 
+                                    outputSymbols[0][0], depthForecast );
                 if( StringFind( outputSymbols[0][0], _Symbol ) >= 0 ) {
                     outputSymbol = outputSymbols[0][0];
                     PrintFormat( "Assistant for %s is ready.", outputSymbol );
@@ -241,8 +243,8 @@ int OnCalculate(const int rates_total,
                 ui.SetMAKit( kitName );
                 ui.SetMAOutSymbol( outputSymbol );
                 datetime controlBars[]; 
-                ReadForecastBarSeries( outputSymbol, controlBars );
-                ui.SetControlBars( controlBars );
+                if( ReadForecastBarSeries( outputSymbol, controlBars ) == 0 )
+                    ui.SetControlBars( controlBars );
             }
         }
         if( configIsReaded && ArrayRange( kitList, 0 ) > 0 ) {
@@ -254,7 +256,11 @@ int OnCalculate(const int rates_total,
                         outputSymbol = outputSymbols[idx][0];
                         PrintFormat( "Assistant for %s is ready.", outputSymbol );
                         isReady = true;
-                        continue;
+//                        for( int idxh = 0; idxh < ArrayRange( inputSymbols, 0 ); idxh++ )  {
+//                            if( SaveHistory( inputSymbols[idxh][0] ) && messagesOn )
+//                                PrintFormat( "msg: History file %s.csv saved.", inputSymbols[idxh][0] );
+//                        }
+                        break;
                     }
                     if( StringFind( outputSymbols[idx][0], _Symbol ) < 0 &&
                             OpenNewWindow( outputSymbols[idx][0] ) > 0 )
@@ -300,7 +306,7 @@ struct ForecastHeader {
 //+---------------------------------------------------------------------------+
 //| Functions                                                                 |
 //+---------------------------------------------------------------------------+
-bool NewBar(const int tf, const string symb = "")
+bool NewBar(const int tf)
 {
     static datetime lastTime = 0;
     bool condition = false;
@@ -308,9 +314,11 @@ bool NewBar(const int tf, const string symb = "")
         condition = ( ( TimeCurrent() - lastTime >= PeriodSeconds(tf) ) || 
                       ( TimeCurrent() % PeriodSeconds(tf) == 0 ) );
         if( condition ) {
-            lastTime  = TimeCurrent();
+            lastTime = TimeCurrent();
         }
-    } 
+    }
+    if( tickCount <= 1 )
+        return true;
     return condition;
 };
 
@@ -322,23 +330,25 @@ bool NewForecast(const int tf, const string symb)
         condition = ( ( TimeCurrent() - lastTime >= PeriodSeconds(tf) ) || 
                       ( TimeCurrent() % PeriodSeconds(tf) == 0 ) );
         if( condition ) {
-            lastTime  = TimeCurrent();
+            lastTime = TimeCurrent();
         }
     } 
     return condition;
 };
 
-bool SaveHistory(const string symb, const string copy, const char csvSep = ';')
+bool SaveHistory(const string symb)
 {
-    if( SymbolIsTime( symb ) )
+    if( SymbolIsTime( symb ) ) {
         return false;
+    }
+    ushort  csvSep = StringGetChar( csvSeparator, 0 );
     string  symbol, saveFile;
     int     timeframe = 0, limit, csvFile;
     SeparateMasSymbol( symb, symbol, timeframe );
     saveFile = StringConcatenate( mainSavePath, symb, ".csv" );
     limit = GetIndexFirstBar( timeframe );
     csvFile = FileOpen( saveFile, FILE_WRITE | FILE_CSV, csvSep );
-    FileWrite( csvFile, 401, copy, symbol, timeframe, (int)MarketInfo( symbol, MODE_DIGITS ), 
+    FileWrite( csvFile, 401, Copyright, symbol, timeframe, (int)MarketInfo( symbol, MODE_DIGITS ), 
                 iTime( symbol, timeframe, limit - 1 ), iTime( symbol, timeframe, 0 ) );
     for( int i = limit - 1; i >= 0; i-- ) {
         FileSeek( csvFile, 0, SEEK_END );
@@ -455,7 +465,7 @@ void ReadKitConfig(const string file, const string kit,
     }
 };
 
-void ReadForecastBarSeries(const string symb, datetime &seriesControlBars[], const char csvSep = ';')
+int ReadForecastBarSeries(const string symb, datetime &seriesControlBars[], const char csvSep = ';')
 {
     int idx = 0;
     ForecastHeader header;
@@ -469,14 +479,20 @@ void ReadForecastBarSeries(const string symb, datetime &seriesControlBars[], con
                 seriesControlBars[idx] = ReadForcastBar( forecastFile, header.Depth );
                 idx++;
             }
-        } else 
+        } else {
             Print( "err: Wrong header of file! Reading is stopped." );
+            FileClose( forecastFile );
+            return 2;
+        }
         FileClose( forecastFile );
-    } else
+    } else {
         Print( "err: File not open! ", readFile, "; ", GetLastError() );
+        return 1;
+    }
+    return 0;
 };
 
-void ReadForecast(const string symb, const datetime controlBar, const char csvSep = ';')
+int ReadForecast(const string symb, const datetime controlBar, const char csvSep = ';')
 {
     ForecastHeader header;
     string readFile = StringConcatenate( mainReadPath, symb, ".csv" );
@@ -487,11 +503,17 @@ void ReadForecast(const string symb, const datetime controlBar, const char csvSe
                 if( ReadForcastTS( forecastFile, header, controlBar ) )
                     break;
             }
-        } else 
+        } else {
             Print( "err: Wrong header of file! Reading is stopped." );
+            FileClose( forecastFile );
+            return 2;
+        }
         FileClose( forecastFile );
-    } else
+    } else {
         Print( "err: File not open! ", readFile, "; ", GetLastError() );
+        return 1;
+    }
+    return 0;
 };
 
 bool ReadHeader(const int handle, ForecastHeader &fcst)
@@ -554,11 +576,11 @@ bool ReadForcastTS(const int handle, const ForecastHeader &head, const datetime 
 
 void ArraysClear(const int depth = 50)
 {
-    for( int i = 0; i < depth; i++ )
+    for( int i = 0; i < depth+5; i++ )
         HighBuffer[i] = EMPTY_VALUE;
-    for( int i = 0; i < depth; i++ )
+    for( int i = 0; i < depth+5; i++ )
         LowBuffer[i] = EMPTY_VALUE;
-    for( int i = 0; i < depth; i++ )
+    for( int i = 0; i < depth+5; i++ )
         CloseBuffer[i] = EMPTY_VALUE;
 };
 
