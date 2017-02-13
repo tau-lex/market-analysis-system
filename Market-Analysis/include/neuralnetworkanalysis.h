@@ -22,6 +22,7 @@ private:
     qint32                          columnsDS = 1;
     qint64                          firstEntryTime;
     qint64                          lastEntryTime;
+    std::vector<qint64>             timeIndexes;
     DataSet                         *dataSet;
     NeuralNetwork                   *neuralNetwork;
     LossIndex                       *lossIndex;
@@ -47,7 +48,8 @@ private slots:
                           QMap<QString, qint32> &iters,
                           FileType historyType);
     void loadDataToDS(const QMap<QString, IMt4Reader *> &readers,
-                            QMap<QString, qint32> &iters);
+                            QMap<QString, qint32> &iters,
+                            bool isToForecast = false );
     void getEntryTime(const QMap<QString, IMt4Reader *> &readers,
                            qint64 &first, qint64 &last);
     double getDoubleTimeSymbol(const QString &symbol, const qint64 &timeCurrentIter);
