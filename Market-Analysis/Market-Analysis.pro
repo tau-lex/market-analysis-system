@@ -31,6 +31,7 @@ SOURCES += src/main.cpp \
         src/settingsmas.cpp \
         src/marketassaykit.cpp \
         src/neuralnetworkanalysis.cpp \
+        src/masopennnclasses.cpp \
         src/imt4reader.cpp \
         src/hstreader.cpp \
         src/csvreader.cpp \
@@ -46,6 +47,7 @@ HEADERS += include/mainwindow.h \
         include/settingsmas.h \
         include/marketassaykit.h \
         include/neuralnetworkanalysis.h \
+        include/masopennnclasses.h \
         include/imt4reader.h \
         include/hstreader.h \
         include/csvreader.h \
