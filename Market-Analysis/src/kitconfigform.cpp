@@ -54,8 +54,9 @@ void KitConfigForm::setUpDinamicComboBoxes(void)
         ui->trainingStrategyCBox->addItem( method, method );
     ui->trainingStrategyCBox->setCurrentText( configKit->trainingMethod );
     ui->symbolCBox->clear();
-    foreach( QString symbol, configKit->symbols )
-        ui->symbolCBox->addItem( symbol, symbol );
+    ui->symbolCBox->addItems( configKit->symbolsOfTime );
+    ui->symbolCBox->addItems( configKit->symbols );
+    ui->symbolCBox->setCurrentText( configKit->symbols[0] );
     ui->serverCBox->clear();
     foreach( QString server, configKit->servers )
         ui->serverCBox->addItem( server, server );
