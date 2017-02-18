@@ -15,6 +15,8 @@ public:
     void add_input(const size_t&, const size_t&);
     void add_input(const size_t&, const size_t&, const size_t&);
 
+    void construct_inputs(void);
+
     // Parameters
 
     size_t count_parameters_number(void) const;
@@ -25,8 +27,9 @@ public:
     // Output
 
     void add_output(const size_t&);
+    void construct_outputs(void);
 
-    Vector<double> calculate_outputs(const Vector<double>&, const Vector<double>&) const;
+    Vector<double> calculate_outputs(const Vector<double>&) const;
     Matrix<double> calculate_output_data(const Matrix<double>&) const;
 
     // Serialization methods
