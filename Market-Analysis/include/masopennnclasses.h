@@ -16,6 +16,7 @@ public:
     void add_input(const size_t&, const size_t&, const size_t&);
 
     void construct_inputs(void);
+    size_t get_inputs_number(void);
 
     // Parameters
 
@@ -28,6 +29,7 @@ public:
 
     void add_output(const size_t&);
     void construct_outputs(void);
+    size_t get_outputs_number(void);
 
     Vector<double> calculate_outputs(const Vector<double>&) const;
     Matrix<double> calculate_output_data(const Matrix<double>&) const;
@@ -44,7 +46,7 @@ protected:
 
     /// Inputs layers for pars, date-time data and others data.
 
-    Vector< Vector<PerceptronLayer*> > inputs_layers_pointers;
+    Vector< Vector<PerceptronLayer*> > inputsArrayPtr;
 
     /// Main layers
 
@@ -52,11 +54,11 @@ protected:
 
     /// Outputs layers for forecasting pars;
 
-    Vector<PerceptronLayer*> outputs_layers_pointers;
+    Vector<PerceptronLayer*> outputsArrayPtr;
 
     /// Saved data for recurent layers
 
-    Vector< Vector<double> > memory_outputs_data;
+    Vector< Vector< Vector<double> > > memoryHistoryData;
 };
 
 

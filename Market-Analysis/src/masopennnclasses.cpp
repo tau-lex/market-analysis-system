@@ -8,16 +8,7 @@
 
 void MASNeuralNetwork::add_input(const size_t& new_layer_size)
 {
-    Vector<PerceptronLayer*> perceptron_layers;
-    perceptron_layers.push_back(new PerceptronLayer(new_layer_size, new_layer_size));
-    inputs_layers_pointers.push_back(perceptron_layers);
-
-    size_t new_input_size = 0;
-    for(size_t idx = 0; idx < inputs_layers_pointers.size(); idx++)
-        new_input_size += inputs_layers_pointers[idx][0]->get_inputs_number();
-    if( !inputs_pointer )
-        inputs_pointer = new Inputs();
-    inputs_pointer->set(new_input_size);
+    add_input( new_layer_size, new_layer_size );
 }
 
 // ADD INPUT METHOD
@@ -31,12 +22,14 @@ void MASNeuralNetwork::add_input(const size_t& new_inputs_number,
                                  const size_t& new_layer_size)
 {
     Vector<PerceptronLayer*> perceptron_layers;
+    Vector< Vector<double> > tmpHistVec;
     perceptron_layers.push_back(new PerceptronLayer(new_inputs_number, new_layer_size));
-    inputs_layers_pointers.push_back(perceptron_layers);
+    inputsArrayPtr.push_back(perceptron_layers);
+    memoryHistoryData.push_back( tmpHistVec );
 
     size_t new_input_size = 0;
-    for(size_t idx = 0; idx < inputs_layers_pointers.size(); idx++)
-        new_input_size += inputs_layers_pointers[idx][0]->get_inputs_number();
+    for(size_t idx = 0; idx < inputsArrayPtr.size(); idx++)
+        new_input_size += inputsArrayPtr[idx][0]->get_inputs_number();
     if( !inputs_pointer )
         inputs_pointer = new Inputs();
     inputs_pointer->set(new_input_size);
@@ -54,22 +47,27 @@ void MASNeuralNetwork::add_input(const size_t& new_inputs_number,
                                  const size_t& new_layer_size,
                                  const size_t& new_depth_recursion)
 {
-    Vector<PerceptronLayer*> perceptron_layers;
+    Vector<PerceptronLayer*> newInputLayer;
+    Vector< Vector<double> > tmpHistVec;
     // Main input
-    perceptron_layers.push_back(new PerceptronLayer(new_inputs_number, new_layer_size));
+    newInputLayer.push_back( new PerceptronLayer(new_inputs_number, new_layer_size) );
     // Sum input and recurent layers
-    perceptron_layers.push_back(new PerceptronLayer(new_layer_size, new_layer_size));
+    newInputLayer.push_back( new PerceptronLayer(new_layer_size*2, new_layer_size) );
     // Recurent layers
     for(size_t idx = 0; idx < new_depth_recursion; idx++) {
-        perceptron_layers.push_back(new PerceptronLayer(new_layer_size, new_layer_size));
-        Vector<double> history_vec(new_layer_size, 0.0);
-        memory_outputs_data.push_back(history_vec);
+        if( idx < new_depth_recursion-1  )
+            newInputLayer.push_back( new PerceptronLayer(new_layer_size*2, new_layer_size) );
+        else
+            newInputLayer.push_back( new PerceptronLayer(new_layer_size, new_layer_size) );
+        Vector<double> newHistoryVec( new_layer_size , 0.0 );
+        tmpHistVec.push_back( newHistoryVec );
     }
-    inputs_layers_pointers.push_back(perceptron_layers);
+    inputsArrayPtr.push_back( newInputLayer );
+    memoryHistoryData.push_back( tmpHistVec );
 
     size_t new_input_size = 0;
-    for(size_t idx = 0; idx < inputs_layers_pointers.size(); idx++)
-        new_input_size += inputs_layers_pointers[idx][0]->get_inputs_number();
+    for(size_t idx = 0; idx < inputsArrayPtr.size(); idx++)
+        new_input_size += inputsArrayPtr[idx][0]->get_inputs_number();
     if( !inputs_pointer )
         inputs_pointer = new Inputs();
     inputs_pointer->set(new_input_size);
@@ -81,20 +79,25 @@ void MASNeuralNetwork::construct_inputs()
     {
         size_t inputs_number = 0;
 
-        for(size_t idx = 0; idx < inputs_layers_pointers.size(); idx++)
-            inputs_number += inputs_layers_pointers[idx][0]->get_inputs_number();
+        for(size_t idx = 0; idx < inputsArrayPtr.size(); idx++)
+            inputs_number += inputsArrayPtr[idx][0]->get_inputs_number();
 
         inputs_pointer = new Inputs(inputs_number);
     }
+}
+
+size_t MASNeuralNetwork::get_inputs_number()
+{
+
 }
 
 size_t MASNeuralNetwork::count_parameters_number() const
 {
     size_t parameters_number = 0;
 
-    for(size_t idx = 0; idx < inputs_layers_pointers.size(); idx++) {
-        for(size_t idxin = 0; idxin < inputs_layers_pointers[idx].size(); idxin++) {
-            parameters_number += inputs_layers_pointers[idx][idxin]->count_parameters_number();
+    for(size_t idx = 0; idx < inputsArrayPtr.size(); idx++) {
+        for(size_t idxin = 0; idxin < inputsArrayPtr[idx].size(); idxin++) {
+            parameters_number += inputsArrayPtr[idx][idxin]->count_parameters_number();
         }
     }
 
@@ -108,8 +111,8 @@ size_t MASNeuralNetwork::count_parameters_number() const
         parameters_number += independent_parameters_pointer->get_parameters_number();
     }
 
-    for(size_t idx = 0; idx < outputs_layers_pointers.size(); idx++) {
-        parameters_number += outputs_layers_pointers[idx]->count_parameters_number();
+    for(size_t idx = 0; idx < outputsArrayPtr.size(); idx++) {
+        parameters_number += outputsArrayPtr[idx]->count_parameters_number();
     }
 
     return(parameters_number);
@@ -119,9 +122,9 @@ Vector<double> MASNeuralNetwork::arrange_parameters() const
 {
     Vector<double> parameters;
 
-    for(size_t idx = 0; idx < inputs_layers_pointers.size(); idx++) {
-        for(size_t idxin = 0; idxin < inputs_layers_pointers[idx].size(); idxin++) {
-            parameters.assemble(inputs_layers_pointers[idx][idxin]->arrange_parameters());
+    for(size_t idx = 0; idx < inputsArrayPtr.size(); idx++) {
+        for(size_t idxin = 0; idxin < inputsArrayPtr[idx].size(); idxin++) {
+            parameters.assemble(inputsArrayPtr[idx][idxin]->arrange_parameters());
         }
     }
 
@@ -130,8 +133,8 @@ Vector<double> MASNeuralNetwork::arrange_parameters() const
     if( independent_parameters_pointer )
         parameter.assemble(independent_parameters_pointer->calculate_scaled_parameters());
 
-    for(size_t idx = 0; idx < outputs_layers_pointers.size(); idx++) {
-        parameters.assemble(outputs_layers_pointers[idx]->arrange_parameters());
+    for(size_t idx = 0; idx < outputsArrayPtr.size(); idx++) {
+        parameters.assemble(outputsArrayPtr[idx]->arrange_parameters());
     }
 
     return(parameters);
@@ -162,11 +165,11 @@ void MASNeuralNetwork::set_parameters(const Vector<double>& new_parameters)
 
     size_t parameters_number, take_begin = 0;
 
-    for(size_t idx = 0; idx < inputs_layers_pointers.size(); idx++) {
-        for(size_t idxin = 0; idxin < inputs_layers_pointers[idx].size(); idxin++) {
-            parameters_number = inputs_layers_pointers[idx][idxin]->count_parameters_number();
+    for(size_t idx = 0; idx < inputsArrayPtr.size(); idx++) {
+        for(size_t idxin = 0; idxin < inputsArrayPtr[idx].size(); idxin++) {
+            parameters_number = inputsArrayPtr[idx][idxin]->count_parameters_number();
             const Vector<double> parameters = new_parameters.take_out(take_begin,parameters_number);
-            inputs_layers_pointers[idx][idxin]->set_parameters(parameters);
+            inputsArrayPtr[idx][idxin]->set_parameters(parameters);
             take_begin += parameters_number;
         }
     }
@@ -187,10 +190,10 @@ void MASNeuralNetwork::set_parameters(const Vector<double>& new_parameters)
         take_begin += parameters_number;
     }
 
-    for(size_t idx = 0; idx < outputs_layers_pointers.size(); idx++) {
-        parameters_number = outputs_layers_pointers[idx]->count_parameters_number();
+    for(size_t idx = 0; idx < outputsArrayPtr.size(); idx++) {
+        parameters_number = outputsArrayPtr[idx]->count_parameters_number();
         const Vector<double> parameters = new_parameters.take_out(take_begin,parameters_number);
-        outputs_layers_pointers[idx]->set_parameters(parameters);
+        outputsArrayPtr[idx]->set_parameters(parameters);
         take_begin += parameters_number;
     }
 }
@@ -200,11 +203,13 @@ void MASNeuralNetwork::add_output(const size_t& new_layer_size)
     size_t inputs_number = 0;
     if( multilayer_perceptron_pointer )
         inputs_number = multilayer_perceptron_pointer->get_outputs_number();
-    outputs_layers_pointers.push_back(new PerceptronLayer(inputs_number, new_layer_size));
+    else
+        throw std::logic_error("Prepare first a multilayer perceptron!");
+    outputsArrayPtr.push_back(new PerceptronLayer(inputs_number, new_layer_size));
 
     size_t new_output_size = 0;
-    for(size_t idx = 0; idx < outputs_layers_pointers.size(); idx++)
-        new_output_size += outputs_layers_pointers[idx]->get_perceptrons_number();
+    for(size_t idx = 0; idx < outputsArrayPtr.size(); idx++)
+        new_output_size += outputsArrayPtr[idx]->get_perceptrons_number();
     if( !outputs_pointer )
         outputs_pointer = new Outputs();
     outputs_pointer->set(new_output_size);
@@ -216,11 +221,16 @@ void MASNeuralNetwork::construct_outputs()
     {
         size_t outputs_number = 0;
 
-        for(size_t idx = 0; idx < outputs_layers_pointers.size(); idx++)
-            outputs_number += outputs_layers_pointers[idx]->get_perceptrons_number();
+        for(size_t idx = 0; idx < outputsArrayPtr.size(); idx++)
+            outputs_number += outputsArrayPtr[idx]->get_perceptrons_number();
 
         outputs_pointer = new Outputs(outputs_number);
     }
+}
+
+size_t MASNeuralNetwork::get_outputs_number()
+{
+
 }
 
 Vector<double> MASNeuralNetwork::calculate_outputs(const Vector<double>& inputs) const
@@ -249,7 +259,7 @@ Vector<double> MASNeuralNetwork::calculate_outputs(const Vector<double>& inputs)
 
 #endif
 
-    Vector<double> outputs(inputs);
+    Vector<double> outputs( inputs );
 
     // Scaling layer
 
@@ -266,42 +276,45 @@ Vector<double> MASNeuralNetwork::calculate_outputs(const Vector<double>& inputs)
     }
 
     // MAS Inputs
-    size_t take_size, take_begin = 0;
-    Vector<Vector<double> > outputs_input_layer;
 
-    for( size_t idx = 0; idx < inputs_layers_pointers.size(); idx++ ) {
+    size_t takeSize, takeBegin = 0; // for take_out from a input
+    Vector< Vector<double> > outputsArray; // outputs from input layers
 
-        Vector<double> tmp_vec;
-        take_size = inputs_layers_pointers[idx][0]->get_inputs_number();
-        Vector<double> tmp_invec = outputs.take_out( take_begin, take_size );
+    for( size_t idx = 0; idx < inputsArrayPtr.size(); idx++ ) {
+        Vector<double> tmpInVec, tmpOutVec;
+        takeSize = inputsArrayPtr[idx][0]->get_inputs_number();
+        tmpInVec = outputs.take_out( takeBegin, takeSize );
+        takeBegin = takeSize;
 
-        if( inputs_layers_pointers[idx].size() == 1 ) {
-
-            tmp_vec = inputs_layers_pointers[idx][0]->calculate_outputs( tmp_invec );
-
-        } else if( inputs_layers_pointers[idx].size() >= 3 ) {
-
-            tmp_vec = inputs_layers_pointers[idx][0]->calculate_outputs( tmp_invec );
-
-            Vector<double> tmp_histvec;
-
-            for( size_t idxhist = 2; idxhist < inputs_layers_pointers[idx].size(); idxhist++ ) {
-                // ?
-                tmp_histvec = inputs_layers_pointers[idx][idxhist]->calculate_outputs(/* ? */);
-                // ?
+        if( inputsArrayPtr[idx].size() == 1 ) { // without history layers
+            tmpOutVec = inputsArrayPtr[idx][0]->calculate_outputs( tmpInVec );
+        } else if( inputsArrayPtr[idx].size() >= 3 ) { //with history layers
+            // calculate input layer
+            tmpOutVec = inputsArrayPtr[idx][0]->calculate_outputs( tmpInVec );
+            // calculate history layer
+            Vector<double> tmpHistVec;
+            for( size_t idxHist = inputsArrayPtr[idx].size()-1; idxHist >= 2; idxHist-- ) {
+                // from endHistory to current-1(beginHistory)
+                if( idxHist == inputsArrayPtr[idx].size()-1 ) {// if last history layer
+                    tmpHistVec = inputsArrayPtr[idx][idxHist]->
+                            calculate_outputs( memoryHistoryData[idx][idxHist-2] );
+                } else {// if not last history layer
+                    tmpHistVec = inputsArrayPtr[idx][idxHist]->
+                            calculate_outputs( tmpHistVec.assemble(memoryHistoryData[idx][idxHist-2]) );
+                    memoryHistoryData[idx][idxHist-1] = tmpHistVec;
+                }
             }
-
-            tmp_vec.assemble( tmp_histvec );
-
-            tmp_vec = inputs_layers_pointers[idx][1]->calculate_outputs( tmp_vec );
-
-        } else { /* err */; }
-
-        outputs_input_layer.push_back( tmp_vec );
+            memoryHistoryData[idx][0] = tmpOutVec;
+            tmpOutVec.assemble( tmpHistVec );
+            // calulate output layer
+            tmpOutVec = inputsArrayPtr[idx][1]->calculate_outputs( tmpOutVec );
+        } else {
+            throw std::logic_error("MASNeuralNetwork::calculate_outputs()");
+        }
+        outputsArray.push_back( tmpOutVec );
     }
-
     outputs.clear();
-    foreach( auto vec, outputs_input_layer ) {
+    foreach( auto vec, outputsArray ) {
         outputs.assemble( vec );
     }
 
@@ -310,6 +323,31 @@ Vector<double> MASNeuralNetwork::calculate_outputs(const Vector<double>& inputs)
     if(multilayer_perceptron_pointer)
     {
         outputs = multilayer_perceptron_pointer->calculate_outputs(outputs);
+    }
+
+    // MAS Outputs
+
+    takeSize = 0, takeBegin = 0; // for take_out from a output a multilayer perceptron
+    outputsArray.clear(); // outputs from output layers
+
+    size_t inSize = 0;
+    for( size_t idx = 0; idx < outputsArrayPtr.size(); idx++ )
+        inSize += outputsArrayPtr[idx]->get_inputs_number();
+    if( multilayer_perceptron_pointer->get_outputs_number() != inSize )
+        throw std::logic_error(" MLP.out != OutputsSumIn ");
+
+    for( size_t idx = 0; idx < outputsArrayPtr.size(); idx++ ) {
+        Vector<double> tmpVec;
+        takeSize = outputsArrayPtr[idx]->get_inputs_number();
+        tmpVec = outputs.take_out( takeBegin, takeSize );
+        takeBegin = takeSize;
+        // calculate output layer
+        tmpVec = outputsArrayPtr[idx]->calculate_outputs( tmpVec );
+        outputsArray.push_back( tmpVec );
+    }
+    outputs.clear();
+    foreach( auto vec, outputsArray ) {
+        outputs.assemble( vec );
     }
 
     // Conditions
@@ -343,9 +381,47 @@ Vector<double> MASNeuralNetwork::calculate_outputs(const Vector<double>& inputs)
     return(outputs);
 }
 
-Matrix<double> MASNeuralNetwork::calculate_output_data(const Matrix<double> &) const
+Matrix<double> MASNeuralNetwork::calculate_output_data(const Matrix<double>& input_data) const
 {
+    const size_t inputs_number = get_inputs_number();
+    const size_t outputs_number = get_outputs_number();
 
+    // Control sentence (if debug)
+
+#ifdef __OPENNN_DEBUG__
+
+    const size_t columns_number = input_data.get_columns_number();
+
+    if(columns_number != inputs_number)
+    {
+        std::ostringstream buffer;
+
+        buffer << "OpenNN Exception: NeuralNetwork class.\n"
+               << "Matrix<double> calculate_output_data(const Matrix<double>&) const method.\n"
+               << "Number of columns must be equal to number of inputs.\n";
+
+        throw std::logic_error(buffer.str());
+    }
+
+#endif
+
+    const size_t input_vectors_number = input_data.get_rows_number();
+
+    Matrix<double> output_data(input_vectors_number, outputs_number);
+
+    Vector<double> inputs(inputs_number);
+    Vector<double> outputs(outputs_number);
+
+//#pragma omp parallel for private(inputs, outputs)
+
+    for(int i = 0; i < input_vectors_number; i++)
+    {
+        inputs = input_data.arrange_row(i);
+        outputs = calculate_outputs(inputs);
+        output_data.set_row(i, outputs);
+    }
+
+    return(output_data);
 }
 
 void MASNeuralNetwork::save(const std::string &) const
