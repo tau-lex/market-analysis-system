@@ -176,13 +176,14 @@ void KitConfigForm::on_runTerminalButton_clicked()
 
 void KitConfigForm::on_addSymbolButton_clicked()
 {
-    QString str;
-    str = ui->symbolCBox->currentText();
-    str += ui->periodCBox->currentData().toString();
+    QString newSymbol;
+    newSymbol = ui->symbolCBox->currentData().toString();
+    if( !configKit->isTimeSymbol( newSymbol ) )
+        newSymbol += ui->periodCBox->currentData().toString();
     if( ui->inputRButton->isChecked() ) {
-        ui->inputListWidget->addItem( str );
+        ui->inputListWidget->addItem( newSymbol );
     } else if( ui->outputRButton->isChecked() ) {
-        ui->outputListWidget->addItem( str );
+        ui->outputListWidget->addItem( newSymbol );
     }
     if( !tempPeriods.contains( ui->periodCBox->currentData().toString().toInt() ) )
         tempPeriods.append( ui->periodCBox->currentData().toString().toInt() );
