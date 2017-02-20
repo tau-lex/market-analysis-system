@@ -459,8 +459,8 @@ MainWindow::KitTabWidget::KitTabWidget(QTabWidget *parent, QString name) :
         outputSize->setText(QString());
         configurationButton->setText(QApplication::translate("MainWindow",
                                                              "Configuration", 0));
-        trainingButton->setText(QApplication::translate("MainWindow", "Train", 0));
-        workButton->setText(QApplication::translate("MainWindow", "Run work", 0));
+        trainingButton->setText(QApplication::translate("MainWindow", "Train Model", 0));
+        workButton->setText(QApplication::translate("MainWindow", "Do Forecast", 0));
         stopButton->setText(QApplication::translate("MainWindow", "Stop", 0));
         deleteButton->setText(QApplication::translate("MainWindow", "Delete", 0));
         progressBar->setFormat(QApplication::translate("MainWindow", "%p%", 0));

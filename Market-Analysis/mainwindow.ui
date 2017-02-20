@@ -175,7 +175,7 @@
      <normaloff>:/img/clipboard_pencil_64.png</normaloff>:/img/clipboard_pencil_64.png</iconset>
    </property>
    <property name="text">
-    <string>Train NN</string>
+    <string>Train Model</string>
    </property>
    <property name="toolTip">
     <string>Train Neural Network</string>
@@ -187,7 +187,7 @@
      <normaloff>:/img/statistics2_diagram_64.png</normaloff>:/img/statistics2_diagram_64.png</iconset>
    </property>
    <property name="text">
-    <string>Start forecasting</string>
+    <string>Do Forecast</string>
    </property>
   </action>
   <action name="actionStop">
