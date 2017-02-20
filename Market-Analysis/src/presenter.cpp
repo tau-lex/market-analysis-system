@@ -161,6 +161,7 @@ void Presenter::deleteMAKit(const QString name)
     mapKits.erase( mapKits.find( name ) );
     settings->session.removeOne( name );
     settings->savedKits.removeOne( name );
+    saveSettings();
 }
 
 void Presenter::runTraining(const QString name)
