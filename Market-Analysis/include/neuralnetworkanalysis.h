@@ -24,7 +24,7 @@ private:
     qint64                          lastEntryTime;
     std::vector<qint64>             timeIndexes;
     DataSet                         *dataSet;
-    NeuralNetwork                   *neuralNetwork;
+    NeuralNetwork                   *neuralNet;
     LossIndex                       *lossIndex;
     TrainingStrategy                *trainingStrategy;
 

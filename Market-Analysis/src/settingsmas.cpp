@@ -149,7 +149,10 @@ void SettingsMAS::loadMt4Conf(ConfigMT4 *configKit)
     kitFile = new QSettings( QString("%1%2").arg( configKit->mt4Path )
                              .arg( configKit->configFile ), QSettings::IniFormat);
     kitFile->beginGroup( "Main" );
-    readArray( "Symbols", "Smb", kitFile, configKit->symbols );
+    QStringList tmp;
+    readArray( "Symbols", "Smb", kitFile, tmp );
+    if( tmp.size() > 10 )
+        configKit->symbols = tmp;
     configKit->mt4Account = kitFile->value( "Mt4_Account" ).toInt();
     kitFile->endGroup();
     delete kitFile;

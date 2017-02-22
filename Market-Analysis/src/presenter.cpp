@@ -2,6 +2,8 @@
 #include "include/settingsmas.h"
 
 #include <QApplication>
+#include <QFile>
+#include <QTextStream>
 #include <QMap>
 #include <QMessageBox>
 #include <QScrollBar>
@@ -53,11 +55,23 @@ void Presenter::openKitConfigForm(const QString name)
 void Presenter::errorMessage(const QString text)
 {
     QMessageBox::warning( mainWindow, tr("Program Error!"), text );
+    QFile log( "global.log" );
+    if( log.open( QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append ) ) {
+        QTextStream output( &log );
+        output << QString("%1\n").arg(text).toUtf8();
+        log.close();
+    }
 }
 
 void Presenter::errorMessage(const QString name, const QString text)
 {
     QMessageBox::warning( mainWindow, tr("Kit %1 Error!").arg( name ), text );
+    QFile log( QString("%1/%2.log").arg(mapKits[name]->configKit->kitPath).arg(name) );
+    if( log.open( QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append ) ) {
+        QTextStream output( &log );
+        output << QString("%1\n").arg(text).toUtf8();
+        log.close();
+    }
 }
 
 void Presenter::setCurrentKit(const QString name)
@@ -147,6 +161,7 @@ void Presenter::deleteMAKit(const QString name)
     mapKits.erase( mapKits.find( name ) );
     settings->session.removeOne( name );
     settings->savedKits.removeOne( name );
+    saveSettings();
 }
 
 void Presenter::runTraining(const QString name)
@@ -183,6 +198,12 @@ void Presenter::writeToConsole(const QString name, const QString text)
     mapKits[name]->tabKit->consoleTextEdit->appendPlainText( QString("%1").arg( text ) );
     QScrollBar *v = mapKits[name]->tabKit->consoleTextEdit->verticalScrollBar();
     v->setValue( v->maximum() );
+    QFile log( QString("%1/%2.log").arg(mapKits[name]->configKit->kitPath).arg(name) );
+    if( log.open( QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append ) ) {
+        QTextStream output( &log );
+        output << QString("%1\n").arg(text).toUtf8();
+        log.close();
+    }
 }
 
 void Presenter::updateTab(const QString name)

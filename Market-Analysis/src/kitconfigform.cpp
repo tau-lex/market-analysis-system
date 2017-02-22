@@ -54,8 +54,22 @@ void KitConfigForm::setUpDinamicComboBoxes(void)
         ui->trainingStrategyCBox->addItem( method, method );
     ui->trainingStrategyCBox->setCurrentText( configKit->trainingMethod );
     ui->symbolCBox->clear();
-    foreach( QString symbol, configKit->symbols )
-        ui->symbolCBox->addItem( symbol, symbol );
+    foreach( QString symbol, configKit->symbolsOfTime )
+        ui->symbolCBox->addItem( QString("time:%1").arg(symbol), symbol );
+    foreach( QString symbol, configKit->symbols ) {
+        if( symbol.contains(".OQ") || symbol.contains(".N") )
+            ui->symbolCBox->addItem( QString("uidx:%1").arg(symbol), symbol );
+        else if( symbol.contains(".DE") )
+            ui->symbolCBox->addItem( QString("eidx:%1").arg(symbol), symbol );
+        else if( symbol.contains("XAU") || symbol.contains("XAG") )
+            ui->symbolCBox->addItem( QString("mtls:%1").arg(symbol), symbol );
+        else
+            ui->symbolCBox->addItem( QString("forx:%1").arg(symbol), symbol );
+    }
+    if( configKit->symbols.size() )
+        ui->symbolCBox->setCurrentText( configKit->symbols[0] );
+    else
+        ui->symbolCBox->setCurrentText( configKit->symbolsOfTime[0] );
     ui->serverCBox->clear();
     foreach( QString server, configKit->servers )
         ui->serverCBox->addItem( server, server );
@@ -162,13 +176,14 @@ void KitConfigForm::on_runTerminalButton_clicked()
 
 void KitConfigForm::on_addSymbolButton_clicked()
 {
-    QString str;
-    str = ui->symbolCBox->currentText();
-    str += ui->periodCBox->currentData().toString();
+    QString newSymbol;
+    newSymbol = ui->symbolCBox->currentData().toString();
+    if( !configKit->isTimeSymbol( newSymbol ) )
+        newSymbol += ui->periodCBox->currentData().toString();
     if( ui->inputRButton->isChecked() ) {
-        ui->inputListWidget->addItem( str );
+        ui->inputListWidget->addItem( newSymbol );
     } else if( ui->outputRButton->isChecked() ) {
-        ui->outputListWidget->addItem( str );
+        ui->outputListWidget->addItem( newSymbol );
     }
     if( !tempPeriods.contains( ui->periodCBox->currentData().toString().toInt() ) )
         tempPeriods.append( ui->periodCBox->currentData().toString().toInt() );
