@@ -52,15 +52,38 @@ protected:
 
     //MultilayerPerceptron* multilayer_perceptron_pointer;
 
-    /// Outputs layers for forecasting pars;
+    /// Outputs layers for forecasting pars.
 
     Vector<PerceptronLayer*> outputsArrayPtr;
 
-    /// Saved data for recurent layers
+    /// Saved data for recurent layers.
 
     Vector< Vector< Vector<double> > > memoryHistoryData;
 };
 
+class RecurrentPerceptronLayer : public PerceptronLayer
+{
+public:
+    explicit RecurrentPerceptronLayer();
+    explicit RecurrentPerceptronLayer();
 
+protected:
+
+};
+
+class LstmPerceptronLayer : public PerceptronLayer
+{
+public:
+
+    // ENUMERATIONS
+
+    /// Type of implementation a recurrent LSTM layer.
+
+    enum Type{Standart, PeepholeConnections, GatedRecurrentUnit};
+
+
+protected:
+
+};
 
 #endif // MASOPENNNCLASSES_H

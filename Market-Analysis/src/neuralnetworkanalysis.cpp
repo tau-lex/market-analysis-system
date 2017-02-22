@@ -8,7 +8,7 @@
 
 NeuralNetworkAnalysis::NeuralNetworkAnalysis(QObject *parent) : QObject(parent),
     dataSet(nullptr),
-    neuralNetwork(nullptr),
+    neuralNet(nullptr),
     lossIndex(nullptr),
     trainingStrategy(nullptr)
 {
@@ -21,8 +21,8 @@ NeuralNetworkAnalysis::~NeuralNetworkAnalysis()
         delete trainingStrategy;
     if( lossIndex )
         delete lossIndex;
-    if( neuralNetwork )
-        delete neuralNetwork;
+    if( neuralNet )
+        delete neuralNet;
     if( dataSet )
         delete dataSet;
 }
@@ -42,7 +42,6 @@ void NeuralNetworkAnalysis::runTraining()
         prepareDataSet( FileType::HST );
         progress( 32 );
         prepareVariablesInfo();
-        progress( 33 );
         prepareInstances();
         prepareNeuralNetwork();
         prepareLossIndex();
@@ -218,22 +217,22 @@ void NeuralNetworkAnalysis::prepareNeuralNetwork()
             idx += 1;
         }
         layers.push_back( config->sumOutput() );
-        if( neuralNetwork && !config->isTrained )
-            delete neuralNetwork;
-        neuralNetwork = new NeuralNetwork( layers );
+        if( neuralNet && !config->isTrained )
+            delete neuralNet;
+        neuralNet = new NeuralNetwork( layers );
     }
-    Inputs* inputsPtr = neuralNetwork->get_inputs_pointer();
+    Inputs* inputsPtr = neuralNet->get_inputs_pointer();
     inputsPtr->set_information( dataSet->get_variables_pointer()->
                                 arrange_inputs_information() );
-    Outputs* outputsPtr = neuralNetwork->get_outputs_pointer();
+    Outputs* outputsPtr = neuralNet->get_outputs_pointer();
     outputsPtr->set_information( dataSet->get_variables_pointer()->
                                  arrange_targets_information() );
-    neuralNetwork->construct_scaling_layer();
-    ScalingLayer* scalingLayerPtr = neuralNetwork->get_scaling_layer_pointer();
+    neuralNet->construct_scaling_layer();
+    ScalingLayer* scalingLayerPtr = neuralNet->get_scaling_layer_pointer();
     scalingLayerPtr->set_statistics( dataSet->scale_inputs_mean_standard_deviation() );
     scalingLayerPtr->set_scaling_method( ScalingLayer::NoScaling );
-    neuralNetwork->construct_unscaling_layer();
-    UnscalingLayer* unscalingLayerPtr = neuralNetwork->get_unscaling_layer_pointer();
+    neuralNet->construct_unscaling_layer();
+    UnscalingLayer* unscalingLayerPtr = neuralNet->get_unscaling_layer_pointer();
     unscalingLayerPtr->set_statistics( dataSet->scale_targets_mean_standard_deviation() );
     unscalingLayerPtr->set_unscaling_method( UnscalingLayer::NoUnscaling );
 }
@@ -241,7 +240,7 @@ void NeuralNetworkAnalysis::prepareNeuralNetwork()
 void NeuralNetworkAnalysis::prepareLossIndex()
 {
     message( tr("Set loss indexes...") );
-    lossIndex = new LossIndex( neuralNetwork, dataSet);
+    lossIndex = new LossIndex( neuralNet, dataSet );
     lossIndex->set_regularization_type( LossIndex::NEURAL_PARAMETERS_NORM ); //need?
     message( tr("Set training strategy...") );
     trainingStrategy = new TrainingStrategy( lossIndex );
@@ -254,16 +253,16 @@ void NeuralNetworkAnalysis::prepareLossIndex()
 
 void NeuralNetworkAnalysis::runTrainingNeuralNetwork()
 {
-    message( tr("Results training strategy...") );
+    message( tr("Training...") );
     TrainingStrategy::Results trainingStrategyResults =
             trainingStrategy->perform_training();
     message( tr("Testing analysis.") );
-    TestingAnalysis testingAnalysis( neuralNetwork, dataSet );
+    TestingAnalysis testingAnalysis( neuralNet, dataSet );
     TestingAnalysis::LinearRegressionResults linearRegressionResults =
             testingAnalysis.perform_linear_regression_analysis();
-    neuralNetwork->get_scaling_layer_pointer()->
+    neuralNet->get_scaling_layer_pointer()->
             set_scaling_method( ScalingLayer::MeanStandardDeviation );
-    neuralNetwork->get_unscaling_layer_pointer()->
+    neuralNet->get_unscaling_layer_pointer()->
             set_unscaling_method( UnscalingLayer::MeanStandardDeviation );
     message( tr("Model training done!") );
     config->isTrained = true;
@@ -281,8 +280,8 @@ void NeuralNetworkAnalysis::saveResultsTraining()
     dataSet->save( QString("%1/dataSet.xml").arg( config->kitPath ).toStdString() );
     dataSet->get_data().save_csv( QString("%1/dataSet-data.csv")
                                   .arg( config->kitPath ).toStdString());
-    neuralNetwork->save( QString("%1/neuralNetwork.xml").arg( config->kitPath ).toStdString() );
-    neuralNetwork->save_expression( QString("%1/nnExpression.txt").arg( config->kitPath ).toStdString() );
+    neuralNet->save( QString("%1/neuralNetwork.xml").arg( config->kitPath ).toStdString() );
+    neuralNet->save_expression( QString("%1/nnExpression.txt").arg( config->kitPath ).toStdString() );
     lossIndex->save( QString("%1/lossIndex.xml").arg( config->kitPath ).toStdString() );
 }
 
@@ -313,7 +312,7 @@ void NeuralNetworkAnalysis::runWorkingProcess()
         header->Depth = config->depthPrediction;
     }
     Matrix<double> inputMatrix( dataSet->arrange_input_data() );
-    Matrix<double> outputMatrix( neuralNetwork->calculate_output_data( inputMatrix ) );
+    Matrix<double> outputMatrix( neuralNet->calculate_output_data( inputMatrix ) );
     for( qint32 i = 0; i < timeIndexes.size(); i++ ) {
         foreach( QString symbol, config->output ) {
             if( config->isTimeSymbol(symbol) )
@@ -484,9 +483,9 @@ bool NeuralNetworkAnalysis::loadTrainedModel()
 {
     if( !config->isTrained )
         return false;
-    if( !neuralNetwork )
-        neuralNetwork = new NeuralNetwork();
-    neuralNetwork->load( QString("%1/neuralNetwork.xml")
+    if( !neuralNet )
+        neuralNet = new NeuralNetwork();
+    neuralNet->load( QString("%1/neuralNetwork.xml")
                          .arg( config->kitPath ).toStdString() );
     config->isReady = true;
     message( tr("The Neural Network model of %1 kit loaded.").arg( config->nameKit ) );
