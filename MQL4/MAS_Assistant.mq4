@@ -43,9 +43,12 @@ double      CloseBuffer[];
 //-----------------Global variables-------------------------------------------+
 <<<<<<< .merge_file_a00536
 const string    Copyright = "Copyright 2016, Terentew Aleksey";
+<<<<<<< HEAD
 =======
 const string    Copyright = COPYRIGHT;
 >>>>>>> .merge_file_a05172
+=======
+>>>>>>> MQL
 const string    comment = "MAS_Assistant v1.3.7";
 input string    configFile = "mas.conf";
 input bool      messagesOn = true;
@@ -61,7 +64,14 @@ string      outputSymbol;
 int         depthForecast;
 string      mainSavePath = "MAS_MarketData/";
 string      mainReadPath = "MAS_Prediction/";
+<<<<<<< HEAD
 
+=======
+ulong       tickCount;
+double      HighBuffer[];
+double      LowBuffer[];
+double      CloseBuffer[];
+>>>>>>> MQL
 //+--------------------UserInterface Class------------------------------------+
 #ifdef MAS_MASTERWINDOWS
 int Mint[][3] =     { { 1, 0,   0  },
@@ -622,6 +632,54 @@ int GetSymbolsString(const bool selected, string &symbols)
     return size;
 };
 
+<<<<<<< HEAD
+=======
+int StringSplitMAS(const string string_value, const ushort separator, string &result[][64])
+{
+    if( StringLen( string_value ) <= 0 || string_value == NULL )
+        return 0;
+    int lastChar = 0, currentChar = 0, size = StringLen(string_value), sizeRes = 0, sepIdxs[50];
+    ArrayInitialize( sepIdxs, 0 );
+    for( int idx = 0; idx < size; idx++) {
+        if( StringGetChar(string_value, idx) == separator ) {
+            sepIdxs[sizeRes] = idx;
+            sizeRes += 1;
+            if( sizeRes >= ArraySize(sepIdxs) )
+                ArrayResize( sepIdxs, ArraySize(sepIdxs) + 50 );
+        }
+    }
+    ArrayResize( result, sizeRes + 1 );
+    if( sizeRes == 0 ) {
+        result[sizeRes][0] = string_value;
+        return sizeRes + 1;
+    }
+    for( int idx = 0; idx <= sizeRes; idx++) {
+        if( idx == 0 ) {
+            result[idx][0] = StringSubstr( string_value, 0, sepIdxs[idx] );
+            continue;
+        }
+        result[idx][0] = StringSubstr( string_value, sepIdxs[idx-1] + 1, 
+                                                     sepIdxs[idx] - sepIdxs[idx-1] - 1 );
+    }
+    return sizeRes + 1;
+};
+
+double StrToDbl(const string str)
+{
+    int i, k = 1;
+    double r = 0, p = 1;
+    for( i = 0; i < StringLen(str); i++ ) {
+        if( k < 0 )
+			p = p * 10;
+        if( StringGetChar( str, i ) == '.' )
+            k = -k;
+        else
+            r = r * 10 + ( StringGetChar( str, i ) - '0' );
+    }
+    return r / p;
+};
+
+>>>>>>> MQL
 void SeparateMasSymbol(const string masSymbol, string &symbol, int &period)
 {
     int periods[] = {PERIOD_MN1, PERIOD_W1, PERIOD_D1, PERIOD_H4, PERIOD_H1,
