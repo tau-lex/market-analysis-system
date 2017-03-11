@@ -10,3 +10,5 @@ kits/
 *.hdf5
 *.model
 *.csv
+*.txt
+*.xlsx
