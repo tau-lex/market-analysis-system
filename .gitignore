@@ -7,3 +7,11 @@ build-Market-Analysis-MSVC2015_64bit-Debug/
 build-Market-Analysis-MSVC2015_64bit-Release/
 /*.png
 kits/
+<<<<<<< .merge_file_a08120
+=======
+*.hdf5
+*.model
+*.csv
+*.txt
+*.xlsx
+>>>>>>> .merge_file_a06048
