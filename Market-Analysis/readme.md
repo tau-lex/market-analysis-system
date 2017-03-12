@@ -1,10 +1,12 @@
-Module name: Market analysis
-Short name: mrktnn
-OS: Linux x86 or Windows 7+
-Framework: Qt, OpenNN
+# Market analysis programm
 
-Description: пользовательский интерфейс MAS. Загрузка данных истории, процесс обучения/переобучения на истории, анализ данных в рабочем режиме, сохранение данных прогноза. 
+Framework: Qt, [OpenNN](https://github.com/Artelnics/OpenNN)
 
-UI: директория данных истории и новых данных, названия инструментов, директория сохранения данных анализа, директория данных совершенных сделок.
+### Description (Eng)
 
-Planes: Интерфейс сборки нейросети различных конфигураций.
+MAS user interface. Download of historical data, the process of learning / retraining for history, data analysis in the operating mode, saving forecast data.
+
+### Description (Rus)
+
+Пользовательский интерфейс MAS. Загрузка данных истории, процесс обучения/переобучения на истории, анализ данных в рабочем режиме, сохранение данных прогноза. 
+
