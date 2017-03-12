@@ -1,16 +1,19 @@
-//+------------------------------------------------------------------+
-//|                                                MAS_Assistant.mq4 |
-//|                                 Copyright 2016, Terentew Aleksey |
-//|                        https://www.mql5.com/ru/users/terentjew23 |
-//+------------------------------------------------------------------+
-#property copyright     "Copyright 2016, Terentew Aleksey"
+//+---------------------------------------------------------------------------+
+//|                                                         MAS_Assistant.mq4 |
+//|                                          Copyright 2017, Terentew Aleksey |
+//|                                 https://www.mql5.com/ru/users/terentjew23 |
+//+---------------------------------------------------------------------------+
+#property copyright     "Copyright 2017, Terentew Aleksey"
 #property link          "https://www.mql5.com/ru/users/terentjew23"
-#property description   "This indicator is a modul in the Market Analysis System programm complex."
+#property description   "This indicator is a module in the Market Analysis System programm complex."
 #property description   "MAS_Assistant save history and read forecast for Market Assay Kit."
 #property description   "License GNU LGPL v.3"
 #property version       "1.3.7"
 #property strict
-#include                <MAS_MasterWindows.mqh>
+
+#include                "MAS_Include.mqh"
+#include                "MAS_MasterWindows.mqh"
+
 //---------------------Indicators---------------------------------------------+
 #property indicator_chart_window
 #property indicator_buffers 3
@@ -32,8 +35,13 @@
 #property indicator_color3  clrLimeGreen
 //#property indicator_style3  STYLE_SOLID
 #property indicator_width3  1
+//--- indicator buffers
+double      HighBuffer[];
+double      LowBuffer[];
+double      CloseBuffer[];
+
 //-----------------Global variables-------------------------------------------+
-const string    Copyright = "Copyright 2016, Terentew Aleksey";
+const string    Copyright = COPYRIGHT;
 const string    comment = "MAS_Assistant v1.3.7";
 input string    configFile = "mas.conf";
 input bool      messagesOn = true;
@@ -49,10 +57,7 @@ string      outputSymbol;
 int         depthForecast;
 string      mainSavePath = "MAS_MarketData/";
 string      mainReadPath = "MAS_Prediction/";
-ulong       tickCount;
-double                      HighBuffer[];
-double                      LowBuffer[];
-double                      CloseBuffer[];
+
 //+--------------------UserInterface Class------------------------------------+
 #ifdef MAS_MASTERWINDOWS
 int Mint[][3] =     { { 1, 0,   0  },
@@ -178,6 +183,7 @@ public:
 
 //+------------------------UI-------------------------------------------------+
 UiAssistant     ui;
+
 //+---------------------------------------------------------------------------+
 int OnInit()
 {
@@ -277,6 +283,7 @@ int OnCalculate(const int rates_total,
     }
     return( rates_total );
 }
+
 //+---------------------------------------------------------------------------+
 void OnChartEvent(const int id,
                   const long &lparam,
@@ -285,6 +292,7 @@ void OnChartEvent(const int id,
 {
     ui.OnEvent( id, lparam, dparam, sparam );
 }
+
 //+---------------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
@@ -292,6 +300,7 @@ void OnDeinit(const int reason)
     ui.Deinit();
     ChartIndicatorDelete( 0, 0, "MAS_Assistant" );
 }
+
 //+---------------------------------------------------------------------------+
 struct ForecastHeader {
     int         Version;
@@ -399,7 +408,7 @@ bool ReadConfig(const string file, string &list[][64] )
             if( StringLen( tmp ) <= 10 )
                 fileBuffer[idx][0] = StringConcatenate( "Symbols=\"", symbolsString, "\"" );
             symbolsIsWrited = true;
-            GlobalVariableSet( "glSymbolsWrited", (double)symbolsIsWrited );
+            //GlobalVariableSet( "glSymbolsWrited", (double)symbolsIsWrited );
         }
         if( StringFind( fileBuffer[idx][0], "Mt4_Account=" ) >= 0 && mainSection ) {
             tmp = StringSubstr( fileBuffer[idx][0], 12 );
@@ -411,7 +420,7 @@ bool ReadConfig(const string file, string &list[][64] )
                                      "\"\r\nMt4_Account=" + IntegerToString(AccountNumber()) );
             fileBuffer[kitIdx][0] = StringConcatenate( fileBuffer[kitIdx][0], "\r\n", tmp );
             symbolsIsWrited = true;
-            GlobalVariableSet( "glSymbolsWrited", (double)symbolsIsWrited );
+            //GlobalVariableSet( "glSymbolsWrited", (double)symbolsIsWrited );
         }
         idx++;
     }
@@ -597,35 +606,6 @@ void CloseThisWindow()
     ChartClose();
 };
 
-int GetSymbolsList(const bool selected, string &symbols[])
-{
-    string symbolsFileName;
-    int symbolsNumber, offset;
-    if( selected ) 
-        symbolsFileName = "symbols.sel";
-    else
-        symbolsFileName = "symbols.raw";
-    int hFile = FileOpenHistory( symbolsFileName, FILE_BIN|FILE_READ );
-    if( hFile < 0 ) 
-        return -1;
-    if( selected ) {
-        symbolsNumber = ( (int)FileSize(hFile) - 4 ) / 128;
-        offset = 116;
-    } else { 
-        symbolsNumber = (int)FileSize(hFile) / 1936;
-        offset = 1924;
-    }
-    ArrayResize( symbols, symbolsNumber );
-    if( selected )
-        FileSeek( hFile, 4, SEEK_SET );
-    for( int i = 0; i < symbolsNumber; i++ ) {
-        symbols[i] = FileReadString( hFile, 12 );
-        FileSeek( hFile, offset, SEEK_CUR );
-    }
-    FileClose( hFile );
-    return symbolsNumber;
-};
-
 int GetSymbolsString(const bool selected, string &symbols)
 {
     string symbolsList[];
@@ -637,51 +617,6 @@ int GetSymbolsString(const bool selected, string &symbols)
     }
     return size;
 };
-
-int StringSplitMAS(const string string_value, const ushort separator, string &result[][64])
-{
-    if( StringLen( string_value ) <= 0 || string_value == NULL )
-        return 0;
-    int lastChar = 0, currentChar = 0, size = StringLen(string_value), sizeRes = 0, sepIdxs[50];
-    ArrayInitialize( sepIdxs, 0 );
-    for( int idx = 0; idx < size; idx++) {
-        if( StringGetChar(string_value, idx) == separator ) {
-            sepIdxs[sizeRes] = idx;
-            sizeRes += 1;
-            if( sizeRes >= ArraySize(sepIdxs) )
-                ArrayResize( sepIdxs, ArraySize(sepIdxs) + 50 );
-        }
-    }
-    ArrayResize( result, sizeRes + 1 );
-    if( sizeRes == 0 ) {
-        result[sizeRes][0] = string_value;
-        return sizeRes + 1;
-    }
-    for( int idx = 0; idx <= sizeRes; idx++) {
-        if( idx == 0 ) {
-            result[idx][0] = StringSubstr( string_value, 0, sepIdxs[idx] );
-            continue;
-        }
-        result[idx][0] = StringSubstr( string_value, sepIdxs[idx-1] + 1, 
-                                                     sepIdxs[idx] - sepIdxs[idx-1] - 1 );
-    }
-    return sizeRes + 1;
-};
-
-double StrToDbl(const string str)
-{
-    int i, k = 1;
-    double r = 0, p = 1;
-    for( i = 0; i < StringLen(str); i++ ) {
-        if( k < 0 )
-			p = p * 10;
-        if( StringGetChar( str, i ) == '.' )
-            k = -k;
-        else
-            r = r * 10 + ( StringGetChar( str, i ) - '0' );
-    }
-    return r / p;
-}
 
 void SeparateMasSymbol(const string masSymbol, string &symbol, int &period)
 {
@@ -703,14 +638,6 @@ void SeparateMasSymbol(const string masSymbol, string &symbol, int &period)
         symbol = "";
         period = -1;
     }
-};
-
-int GetIndexFromTime(const datetime time, const int timeframe = 0)
-{
-    int index = 0;
-    while( iTime( _Symbol, timeframe, index ) >= time )
-        index++;
-    return index;
 };
 
 int GetIndexFirstBar(int timeframe = 0)
@@ -741,6 +668,15 @@ bool SymbolIsTime(const string symb)
         (symb == "HOUR") || (symb == "MINUTE") )
         return true;
     return false;
+};
+
+void GetDell(const string name = "mas_")
+{
+    string vName;
+    for(int i=ObjectsTotal()-1; i>=0;i--) {
+        vName = ObjectName(i);
+        if (StringFind(vName,name) !=-1) ObjectDelete(vName);
+    }
 };
 
 void SetMyTemplate()
