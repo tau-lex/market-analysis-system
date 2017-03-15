@@ -1,6 +1,7 @@
 # Market analysis system (MAS)
 
-Written in the Qt 5.7
+Written in the Qt 5.7 (Market-Analysis)
+Written in the Keras (python3.6) (Market-Analysis-with-Keras)
 
 ### Eng
 

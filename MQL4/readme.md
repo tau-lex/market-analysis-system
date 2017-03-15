@@ -10,18 +10,11 @@ Scripts for use in MetaTrader.
 
 - MAS_DataSetPreparer - Saves new historical data for the desired configuration.
 
-- MAS_Elder_v1 - Indicator
 
-- MAS_Impulse - Indicator
+### Описание (Rus)
 
-### Description (Rus)
+Скрипты для использования в MetaTrader.
 
-Скрипты для исполбзования в MetaTrader.
-
-- MAS_Assistant - Сохраняет новые данные для MAS Programm, передает информацию о терминале, читает параметры моделей.
+- MAS_Assistant - Сохраняет новые данные для MAS Program, передает информацию о терминале, читает параметры моделей.
 
 - MAS_DataSetPreparer - Сохраняет новые исторические данные по нужной конфигурации.
-
-- MAS_Elder_v1 - Индикатор
-
-- MAS_Impulse - Индикатор
