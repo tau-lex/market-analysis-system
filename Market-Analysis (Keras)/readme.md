@@ -6,9 +6,11 @@ Framework: [Keras](https://github.com/fchollet/keras)
 
 Models of machine learning using the Keras framework. You can prepare data using:
 
-- [Hst-Reader](https://github.com/terentjew-alexey/Hst-reader)
+- [Hst-Reader](https://github.com/terentjew-alexey/Hst-reader) - Program for converting HST files to standard CSV file format.
 
-- [MAS_DataSetPreparer](https://github.com/terentjew-alexey/market-analysis-system/blob/master/MQL4/MAS_DataSetPreparer.mq4)
+- [MASi_ML-Assistant](https://github.com/terentjew-alexey/market-analysis-system/blob/master/MQL4/MASi_ML-Assistant.mq4) - This script will help in preparing data for machine learning and displaying the forecast on the graph.
+
+- [MASs_DataSetPreparer](https://github.com/terentjew-alexey/market-analysis-system/blob/master/MQL4/MASs_DataSetPreparer.mq4) - The script preserves the history of the necessary timeseries specified in the config file.
 
 ### Description (Rus)
 
@@ -16,5 +18,7 @@ Models of machine learning using the Keras framework. You can prepare data using
 
 - [Hst-Reader](https://github.com/terentjew-alexey/Hst-reader) - Программа для конвертации файлов формата HST в стандартный формат файлов CSV.
 
-- [MAS_DataSetPreparer](https://github.com/terentjew-alexey/market-analysis-system/blob/master/MQL4/MAS_DataSetPreparer.mq4) - Скрипт сохраняющий историю нужных таймсерий, заданных в конфиг-файле.
+- [MASi_ML-Assistant](https://github.com/terentjew-alexey/market-analysis-system/blob/master/MQL4/MASi_ML-Assistant.mq4) - Этот скрипт поможет при подготовке данных для машинного обучения и показа прогноза на графике.
+
+- [MASs_DataSetPreparer](https://github.com/terentjew-alexey/market-analysis-system/blob/master/MQL4/MASs_DataSetPreparer.mq4) - Скрипт сохраняющий историю нужных таймсерий, заданных в конфиг-файле.
 
