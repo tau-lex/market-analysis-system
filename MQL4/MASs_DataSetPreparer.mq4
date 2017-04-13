@@ -1,18 +1,18 @@
 //+---------------------------------------------------------------------------+
-//|                                                   MAS_DataSetPreparer.mq4 |
+//|                                                  MASs_DataSetPreparer.mq4 |
 //|                                          Copyright 2017, Terentew Aleksey |
 //|                                 https://www.mql5.com/ru/users/terentjew23 |
 //+---------------------------------------------------------------------------+
-#property copyright     "Copyright 2017, Terentew Aleksey"
+#property copyright     "Copyright 2016-2017, Terentew Aleksey"
 #property link          "https://www.mql5.com/ru/users/terentjew23"
-#property description   "This script is a module in the Market Analysis System programm complex."
-#property description   "MAS_DataSetPreparer"
+#property description   "MASs_DataSetPreparer"
+#property description   "The script saves the historical data for the parameters specified in the configuration file."
 #property description   "License GNU LGPL v.3"
 #property version       "1.0"
 #property strict
 
 //-----------------Global variables-------------------------------------------+
-const string    Copyright = "Copyright 2016, Terentew Aleksey";
+const string    Copyright = "Copyright 2016-2017, Terentew Aleksey";
 input string    configFile = "mas_data.conf";
 input string    csvSeparator = ";";
 string      modelList[1][64];
@@ -93,6 +93,7 @@ void saveHistoryFiles()
 void saveHistory(const string &symbol, const int &timeframe, const string &file)
 {
     ushort  csvSep = StringGetChar( csvSeparator, 0 );
+    int     digits = (int)MarketInfo( symbol, MODE_DIGITS );
     int     limit, csvFile;
     if( fullData )
         limit = iBars( symbol, timeframe ) - 1;
@@ -104,10 +105,10 @@ void saveHistory(const string &symbol, const int &timeframe, const string &file)
     for( int i = limit - 1; i >= 0; i-- ) {
         FileSeek( csvFile, 0, SEEK_END );
         FileWrite( csvFile, iTime( symbol, timeframe, i ), 
-                            DoubleToStr( iOpen(  symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
-                            DoubleToStr( iHigh(  symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
-                            DoubleToStr( iLow(   symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
-                            DoubleToStr( iClose( symbol, timeframe, i ), (int)MarketInfo( symbol, MODE_DIGITS ) ), 
+                            DoubleToStr( iOpen(  symbol, timeframe, i ), digits ), 
+                            DoubleToStr( iHigh(  symbol, timeframe, i ), digits ), 
+                            DoubleToStr( iLow(   symbol, timeframe, i ), digits ), 
+                            DoubleToStr( iClose( symbol, timeframe, i ), digits ), 
                             iVolume(_Symbol, timeframe, i) );
     }
     FileClose( csvFile );
