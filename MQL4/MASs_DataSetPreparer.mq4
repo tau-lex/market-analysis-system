@@ -7,13 +7,12 @@
 #property link          "https://www.mql5.com/ru/users/terentjew23"
 #property description   "MASs_DataSetPreparer"
 #property description   "The script saves the historical data for the parameters specified in the configuration file."
-#property description   "License GNU LGPL v.3"
+#property description   "I recommend this script https://www.mql5.com/ru/code/15022"
 #property version       "1.0"
 #property strict
 
 //-----------------Global variables-------------------------------------------+
-const string    Copyright = "Copyright 2016-2017, Terentew Aleksey";
-input string    configFile = "mas_data.conf";
+input string    configFile = "MASs_DataSetPreparer.conf";
 input string    csvSeparator = ";";
 string      modelList[1][64];
 int         fullData;
@@ -100,8 +99,8 @@ void saveHistory(const string &symbol, const int &timeframe, const string &file)
     else
         limit = GetIndexFirstBar( timeframe );
     csvFile = FileOpen( file, FILE_WRITE | FILE_CSV, csvSep );
-    FileWrite( csvFile, 401, Copyright, symbol, timeframe, (int)MarketInfo( symbol, MODE_DIGITS ), 
-                iTime( symbol, timeframe, limit - 1 ), iTime( symbol, timeframe, 0 ) );
+    //FileWrite( csvFile, 401, Copyright, symbol, timeframe, (int)MarketInfo( symbol, MODE_DIGITS ), 
+    //            iTime( symbol, timeframe, limit - 1 ), iTime( symbol, timeframe, 0 ) );
     for( int i = limit - 1; i >= 0; i-- ) {
         FileSeek( csvFile, 0, SEEK_END );
         FileWrite( csvFile, iTime( symbol, timeframe, i ), 
@@ -123,8 +122,8 @@ void saveIndHistory(const string &symbol, const int &timeframe, const string &in
     else
         limit = GetIndexFirstBar( timeframe );
     csvFile = FileOpen( file, FILE_WRITE | FILE_CSV, csvSep );
-    FileWrite( csvFile, 401, Copyright, symbol, timeframe, (int)MarketInfo( symbol, MODE_DIGITS ), 
-                iTime( symbol, timeframe, limit - 1 ), iTime( symbol, timeframe, 0 ) );
+    //FileWrite( csvFile, 401, Copyright, symbol, timeframe, (int)MarketInfo( symbol, MODE_DIGITS ), 
+    //            iTime( symbol, timeframe, limit - 1 ), iTime( symbol, timeframe, 0 ) );
     for( int i = limit - 1; i >= 0; i-- ) {
         FileSeek( csvFile, 0, SEEK_END );
         FileWrite( csvFile, "" );
