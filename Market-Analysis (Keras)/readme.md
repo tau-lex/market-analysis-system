@@ -4,7 +4,8 @@ Framework: [Keras](https://github.com/fchollet/keras)
 
 ### Description (Eng)
 
-Models of machine learning using the Keras framework. You can prepare data using:
+Scripts for forecasting timeseries.
+You can prepare data using:
 
 - [Hst-Reader](https://github.com/terentjew-alexey/Hst-reader) - Program for converting HST files to standard CSV file format.
 
@@ -14,7 +15,8 @@ Models of machine learning using the Keras framework. You can prepare data using
 
 ### Description (Rus)
 
-Модели машинного обучения, использующие фреймворк Keras. Подготовить данные можно с помощью:
+Скрипты для прогнозирования таймсерий.
+Подготовить данные можно с помощью:
 
 - [Hst-Reader](https://github.com/terentjew-alexey/Hst-reader) - Программа для конвертации файлов формата HST в стандартный формат файлов CSV.
 
