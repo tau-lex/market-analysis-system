@@ -1,18 +1,18 @@
 //+---------------------------------------------------------------------------+
-//|                                                         MAS_Assistant.mq4 |
-//|                                          Copyright 2017, Terentew Aleksey |
+//|                                                        MASi_Assistant.mq4 |
+//|                                         Copyright 2017, Terentyev Aleksey |
 //|                                 https://www.mql5.com/ru/users/terentjew23 |
 //+---------------------------------------------------------------------------+
-#property copyright     "Copyright 2017, Terentew Aleksey"
+#property copyright     "Copyright 2017, Terentyev Aleksey"
 #property link          "https://www.mql5.com/ru/users/terentjew23"
 #property description   "This indicator is a module in the Market Analysis System programm complex."
-#property description   "MAS_Assistant save history and read forecast for Market Assay Kit."
+#property description   "MASi_Assistant save history and read forecast for Market Assay Kit."
 #property description   "License GNU LGPL v.3"
 #property version       "1.3.7"
 #property strict
 
-#include                "MAS_Include.mqh"
-#include                "MAS_MasterWindows.mqh"
+#include                "MASh_Include.mqh"
+#include                "MASh_MasterWindows.mqh"
 
 //---------------------Indicators---------------------------------------------+
 #property indicator_chart_window
@@ -46,17 +46,17 @@ const string    comment = "MAS_Assistant v1.3.7";
 input string    configFile = "mas.conf";
 input bool      messagesOn = true;
 input string    csvSeparator = ";";
-bool        isReady = false;
-bool        configIsReaded = false;
-bool        symbolsIsWrited = false;
-string      kitList[][64];
-string      inputSymbols[][64];
-string      outputSymbols[][64];
-string      kitName = "none";
-string      outputSymbol;
-int         depthForecast;
-string      mainSavePath = "MAS_MarketData/";
-string      mainReadPath = "MAS_Prediction/";
+bool            isReady = false;
+bool            configIsReaded = false;
+bool            symbolsIsWrited = false;
+string          kitList[][64];
+string          inputSymbols[][64];
+string          outputSymbols[][64];
+string          kitName = "none";
+string          outputSymbol;
+int             depthForecast;
+string          mainSavePath = "MAS_MarketData/";
+string          mainReadPath = "MAS_Prediction/";
 
 //+--------------------UserInterface Class------------------------------------+
 #ifdef MAS_MASTERWINDOWS
