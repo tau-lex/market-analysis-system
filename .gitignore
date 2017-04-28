@@ -5,4 +5,4 @@ build-*/
 *.csv
 *.txt
 *.xlsx
-Market-Analysis (Keras)/*.png
+*.png
