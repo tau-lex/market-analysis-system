@@ -30,8 +30,8 @@ batch_time =    25
 gru1 =          64
 gru2 =          32
 
-workfile = 'EURUSD.pro240'
-prefix = 'eurusd_h4_ema-ts_batch_adam'
+prefix = 'eurusd_w1_adam_batch_'
+workfile = 'EURUSD.pro10080'
 path = 'C:/Program Files (x86)/STForex MetaTrader 4/MQL4/Files/ML-Assistant/'
 #=============================================================================#
 file_x = path + workfile + '_x.csv'
@@ -70,7 +70,7 @@ print( '\nCreating or Load Model...' )
 
 json_string = ''
 try:
-    f = open( prefix+'.model', 'r' )
+    f = open( prefix+'_.model', 'r' )
 except IOError as e:
     print( 'Model created' )
 else:
@@ -93,7 +93,7 @@ else:
 model.compile( loss='mse', optimizer='adam', metrics=['mae', 'acc'] )
 
 json_string = model.to_json()
-with open( prefix+'.model', 'w' ) as f:
+with open( prefix+'_.model', 'w' ) as f:
     f.write(json_string)
 #=============================================================================#
 #       Training                                                              #
@@ -101,7 +101,7 @@ with open( prefix+'.model', 'w' ) as f:
 print( '\nTraining...' )
 
 try:
-    model.load_weights( prefix+'.hdf5', by_name=False )
+    model.load_weights( prefix+'_.hdf5', by_name=False )
 except IOError as e:
     print( 'Weights file is empty. New train' )
 else:
@@ -110,11 +110,9 @@ else:
 for i in range( epochs ):
     print( 'Epoch', i+1, '/', epochs )
     model.fit( data_x, data_y, batch_size=batch_size,
-              nb_epoch=nb_epoch)
-#    model.fit( train_x, train_y, batch_size=batch_size,
-#              nb_epoch=nb_epoch)
+               epochs=nb_epoch)
     
-model.save_weights( prefix+'.hdf5' )
+model.save_weights( prefix+'_.hdf5' )
 #model.reset_states()
 #=============================================================================#
 #       Predicting                                                            #
