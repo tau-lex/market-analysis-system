@@ -17,18 +17,20 @@ import numpy as np
 import math
 from keras.backend import backend
 from keras.models import Sequential, model_from_json
-from keras.layers import Dense, GRU, Reshape, normalization
+from keras.layers import Dense, GRU, Reshape, Dropout
+from keras.layers import normalization, LeakyReLU
+from keras.callbacks import ReduceLROnPlateau
+from keras import regularizers
 from sklearn.metrics import mean_squared_error
 
 #=============================================================================#
 batch_size =    64
-nb_epoch =      10
-epochs =        10
+fit_epoch =     300
 
 gru1 =          64
 gru2 =          32
 
-prefix = 'eurusd_w1_adam'
+prefix = 'eurusd_w1_adam_'
 workfile = 'EURUSD.pro10080'
 path = 'C:/Program Files (x86)/STForex MetaTrader 4/MQL4/Files/ML-Assistant/'
 #=============================================================================#
@@ -41,8 +43,10 @@ np.random.seed(7)
 
 print( 'Backend =', backend() )
 print( workfile )
+
+
 #=============================================================================#
-#       Load Data                                                             #
+#       L O A D   D A T A                                                     #
 #=============================================================================#
 print( 'Prepare Data...' )
 
@@ -55,67 +59,49 @@ data_x = np.reshape( data_x, (data_x.shape[0], 1, data_x.shape[1]) )
 print( "data_x:", data_x.shape )
 print( "data_y:", data_y.shape )
 
-train_size = int( len(data_x) * 0.67 )
+train_size = int( len(data_x) * 0.8 )
 test_size = len(data_x) - train_size
 train_x, test_x = data_x[0:train_size,:], data_x[train_size:len(data_x),:]
 print( len(train_x), len(test_x) )
 train_y, test_y = data_y[0:train_size,], data_y[train_size:len(data_y),]
 print( len(train_y), len(test_y) )
+
+
 #=============================================================================#
-#       Prepare Model                                                         #
+#       P R E P A R E   M O D E L                                             #
 #=============================================================================#
 print( '\nCreating or Load Model...' )
 
-json_string = ''
-try:
-    f = open( prefix+'_mas.model', 'r' )
-except IOError as e:
-    print( 'Model created' )
-else:
-    json_string = f.read()
-    f.close()
-    print( 'Model loaded' )
-    
-if( len(json_string) > 0 ):
-    model = model_from_json( json_string )
-else:
-    model = Sequential()
-    model.add( normalization.BatchNormalization( batch_input_shape=(None, 1, data_x.shape[2]) ) )
-    model.add( GRU( gru1, input_shape=(1, data_x.shape[2]) ) )#, dropout=0.2, recurrent_dropout=0.2
+model = Sequential()
+model.add( normalization.BatchNormalization( batch_input_shape=( None, 1, data_x.shape[2] ) ) )
+model.add( GRU( gru1, input_shape=( 1, data_x.shape[2] ) ) )#, dropout=0.2, recurrent_dropout=0.2
+model.add( LeakyReLU() )
+#    model.add( Dropout( 0.2 ) )
 #    model.add( Reshape( (1, gru1) ) )
 #    model.add( GRU( gru2 ) )
-    model.add( Dense( 1, activation='tanh' ) ) # tanh, sigmoid
+model.add( Dense( 1, activation='tanh' ) ) # tanh, sigmoid
+
+reduce_lr = ReduceLROnPlateau( monitor='val_loss', factor=0.9, patience=5, min_lr=0.000001, verbose=1 )
 
 # loss='mse', loss='msle'
 # optimizer='adam', optimizer='rmsprop'
 model.compile( loss='mse', optimizer='adam', metrics=['mae', 'acc'] )
 
-json_string = model.to_json()
-with open( prefix+'_mas.model', 'w' ) as f:
-    f.write(json_string)
+
 #=============================================================================#
-#       Training                                                              #
+#       T R A I N I N G                                                       #
 #=============================================================================#
 print( '\nTraining...' )
 
-try:
-    model.load_weights( prefix+'_weights.hdf5', by_name=False )
-except IOError as e:
-    print( 'Weights file is empty. New train' )
-else:
-    print( 'Weights loaded' )
-    
-for i in range( epochs ):
-    print( 'Epoch', i+1, '/', epochs )
-    model.fit( data_x, data_y, batch_size=batch_size,
-              epochs=nb_epoch)
-#    model.fit( train_x, train_y, batch_size=batch_size,
-#              nb_epoch=nb_epoch)
-    
-model.save_weights( prefix+'_weights.hdf5' )
-#model.reset_states()
+history = model.fit( train_x, train_y, #train_x, train_y, data_x, data_y, 
+                    batch_size=batch_size,
+                    epochs=fit_epoch, 
+                    validation_data=( test_x, test_y ),
+                    callbacks=[reduce_lr] )
+
+
 #=============================================================================#
-#       Predicting                                                            #
+#       P R E D I C T I N G                                                   #
 #=============================================================================#
 print( '\nPredicting...' )
 
@@ -129,38 +115,53 @@ predicted_output = model.predict( data_xx, batch_size=batch_size )
 np.savetxt( file_yy, predicted_output, fmt='%.6f', delimiter=';' )
 
 print( "Predict saved:", file_yy )
+
+
 #=============================================================================#
 #       Plot                                                                  #
 #=============================================================================#
-#print( '\nResults' )
-#plt.subplot(2, 1, 1)
-#plt.plot(expected_output)
-#plt.title('Expected')
-#plt.subplot(2, 1, 2)
-plt.plot( predicted_output )
-plt.title('Predicted')
-plt.show()
-
-
 # make predictions
-trainPredict = model.predict(train_x)
-testPredict = model.predict(test_x)
+trainPredict = model.predict( train_x )
+testPredict = model.predict( test_x )
 # calculate root mean squared error
-trainScore = math.sqrt(mean_squared_error(train_y, trainPredict))
-print('Train Score: %.6f RMSE' % (trainScore))
-testScore = math.sqrt(mean_squared_error(test_y, testPredict))
-print('Test Score: %.6f RMSE' % (testScore))
+trainScore = math.sqrt( mean_squared_error( train_y, trainPredict ) )
+print( 'Train Score: %.6f RMSE' % ( trainScore ) )
+testScore = math.sqrt( mean_squared_error( test_y, testPredict ) )
+print( 'Test Score: %.6f RMSE' % ( testScore ) )
 
-# shift train predictions for plotting
-trainPredictPlot = np.empty_like(data_y)
-trainPredictPlot[:] = np.nan
-trainPredictPlot[1:len(trainPredict)+1] = trainPredict[0]
-# shift test predictions for plotting
-testPredictPlot = np.empty_like(data_y)
-testPredictPlot[:] = np.nan
-testPredictPlot[len(trainPredict)+(1*2)+1:len(data_y)-1] = testPredict[0]
-# plot baseline and predictions
-plt.plot(data_y)
-plt.plot(trainPredictPlot)
-plt.plot(testPredictPlot)
+
+plt.plot( predicted_output )
+plt.title( 'Predicted' )
+plt.ylabel( 'direction')
+plt.xlabel( 'bar')
 plt.show()
+
+
+plt.figure()
+plt.plot( history.history['loss'] )
+plt.plot( history.history['val_loss'] )
+plt.title( 'Model loss' )
+plt.ylabel( 'loss' )
+plt.xlabel( 'epoch' )
+plt.legend( ['train', 'test'], loc='best' )
+plt.show()
+
+plt.figure()
+plt.plot( history.history['acc'] )
+plt.plot( history.history['val_acc'] )
+plt.title( 'Model accuracy' )
+plt.ylabel( 'acc')
+plt.xlabel( 'epoch')
+plt.legend( ['train', 'test'], loc='best' )
+plt.show()
+
+plt.figure()
+plt.plot( history.history['mean_absolute_error'] )
+plt.plot( history.history['val_mean_absolute_error'] )
+plt.title( 'Model mean absolute error' )
+plt.ylabel( 'mae')
+plt.xlabel( 'epoch')
+plt.legend( ['train', 'test'], loc='best' )
+plt.show()
+
+
