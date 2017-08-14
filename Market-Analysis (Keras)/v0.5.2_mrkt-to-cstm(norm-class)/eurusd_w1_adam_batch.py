@@ -2,7 +2,7 @@
 ###############################################################################
 #                                                                             #
 #   Market Analysis System                                                    #
-#   https://www.mql5.com/ru/users/terentjew23                                 #
+#   https://www.mql5.com/ru/users/terentyev23                                 #
 #                                                                             #
 #   M A R K E T   A N A L Y S I S   S C R I P T   W I T H   K E R A S         #
 #                                                                             #
