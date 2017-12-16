@@ -30,8 +30,8 @@ fit_epoch =     100
 gru1 =          64
 gru2 =          32
 
-prefix = 'eurusd_w1_adam_'
-workfile = 'NZDUSD.pro1440'
+prefix = '052_v2_'
+workfile = 'AUDUSD.pro5'
 path = 'C:/Program Files (x86)/STForex MetaTrader 4/MQL4/Files/ML-Assistant/'
 #=============================================================================#
 file_x = path + workfile + '_x.csv'
@@ -148,12 +148,12 @@ plt.title('Predicted')
 plt.ylabel('direction')
 plt.xlabel('bar')
 plt.show()
-#
-#plt.plot( predicted_output )
-#plt.title( 'Predicted' )
-#plt.ylabel( 'direction')
-#plt.xlabel( 'bar')
-#plt.show()
+
+plt.plot( predicted_output )
+plt.title( 'Predicted' )
+plt.ylabel( 'direction')
+plt.xlabel( 'bar')
+plt.show()
 
 
 plt.figure()
