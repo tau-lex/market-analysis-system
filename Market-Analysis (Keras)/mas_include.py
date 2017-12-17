@@ -49,7 +49,7 @@ def load_model(filename: str):
         return model
 
 
-def create_timeseries_matrix_xy(data_x, data_y = [], look_back = 3):
+def create_timeseries_matrix(data_x, data_y = [], look_back = 3):
     """ Convert an array of values into a dataset matrix """
     if look_back <= 1:
         return np.array(data_x), np.array(data_y)
