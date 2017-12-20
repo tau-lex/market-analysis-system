@@ -8,3 +8,5 @@ build-*/
 *.png
 
 *.user
+
+*.pyc
