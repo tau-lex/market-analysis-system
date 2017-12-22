@@ -2,11 +2,11 @@
 ###############################################################################
 #                                                                             #
 #   Market Analysis System                                                    #
-#   https://www.mql5.com/ru/users/terentjew23                                 #
+#   https://www.mql5.com/ru/users/terentyev23                                 #
 #                                                                             #
 #   M A R K E T   A N A L Y S I S   S C R I P T   W I T H   K E R A S         #
 #                                                                             #
-#   Aleksey Terentew                                                          #
+#   Aleksey Terentyev                                                         #
 #   terentew.aleksey@ya.ru                                                    #
 #                                                                             #
 ###############################################################################
@@ -99,7 +99,7 @@ with open( prefix+'_mas.model', 'w' ) as f:
 print( '\nTraining...' )
 
 try:
-    model.load_weights( prefix+'_weights.hdf5', by_name=False )
+    model.load_weights( prefix+'.hdf5', by_name=False )
 except IOError as e:
     print( 'Weights file is empty. New train' )
 else:
@@ -112,7 +112,7 @@ for i in range( epochs ):
 #    model.fit( train_x, train_y, batch_size=batch_size,
 #              nb_epoch=nb_epoch)
     
-model.save_weights( prefix+'_weights.hdf5' )
+model.save_weights( prefix+'.hdf5' )
 #model.reset_states()
 #=============================================================================#
 #       Predicting                                                            #
