@@ -6,7 +6,6 @@ build-*/
 *.txt
 *.xlsx
 *.png
-
 *.user
-
 *.pyc
+*.ex4
