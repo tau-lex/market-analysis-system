@@ -67,7 +67,7 @@ for idx in range(len(params) - 1):
 
 np.random.seed(23)
 
-prefix = 'mas_research/'
+prefix = 'mas_research #2/'
 research_prefix = ''
 workfile = params[0]
 path = 'C:/Program Files (x86)/STForex MetaTrader 4/MQL4/Files/ML-Assistant/'
