@@ -70,7 +70,7 @@ file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
 file_xx = path + workfile + '_xx.csv'
 file_yy = path + workfile + '_yy.csv'
-prefix = 'C:/mas/simple_rnn_'
+prefix = 'simple_rnn_'
 model = None
 data_x = np.array([])
 data_y = np.array([])
@@ -102,7 +102,7 @@ if run_type == 0:
     start, size = 0, len(data_x)
     if size > limit:
         start, size = size - limit, limit
-    train_size = int(size * 0.65)
+    train_size = int(size * 0.8)
     test_size = size - train_size
     train_x, test_x = data_x[start:start+train_size, :], data_x[start+train_size:len(data_x), :]
     train_y, test_y = data_y[start:start+train_size,], data_y[start+train_size:len(data_y),]
@@ -115,71 +115,6 @@ if run_type == 0:
 #    print(train_y)
 #    plt.plot(test_y)
 #    plt.show()
-
-#plt.figure()
-#plt.plot(data_x[:, 2], data_x[:, 6])
-'''
-_from, _to = 4500, data_x.shape[0]-1
-#_from, _to = -500,
-
-# three simple graphs
-fig, axes = plt.subplots(nrows=1, ncols=3)
-
-axes[0].plot(data_x[_from:_to, 1], data_y[_from:_to])
-axes[1].plot(data_x[_from:_to, 2], data_y[_from:_to])
-axes[2].plot(data_x[_from:_to, 5], data_y[_from:_to])
-
-plt.show()
-
-# 3D graph
-from mpl_toolkits.mplot3d import axes3d
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot_wireframe(data_x[_from:_to, 2], data_x[_from:_to, 6], data_y[_from:_to], rstride=10, cstride=10)
-ax.view_init(60, 180)
-
-plt.show()
-
-#
-from matplotlib.colors import BoundaryNorm
-from matplotlib.ticker import MaxNLocator
-
-# make these smaller to increase the resolution
-dx, dy = 0.05, 0.05
-# generate 2 2d grids for the x & y bounds
-y, x = np.mgrid[slice(data_x[_from:_to, 2].min(), data_x[_from:_to, 2].max(), 0.05),
-                slice(data_x[_from:_to, 6].min(), data_x[_from:_to, 6].max(), 0.05)]
-
-z = x - y
-
-levels = MaxNLocator(nbins=15).tick_values(z.min(), z.max())
-
-# pick the desired colormap, sensible levels, and define a normalization
-# instance which takes data values and translates those into levels.
-cmap = plt.get_cmap('PiYG')
-norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
-
-fig, (ax0, ax1) = plt.subplots(nrows=2)
-
-im = ax0.pcolormesh(x, y, z, cmap=cmap, norm=norm)
-fig.colorbar(im, ax=ax0)
-ax0.set_title('pcolormesh with levels')
-
-# contours are *point* based plots, so convert our bound into point
-# centers
-cf = ax1.contourf(x[:, :] + dx/2.,
-                  y[:, :] + dy/2., z, levels=levels,
-                  cmap=cmap)
-fig.colorbar(cf, ax=ax1)
-ax1.set_title('contourf with levels')
-
-# adjust spacing between subplots so `ax1` title and `ax0` tick labels
-# don't overlap
-fig.tight_layout()
-
-plt.show()
-'''
 
 
 #=============================================================================#
@@ -229,7 +164,7 @@ opt = Nadam()
 # 'squared_hinge', 'hinge', 'kullback_leibler_divergence(kld)'
 # 'poisson', 'cosine_proximity'
 # 'binary_crossentropy', 'categorical_crossentropy'(softmax)
-model.compile(loss='mae', optimizer=opt, metrics=['acc'])
+model.compile(loss='hinge', optimizer=opt, metrics=['acc'])
 
 
 #=============================================================================#
