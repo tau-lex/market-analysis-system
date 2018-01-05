@@ -5,24 +5,29 @@ Framework: [Keras](https://github.com/fchollet/keras)
 ### Description (Eng)
 
 Scripts for forecasting timeseries.
+
+- [simple_rnn*] - scripts using hidden recurrent layers.
+
+- [mas_research*] - scripts for finding the loss function and optimization method.
+
 You can prepare data using:
 
 - [Hst-Reader](https://github.com/terentjew-alexey/Hst-reader) - Program for converting HST files to standard CSV file format.
 
-- [MASi_ML-Assistant](https://www.mql5.com/ru/blogs/post/712023) - This script will help in preparing data for machine learning and displaying the forecast on the graph.
+- [MASi_ML-Assistant](https://www.mql5.com/ru/blogs/post/712023) - This mt4-program will help in preparing data for machine learning and displaying the forecast on the graph.
 
 ### Description (Rus)
 
 Скрипты для прогнозирования таймсерий.
 
-- [simple_rnn] - скрипты с применением скрытых рекурентных слоев.
+- [simple_rnn*] - скрипты с применением скрытых рекурентных слоев.
 
-- [mas_research] - скрипты для подбора функции нахождения ошибки и метода оптимизации.
+- [mas_research*] - скрипты для подбора функции нахождения ошибки и метода оптимизации.
 
 Подготовить данные можно с помощью:
 
 - [Hst-Reader](https://github.com/terentjew-alexey/Hst-reader) - Программа для конвертации файлов формата HST в стандартный формат файлов CSV.
 
-- [MASi_ML-Assistant](https://www.mql5.com/ru/blogs/post/712023) - Этот скрипт поможет при подготовке данных для машинного обучения и показа прогноза на графике.
+- [MASi_ML-Assistant](https://www.mql5.com/ru/blogs/post/712023) - Этот mt4-программа поможет при подготовке данных для машинного обучения и показа прогноза на графике.
 
 
