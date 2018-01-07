@@ -42,18 +42,25 @@ def create_timeseries_matrix(data_x, data_y=np.array([]), look_back=3):
     return result, data_y[look_back - 1:]
 
 
-def dataset_to_traintest(data, ratio=0.6):
-    """Returns a data set divided into two matrices."""
+def dataset_to_traintest(data, ratio=0.6, limit=0):
+    """Returns a data set divided into two matrices.
+    train = ratio * data.
+    limit > 0 - limits the size of the dataset."""
+
+    start, size = 0, len(data)
+    if limit > 0:
+        if size > limit:
+            start, size = size - limit, limit
 
     if ratio <= 0.0:
-        return None, data
+        return None, data[start:len(data), :]
     elif ratio >= 1.0:
-        return data, None
+        return data[start:len(data), :], None
 
-    train_size = int(len(data) * ratio)
+    train_size = int(size * ratio)
     # test_size = len(data) - train_size
 
-    return data[0:train_size,:], data[train_size:len(data),:]
+    return data[start:(start + train_size), :], data[(start + train_size):len(data), :]
 
 
 def signal_to_class2(data, normalize=True):

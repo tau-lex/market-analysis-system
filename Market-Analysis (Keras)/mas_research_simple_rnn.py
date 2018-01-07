@@ -15,10 +15,10 @@ from __future__ import print_function
 #import math
 import matplotlib.pyplot as plt
 import numpy as np
-from mas_include import create_timeseries_matrix, get_delta
-#from mas_include import signal_to_class2, class2_to_signal
-#from mas_include import signal_to_class3, class3_to_signal
-from mas_include import save_model, load_model
+from mas.data import create_timeseries_matrix, get_delta
+#from mas.include import signal_to_norm_class2, norm_class2_to_signal
+#from mas.include import signal_to_class3, class3_to_signal
+from mas.models import save_model, load_model
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 from keras.layers import BatchNormalization
