@@ -47,6 +47,8 @@ def dataset_to_traintest(data, ratio=0.6, limit=0):
     train = ratio * data.
     limit > 0 - limits the size of the dataset."""
 
+    data = np.array(data)
+
     start, size = 0, len(data)
     if limit > 0:
         if size > limit:
@@ -60,6 +62,8 @@ def dataset_to_traintest(data, ratio=0.6, limit=0):
     train_size = int(size * ratio)
     # test_size = len(data) - train_size
 
+    if len(data.shape) == 1:
+        return data[start:(start + train_size),], data[(start + train_size):len(data),]
     return data[start:(start + train_size), :], data[(start + train_size):len(data), :]
 
 

@@ -11,14 +11,14 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import print_function
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+
 from mas.include import get_parameters
-from mas.data import signal_to_class2, class2_to_signal
 from mas.data import create_timeseries_matrix, dataset_to_traintest
 from mas.models import save_model, load_model
+
 from keras.models import Sequential
 from keras.layers import Dense, GRU, LSTM, Dropout, Activation
 from keras.layers import BatchNormalization
@@ -27,6 +27,7 @@ from keras.optimizers import RMSprop, SGD
 from keras.optimizers import Adam, Nadam, Adagrad, Adamax, Adadelta
 from keras.callbacks import ReduceLROnPlateau
 from keras import regularizers
+
 from sklearn.metrics import mean_squared_error
 
 
@@ -34,10 +35,10 @@ from sklearn.metrics import mean_squared_error
 #       P R E P A R E   V A R I A B L E S                                     #
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
-params = get_parameters()
-#params = ['EURUSD.pro1440', '-train', 100, '-graph']
+# params = get_parameters()
+params = ['EURUSD.pro1440', '-train', 100, '-graph']
 limit = 5000
-batch_size = 64
+batch_size = 128
 fit_epoch = 100
 recurent_1 = 32
 recurent_2 = 32
@@ -62,10 +63,14 @@ for item in params:
                 limit = int(item)
     idx += 1
 
-np.random.seed(7)
+# np.random.seed(7)
 
+
+# Main
+path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
+# Server
+# path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 workfile = params[0]
-path = 'C:/Program Files (x86)/STForex MetaTrader 4/MQL4/Files/ML-Assistant/'
 file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
 file_xx = path + workfile + '_xx.csv'
@@ -119,27 +124,29 @@ if run_type == 0:
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], 1)))
-    model.add(LSTM(recurent_1,
+    model.add(GRU(recurent_1,
                     # batch_input_shape=(None, data_x.shape[1], 1),
                     # activation='relu',
                     return_sequences=True,
                     # bias_initializer='ones',
-                    # activity_regularizer=regularizers.l2(0.01)
+                    activity_regularizer=regularizers.l2(0.01)
     ))
-    model.add(LeakyReLU())
+    model.add(PReLU())
     model.add(Dropout(0.5))
-    model.add(LSTM(recurent_2,
+    model.add(GRU(recurent_2,
                     # activation='relu',
                     # bias_initializer='ones',
-                    # activity_regularizer=regularizers.l2(0.01)
+                    activity_regularizer=regularizers.l2(0.01)
     ))
-#    model.add(PReLU())
-    model.add(LeakyReLU())
+    model.add(PReLU())
+    # model.add(LeakyReLU())
+    model.add(BatchNormalization())
 # 'elu', 'selu', 'relu'
 # 'softplus', 'softsign', 'tanh'
 # 'sigmoid', 'hard_sigmoid', 'linear' #, activation='sigmoid'
-    model.add(Dense(8))
-    model.add(Dense(1))
+    model.add(Dense(16, activation='tanh'))
+    model.add(Dense(8, activation='tanh'))
+    model.add(Dense(1, activation='tanh'))
 
     save_model(model, prefix + workfile)
 elif run_type == 1:
