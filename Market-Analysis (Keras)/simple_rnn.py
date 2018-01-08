@@ -11,14 +11,14 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import print_function
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-from mas_include import get_parameters, create_timeseries_matrix
-#from mas_include import signal_to_class2, class2_to_signal
-#from mas_include import signal_to_class3, class3_to_signal
-from mas_include import save_model, load_model
+
+from mas.include import get_parameters
+from mas.data import create_timeseries_matrix, dataset_to_traintest
+from mas.models import save_model, load_model
+
 from keras.models import Sequential
 from keras.layers import Dense, GRU, LSTM, Dropout, Activation
 from keras.layers import BatchNormalization
@@ -27,6 +27,7 @@ from keras.optimizers import RMSprop, SGD
 from keras.optimizers import Adam, Nadam, Adagrad, Adamax, Adadelta
 from keras.callbacks import ReduceLROnPlateau
 from keras import regularizers
+
 from sklearn.metrics import mean_squared_error
 
 
@@ -34,13 +35,13 @@ from sklearn.metrics import mean_squared_error
 #       P R E P A R E   V A R I A B L E S                                     #
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
-params = get_parameters()
-#params = ['EURUSD.pro1440', '-train', 100, '-graph']
+# params = get_parameters()
+params = ['EURUSD.pro1440', '-train', 100, '-graph']
 limit = 5000
-batch_size = 64
+batch_size = 128
 fit_epoch = 100
 recurent_1 = 32
-recurent_2 = 16
+recurent_2 = 32
 run_type = 0
 graph = False
 
@@ -62,10 +63,14 @@ for item in params:
                 limit = int(item)
     idx += 1
 
-np.random.seed(7)
+# np.random.seed(7)
 
+
+# Main
+path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
+# Server
+# path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 workfile = params[0]
-path = 'C:/Program Files (x86)/STForex MetaTrader 4/MQL4/Files/ML-Assistant/'
 file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
 file_xx = path + workfile + '_xx.csv'
@@ -94,19 +99,13 @@ if run_type == 0:
     data_y = np.genfromtxt(file_y, delimiter=';')
 
     data_x, data_y = create_timeseries_matrix(data_x, data_y, 3)
-#    data_y = signal_to_class2(data_yt)
 
     # batch_input_shape=( batch_size, timesteps, units )
     data_x = np.reshape(data_x, (data_x.shape[0], data_x.shape[1], 1))
 
-    start, size = 0, len(data_x)
-    if size > limit:
-        start, size = size - limit, limit
-    train_size = int(size * 0.8)
-    test_size = size - train_size
-    train_x, test_x = data_x[start:start+train_size, :], data_x[start+train_size:len(data_x), :]
-    train_y, test_y = data_y[start:start+train_size,], data_y[start+train_size:len(data_y),]
-    print('Train/Test :', train_size, '/', test_size)
+    train_x, test_x = dataset_to_traintest(data_x, ratio=0.6, limit=limit)
+    train_y, test_y = dataset_to_traintest(data_y, ratio=0.6, limit=limit)
+    print('Train/Test :', len(train_y), '/', len(test_y))
 
 
 #=============================================================================#
@@ -125,27 +124,29 @@ if run_type == 0:
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], 1)))
-    model.add(LSTM(recurent_1,
+    model.add(GRU(recurent_1,
                     # batch_input_shape=(None, data_x.shape[1], 1),
                     # activation='relu',
                     return_sequences=True,
                     # bias_initializer='ones',
-                    # activity_regularizer=regularizers.l2(0.01)
+                    activity_regularizer=regularizers.l2(0.01)
     ))
-    model.add(LeakyReLU())
+    model.add(PReLU())
     model.add(Dropout(0.5))
-    model.add(LSTM(recurent_2,
+    model.add(GRU(recurent_2,
                     # activation='relu',
                     # bias_initializer='ones',
-                    # activity_regularizer=regularizers.l2(0.01)
+                    activity_regularizer=regularizers.l2(0.01)
     ))
-#    model.add(PReLU())
-    model.add(LeakyReLU())
+    model.add(PReLU())
+    # model.add(LeakyReLU())
+    model.add(BatchNormalization())
 # 'elu', 'selu', 'relu'
 # 'softplus', 'softsign', 'tanh'
 # 'sigmoid', 'hard_sigmoid', 'linear' #, activation='sigmoid'
-    model.add(Dense(8))
-    model.add(Dense(1))
+    model.add(Dense(16, activation='tanh'))
+    model.add(Dense(8, activation='tanh'))
+    model.add(Dense(1, activation='tanh'))
 
     save_model(model, prefix + workfile)
 elif run_type == 1:
@@ -173,15 +174,23 @@ model.compile(loss='hinge', optimizer=opt, metrics=['acc'])
 if run_type == 0:
     print('\nTraining...')
 
-#   ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=8, verbose=0, mode='auto', epsilon=0.0001, cooldown=0, min_lr=0)
-    reduce_lr = ReduceLROnPlateau(factor=0.5, patience=10, min_lr=0.0001, verbose=1)
+    reduce_lr = ReduceLROnPlateau(factor=0.9, patience=5, min_lr=0.000001, verbose=1)
 
     history = model.fit(train_x, train_y, #train_x, train_y, data_x, data_y,
                         batch_size=batch_size,
                         epochs=fit_epoch,
                         callbacks=[reduce_lr],
                         validation_data=(test_x, test_y))
+
     model.save_weights(prefix+workfile+'.hdf5')
+
+    # calculate root mean squared error
+    train_predict = model.predict(train_x)
+    test_predict = model.predict(test_x)
+    train_score = math.sqrt(mean_squared_error(train_y, train_predict))
+    print('Train Score: %.6f RMSE' % (train_score))
+    test_score = math.sqrt(mean_squared_error(test_y, test_predict))
+    print('Test Score: %.6f RMSE' % (test_score))
 
 
 #=============================================================================#
@@ -190,30 +199,21 @@ if run_type == 0:
 print('\nPredicting...')
 
 data_xx = np.genfromtxt(file_xx, delimiter=';')
-
 data_xx, empty = create_timeseries_matrix(data_xx, look_back=3)
-
 data_xx = np.reshape(data_xx, (data_xx.shape[0], data_xx.shape[1], 1))
-
 
 if run_type == 1:
     model.load_weights(prefix+workfile+'.hdf5')
 
 predicted_output = model.predict(data_xx, batch_size=batch_size)
-data_yy = predicted_output
-#data_yy = class2_to_signal(predicted_output)
+data_yy = np.array([])
+data_yy = np.append(data_yy, 0.0)
+data_yy = np.append(data_yy, 0.0)
+data_yy = np.append(data_yy, predicted_output)
 
 np.savetxt(file_yy, data_yy, fmt='%.6f', delimiter=';')
 print("Predict saved:\n", file_yy)
 
-if run_type == 0:
-    # calculate root mean squared error
-    train_predict = model.predict(train_x)
-    test_predict = model.predict(test_x)
-    train_score = math.sqrt(mean_squared_error(train_y, train_predict))
-    print('Train Score: %.6f RMSE' % (train_score))
-    test_score = math.sqrt(mean_squared_error(test_y, test_predict))
-    print('Test Score: %.6f RMSE' % (test_score))
 
 #=============================================================================#
 #       P L O T                                                               #

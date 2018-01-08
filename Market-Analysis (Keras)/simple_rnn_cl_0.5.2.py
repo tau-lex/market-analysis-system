@@ -15,12 +15,13 @@ from __future__ import print_function
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-from mas_include import get_parameters, create_timeseries_matrix
-from mas_include import signal_to_class2, class2_to_signal
+from mas.include import get_parameters
+from mas.data import create_timeseries_matrix, dataset_to_traintest
+from mas.data import signal_to_class2, class2_to_signal
 from keras.backend import backend
 from keras.models import Sequential
-from keras.layers import Dense, GRU, Reshape, Dropout, Activation
-from keras.layers import BatchNormalization, LeakyReLU
+from keras.layers import Dense, GRU, Dropout, Activation
+from keras.layers import BatchNormalization
 from keras.callbacks import ReduceLROnPlateau
 from keras.optimizers import RMSprop, Adam, SGD, Nadam
 from sklearn.metrics import mean_squared_error
@@ -33,8 +34,13 @@ gru1 = 32
 gru2 = 32
 
 prefix = '052_v2_'
-workfile = 'EURUSD1440'
-path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
+workfile = 'EURUSD.pro1440'
+# workfile = 'EURUSD1440'
+# Main
+path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
+# Server
+# path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
+
 #=============================================================================#
 file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
@@ -55,26 +61,13 @@ data_yt = np.genfromtxt(file_y, delimiter=';')
 
 data_x, data_yt = create_timeseries_matrix(data_x, data_yt, 3)
 
-data_y = np.array( [], ndmin=2 )
-for item in data_yt:
-    if item > 0:
-        data_y = np.append( data_y, [abs(item), 0.0] )
-    if item < 0:
-        data_y = np.append( data_y, [0.0, abs(item)] )
-    if item == 0:
-        data_y = np.append( data_y, [0.0, 0.0] )
+data_y = signal_to_class2(data_yt, False)
 
-data_y = np.reshape( data_y, (data_yt.shape[0], 2) )
-
-# batch_input_shape=( batch_size, timesteps, units )
+# batch_input_shape=(batch_size, timesteps, units)
 data_x = np.reshape(data_x, (data_x.shape[0], 1, data_x.shape[1]))
 
-train_size = int(len(data_x) * 0.8)
-test_size = len(data_x) - train_size
-train_x, test_x = data_x[0:train_size,:], data_x[train_size:len(data_x),:]
-print( len(train_x), len(test_x) )
-train_y, test_y = data_y[0:train_size,:], data_y[train_size:len(data_y),:]
-print( len(train_y), len(test_y) )
+train_x, test_x = dataset_to_traintest(data_x, 0.7)
+train_y, test_y = dataset_to_traintest(data_y, 0.7)
 
 
 #=============================================================================#
@@ -95,8 +88,6 @@ model.add(Activation('softmax'))
 
 opt = Nadam()
 
-# loss='mse', 'msle', 'categorical_crossentropy'(softmax)
-# optimizer='adam', 'rmsprop', opt
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc'])
 
 
@@ -105,9 +96,10 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc'])
 #=============================================================================#
 print('\nTraining...')
 
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=5, min_lr=0.000001, verbose=1)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=5,
+                                min_lr=0.000001, verbose=1)
 
-history = model.fit(train_x, train_y, #train_x, train_y, data_x, data_y, 
+history = model.fit(train_x, train_y,
                     batch_size=batch_size,
                     epochs=fit_epoch,
                     validation_data=(test_x, test_y),
@@ -120,11 +112,8 @@ history = model.fit(train_x, train_y, #train_x, train_y, data_x, data_y,
 print('\nPredicting...')
 
 data_xx = np.genfromtxt(file_xx, delimiter=';')
-
 data_xx, empty = create_timeseries_matrix(data_xx, look_back=3)
-
 data_xx = np.reshape(data_xx, (data_xx.shape[0], 1, data_xx.shape[1]))
-
 
 predicted_output = model.predict(data_xx, batch_size=batch_size)
 
@@ -141,26 +130,27 @@ print("Predict saved:", file_yy)
 # make predictions
 trainPredict = model.predict(train_x)
 testPredict = model.predict(test_x)
+
 # calculate root mean squared error
 trainScore = math.sqrt(mean_squared_error(train_y, trainPredict))
 print('Train Score: %.6f RMSE' % (trainScore))
-testScore = math.sqrt( mean_squared_error(test_y, testPredict))
+testScore = math.sqrt(mean_squared_error(test_y, testPredict))
 print('Test Score: %.6f RMSE' % (testScore))
 
 
 #=============================================================================#
 #       Plot                                                                  #
 #=============================================================================#
-plt.plot( data_yy )
+plt.plot(data_yy)
 plt.title('Predicted')
 plt.ylabel('direction')
 plt.xlabel('bar')
 plt.show()
 
-plt.plot( predicted_output )
-plt.title( 'Predicted' )
-plt.ylabel( 'direction')
-plt.xlabel( 'bar')
+plt.plot(predicted_output)
+plt.title('Predicted')
+plt.ylabel('direction')
+plt.xlabel('bar')
 plt.show()
 
 
@@ -181,4 +171,3 @@ plt.ylabel('acc')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='best')
 plt.show()
-

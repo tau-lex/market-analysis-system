@@ -15,8 +15,12 @@ from __future__ import print_function
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-from mas_include import get_parameters, signal_to_class2, class2_to_signal
-from mas_include import save_model, load_model
+
+from mas.include import get_parameters
+from mas.data import signal_to_class2, class2_to_signal
+from mas.data import create_timeseries_matrix, dataset_to_traintest
+from mas.models import save_model, load_model
+
 from keras.models import Sequential
 from keras.layers import Dense, GRU, Dropout, Activation
 from keras.layers import BatchNormalization
