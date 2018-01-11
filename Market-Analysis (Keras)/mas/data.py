@@ -172,7 +172,11 @@ def get_deltas_from_ohlc(data, index1=0):
 
 
 def get_diff(data, rate=1):
-    """Calculate difference and return ..."""
-    #
-    #
+    """Calculates a derivative and returns an array of length equal to
+	the length of the original array."""
+    
+	result = np.diff(data, rate)
+	for idx in range(rate):
+		result = np.append(result, 0.0)
+    
     return np.diff(data, rate)
