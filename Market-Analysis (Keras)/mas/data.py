@@ -169,3 +169,10 @@ def get_deltas_from_ohlc(data, index1=0):
                                    ])
 
     return np.reshape(result, (data.shape[0], 6))
+
+
+def get_diff(data, rate=1):
+    """Calculate difference and return ..."""
+    #
+    #
+    return np.diff(data, rate)
