@@ -174,9 +174,36 @@ def get_deltas_from_ohlc(data, index1=0):
 def get_diff(data, rate=1):
     """Calculates a derivative and returns an array of length equal to
 	the length of the original array."""
-    
-	result = np.diff(data, rate)
-	for idx in range(rate):
-		result = np.append(result, 0.0)
-    
+
+    result = np.diff(data, rate)
+
+    for idx in range(rate):
+        result = np.append(result, 0.0)
+
     return np.diff(data, rate)
+
+
+def get_sigmoid(data):
+    """"""
+
+    result =  1 / (1 + np.exp(-data)) 
+
+    return result
+
+
+def get_sigmoid0(data):
+    "Numerically-stable sigmoid function."
+    if x >= 0:
+        z = exp(-data)
+        return 1 / (1 + z)
+    else:
+        z = exp(data)
+        return z / (1 + z)
+
+
+def get_sigmoid1(data):  
+    return math.exp(-np.logaddexp(0, -data))
+
+
+def get_sigmoid2(data):  
+    return 0.5 * (1 + x / (1 + abs(data)))
