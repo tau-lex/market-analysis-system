@@ -16,6 +16,7 @@ The module contains functions for working with the Keras models of the MAS proje
 
 from keras.models import Model, model_from_json #, Sequential
 
+
 def save_model(model: Model, filename: str):
     """Writes the model to a text file."""
 

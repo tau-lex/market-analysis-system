@@ -14,6 +14,7 @@
 The module contains the data processing functions of the MAS project.
 """
 
+from math import exp
 import numpy as np
 
 
@@ -184,26 +185,36 @@ def get_diff(data, rate=1):
 
 
 def get_sigmoid(data):
-    """"""
+    """Sigmoid function."""
 
-    result =  1 / (1 + np.exp(-data)) 
+    result = 1 / (1 + np.exp(-data))
 
     return result
 
 
 def get_sigmoid0(data):
-    "Numerically-stable sigmoid function."
-    if x >= 0:
-        z = exp(-data)
-        return 1 / (1 + z)
-    else:
-        z = exp(data)
-        return z / (1 + z)
+    """Numerically-stable sigmoid function."""
+
+    result = np.array([])
+    z = 0.0
+
+    for item in data:
+        if item >= 0.0:
+            z = 1.0 / (1 + exp(-data))
+        else:
+            z = 1.0 / (1 + exp(data))
+        result = np.append(result, z)
+
+    return result
 
 
-def get_sigmoid1(data):  
-    return math.exp(-np.logaddexp(0, -data))
+def get_sigmoid1(data):
+    """More variant."""
+
+    return exp(-np.logaddexp(0, -data))
 
 
-def get_sigmoid2(data):  
-    return 0.5 * (1 + x / (1 + abs(data)))
+def get_sigmoid2(data):
+    """More variant."""
+
+    return 0.5 * (1 + data / (1 + abs(data)))
