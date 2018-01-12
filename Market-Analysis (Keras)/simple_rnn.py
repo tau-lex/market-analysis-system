@@ -148,9 +148,9 @@ if run_type == 0:
     model.add(Dense(8, activation='tanh'))
     model.add(Dense(1, activation='tanh'))
 
-    save_model(model, prefix + workfile)
+    save_model(model, prefix + workfile + '.model')
 elif run_type == 1:
-    model = load_model(prefix + workfile)
+    model = load_model(prefix + workfile + '.model')
 
 # RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
 # SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
