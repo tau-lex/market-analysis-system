@@ -22,10 +22,11 @@ from mas.models import save_model, load_model
 
 from keras.models import Sequential
 from keras.layers import Dense, GRU, Dropout, BatchNormalization
-#from keras.layers import LeakyReLU, PReLU
+from keras.layers import LeakyReLU#, PReLU
 from keras.callbacks import ReduceLROnPlateau
-#from keras import regularizers
+from keras import regularizers
 
+from statsmodels.nonparametric.smoothers_lowess import lowess
 #from sklearn.metrics import mean_squared_error
 
 
@@ -66,9 +67,10 @@ for idx in range(len(params) - 1):
 np.random.seed(23)
 
 # Main
-path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
+# path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
 # Server
-# path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
+params[0] = 'EURUSD1440'
+path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 workfile = params[0]
 prefix = 'mas_research #3(maxdata-regr-regul)/'
 research_prefix = ''
@@ -102,7 +104,7 @@ if run_type == 0:
     delta_prices = get_deltas_from_ohlc(train_data, 7)
     derivative = get_diff(train_data[:, 7:10], 1)
     sigmoid = get_sigmoid_to_zero(train_data[:, 10])
-    lowess = [] # GOTO
+    lowess = lowess(train_data[:, 10])
 
     delta_ema1 = get_delta(train_data, 4, 5)
     delta_ema2 = get_delta(train_data, 6, 7)
@@ -142,14 +144,22 @@ if run_type == 0:
             print('Creating Model...')
 
             model = Sequential()
-            model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], 1)))
-            model.add(LSTM(recurent_1,
+            model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], data_x.shape[2])))
+            model.add(GRU(recurent_1,
                            return_sequences=True,
                            # bias_initializer='ones',
-                           # activity_regularizer=regularizers.l2(0.01)
+                           activity_regularizer=regularizers.l2(0.01)
             ))
+            model.add(LeakyReLU())
             model.add(Dropout(0.5))
-            model.add(LSTM(recurent_2))
+            model.add(GRU(recurent_2, activity_regularizer=regularizers.l2(0.01)))
+            model.add(LeakyReLU())
+            model.add(Dropout(0.4))
+            model.add(GRU(recurent_2, activity_regularizer=regularizers.l2(0.01)))
+            model.add(LeakyReLU())
+            model.add(Dropout(0.3))
+            model.add(BatchNormalization())
+            model.add(Dense(16))
             model.add(Dense(8))
             model.add(Dense(1))
 
@@ -167,6 +177,8 @@ if run_type == 0:
                                 epochs=fit_epoch,
                                 callbacks=[reduce_lr],
                                 validation_data=(test_x, test_y))
+
+            save_model(model, prefix + research_prefix + workfile + '.model')
             model.save_weights(prefix + research_prefix + workfile + '.hdf5')
 
             print('\nPredicting...')
@@ -226,7 +238,7 @@ elif run_type == 1:
 
             research_prefix = optimizer + '-' + loss + '_'
 
-            model = load_model(prefix + research_prefix + workfile)
+            model = load_model(prefix + research_prefix + workfile + '.model')
             model.load_weights(prefix + research_prefix + workfile + '.hdf5')
 
             data_yy = model.predict(data_xx, batch_size=batch_size)
