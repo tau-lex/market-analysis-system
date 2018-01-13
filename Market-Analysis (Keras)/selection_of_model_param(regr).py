@@ -104,7 +104,7 @@ if run_type == 0:
     delta_prices = get_deltas_from_ohlc(train_data, 7)
     derivative = get_diff(train_data[:, 7:10], 1)
     sigmoid = get_sigmoid_to_zero(train_data[:, 10])
-    lowess = lowess(train_data[:, 10])
+    lowess = lowess(train_data[:, 10], range(train_data.shape[0]))
 
     delta_ema1 = get_delta(train_data, 4, 5)
     delta_ema2 = get_delta(train_data, 6, 7)
@@ -117,7 +117,7 @@ if run_type == 0:
                        lowess,
                        train_data[:, 11:14], # ema data
                        delta_ema1, delta_ema2,
-                       train_data[:, 15:]
+                       train_data[:, 15:18]
                       ])
 
     data_x, data_y = create_timeseries_matrix(data_x.swapaxes(0, 1), target_data, 3)
