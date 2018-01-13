@@ -40,6 +40,7 @@ params = ['EURUSD.pro1440', '-train', 100, '-graph']
 limit = 5000
 batch_size = 128
 fit_epoch = 100
+fit_train_test = 0.75
 recurent_1 = 32
 recurent_2 = 32
 run_type = 0
@@ -103,8 +104,8 @@ if run_type == 0:
     # batch_input_shape=( batch_size, timesteps, units )
     data_x = np.reshape(data_x, (data_x.shape[0], data_x.shape[1], 1))
 
-    train_x, test_x = dataset_to_traintest(data_x, ratio=0.6, limit=limit)
-    train_y, test_y = dataset_to_traintest(data_y, ratio=0.6, limit=limit)
+    train_x, test_x = dataset_to_traintest(data_x, ratio=fit_train_test, limit=limit)
+    train_y, test_y = dataset_to_traintest(data_y, ratio=fit_train_test, limit=limit)
     print('Train/Test :', len(train_y), '/', len(test_y))
 
 
