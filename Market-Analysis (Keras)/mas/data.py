@@ -104,8 +104,8 @@ def get_diff(data, rate=1):
 
     result = np.diff(data, rate)
 
-    # for idx in range(rate):
-    #     result = np.append(result, 0.0)
+    for idx in range(rate):
+        result = np.append(result, 0.0)
 
     return result
 

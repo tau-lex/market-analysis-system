@@ -102,22 +102,34 @@ if run_type == 0:
     target_data = np.genfromtxt(file_y, delimiter=';')
 
     delta_prices = get_deltas_from_ohlc(train_data, 7)
-    derivative = get_diff(train_data[:, 7:10], 1)
+    derivative1 = get_diff(train_data[:, 7], 1)
+    derivative2 = get_diff(train_data[:, 8], 1)
+    derivative3 = get_diff(train_data[:, 9], 1)
+    derivative4 = get_diff(train_data[:, 10], 1)
     sigmoid = get_sigmoid_to_zero(train_data[:, 10])
-    lowess = lowess(train_data[:, 10], range(train_data.shape[0]))
+    lowess = lowess(train_data[:, 10], range(train_data.shape[0]), return_sorted=False)
 
     delta_ema1 = get_delta(train_data, 4, 5)
     delta_ema2 = get_delta(train_data, 6, 7)
 
-    data_x = np.array([train_data[:, 0:6], # time data
-                       train_data[:, 7:10], # prices data
-                       delta_prices,
-                       derivative,
+    data_x = np.array([train_data[:, 0], train_data[:, 1], # time data
+                       train_data[:, 2], train_data[:, 3], # time data
+                       train_data[:, 4], train_data[:, 5], # time data
+                       train_data[:, 6], # time data
+                       train_data[:, 7], train_data[:, 8], # prices data
+                       train_data[:, 9], train_data[:, 10], # prices data
+                       delta_prices[:, 0], delta_prices[:, 1], delta_prices[:, 2],
+                       delta_prices[:, 3], delta_prices[:, 4], delta_prices[:, 5],
+                       derivative1, derivative2,
+                       derivative3, derivative4,
                        sigmoid,
                        lowess,
-                       train_data[:, 11:14], # ema data
+                       train_data[:, 11], train_data[:, 12], # ema data
+                       train_data[:, 13], train_data[:, 14], # ema data
                        delta_ema1, delta_ema2,
-                       train_data[:, 15:18]
+                       train_data[:, 15], train_data[:, 16], # macd
+                       train_data[:, 17], train_data[:, 18], # atr, cci
+                       train_data[:, 19] # rsi
                       ])
 
     data_x, data_y = create_timeseries_matrix(data_x.swapaxes(0, 1), target_data, 3)
@@ -127,7 +139,7 @@ if run_type == 0:
 
     train_x, test_x = dataset_to_traintest(data_x, ratio=fit_train_test, limit=limit)
     train_y, test_y = dataset_to_traintest(data_y, ratio=fit_train_test, limit=limit)
-    print('Train/Test :', train_size, '/', test_size)
+    print('Train/Test :', len(train_x), '/', len(test_x))
 
 
 data_xx = np.genfromtxt(file_xx, delimiter=';')
@@ -152,7 +164,9 @@ if run_type == 0:
             ))
             model.add(LeakyReLU())
             model.add(Dropout(0.5))
-            model.add(GRU(recurent_2, activity_regularizer=regularizers.l2(0.01)))
+            model.add(GRU(recurent_2,
+                           return_sequences=True,
+                           activity_regularizer=regularizers.l2(0.01)))
             model.add(LeakyReLU())
             model.add(Dropout(0.4))
             model.add(GRU(recurent_2, activity_regularizer=regularizers.l2(0.01)))
@@ -164,7 +178,7 @@ if run_type == 0:
             model.add(Dense(1))
 
             research_prefix = optimizer + '-' + loss + '_'
-            save_model(model, prefix + research_prefix + workfile)
+            save_model(model, prefix + research_prefix + workfile + '.model')
 
             model.compile(loss=loss, optimizer=optimizer, metrics=['acc'])
 
@@ -178,7 +192,7 @@ if run_type == 0:
                                 callbacks=[reduce_lr],
                                 validation_data=(test_x, test_y))
 
-            save_model(model, prefix + research_prefix + workfile + '.model')
+            # save_model(model, prefix + research_prefix + workfile + '.model')
             model.save_weights(prefix + research_prefix + workfile + '.hdf5')
 
             print('\nPredicting...')
