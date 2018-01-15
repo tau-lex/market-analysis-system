@@ -95,44 +95,46 @@ print('Work file:', workfile)
 #=============================================================================#
 #       L O A D   D A T A                                                     #
 #=============================================================================#
+def prepare_data(data):
+    delta_prices = get_deltas_from_ohlc(data, 7)
+    derivative1 = get_diff(data[:, 7], 1)
+    derivative2 = get_diff(data[:, 8], 1)
+    derivative3 = get_diff(data[:, 9], 1)
+    derivative4 = get_diff(data[:, 10], 1)
+    sigmoid = get_sigmoid_to_zero(data[:, 10])
+    _lowess = lowess(data[:, 10], range(data.shape[0]), return_sorted=False)
+
+    delta_ema1 = get_delta(data, 4, 5)
+    delta_ema2 = get_delta(data, 6, 7)
+
+    return np.array([data[:, 0], data[:, 1], # time data
+                     data[:, 2], data[:, 3], # time data
+                     data[:, 4], data[:, 5], # time data
+                     data[:, 6], # time data
+                     data[:, 7], data[:, 8], # prices data
+                     data[:, 9], data[:, 10], # prices data
+                     delta_prices[:, 0], delta_prices[:, 1], delta_prices[:, 2],
+                     delta_prices[:, 3], delta_prices[:, 4], delta_prices[:, 5],
+                     derivative1, derivative2,
+                     derivative3, derivative4,
+                     sigmoid,
+                     _lowess,
+                     data[:, 11], data[:, 12], # ema data
+                     data[:, 13], data[:, 14], # ema data
+                     delta_ema1, delta_ema2,
+                     data[:, 15], data[:, 16], # macd
+                     data[:, 17], data[:, 18], # atr, cci
+                     data[:, 19] # rsi
+                    ]).swapaxes(0, 1)
+    
 if run_type == 0:
     print('Loading Data...')
 
     train_data = np.genfromtxt(file_x, delimiter=';')
     target_data = np.genfromtxt(file_y, delimiter=';')
 
-    delta_prices = get_deltas_from_ohlc(train_data, 7)
-    derivative1 = get_diff(train_data[:, 7], 1)
-    derivative2 = get_diff(train_data[:, 8], 1)
-    derivative3 = get_diff(train_data[:, 9], 1)
-    derivative4 = get_diff(train_data[:, 10], 1)
-    sigmoid = get_sigmoid_to_zero(train_data[:, 10])
-    lowess = lowess(train_data[:, 10], range(train_data.shape[0]), return_sorted=False)
-
-    delta_ema1 = get_delta(train_data, 4, 5)
-    delta_ema2 = get_delta(train_data, 6, 7)
-
-    data_x = np.array([train_data[:, 0], train_data[:, 1], # time data
-                       train_data[:, 2], train_data[:, 3], # time data
-                       train_data[:, 4], train_data[:, 5], # time data
-                       train_data[:, 6], # time data
-                       train_data[:, 7], train_data[:, 8], # prices data
-                       train_data[:, 9], train_data[:, 10], # prices data
-                       delta_prices[:, 0], delta_prices[:, 1], delta_prices[:, 2],
-                       delta_prices[:, 3], delta_prices[:, 4], delta_prices[:, 5],
-                       derivative1, derivative2,
-                       derivative3, derivative4,
-                       sigmoid,
-                       lowess,
-                       train_data[:, 11], train_data[:, 12], # ema data
-                       train_data[:, 13], train_data[:, 14], # ema data
-                       delta_ema1, delta_ema2,
-                       train_data[:, 15], train_data[:, 16], # macd
-                       train_data[:, 17], train_data[:, 18], # atr, cci
-                       train_data[:, 19] # rsi
-                      ])
-
-    data_x, data_y = create_timeseries_matrix(data_x.swapaxes(0, 1), target_data, 3)
+    data_x = prepare_data(train_data)
+    data_x, data_y = create_timeseries_matrix(data_x, target_data, 3)
 
     # batch_input_shape=( batch_size, timesteps, units )
     data_x = np.reshape(data_x, (data_x.shape[0], data_x.shape[1], 1))
@@ -142,7 +144,8 @@ if run_type == 0:
     print('Train/Test :', len(train_x), '/', len(test_x))
 
 
-data_xx = np.genfromtxt(file_xx, delimiter=';')
+new_data = np.genfromtxt(file_xx, delimiter=';')
+data_xx = prepare_data(new_data)
 data_xx, empty = create_timeseries_matrix(data_xx, look_back=3)
 data_xx = np.reshape(data_xx, (data_xx.shape[0], data_xx.shape[1], 1))
 
