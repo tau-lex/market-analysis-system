@@ -18,6 +18,7 @@ import numpy as np
 import sys
 sys.path.append('../')
 from mas.data import create_timeseries_matrix, dataset_to_traintest
+from mas.classes import signal_to_class2, class2_to_signal
 from mas.data import get_delta, get_deltas_from_ohlc
 from mas.data import get_diff, get_sigmoid_to_zero
 from mas.models import save_model, load_model
@@ -37,7 +38,8 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 #=============================================================================#
 optimizers = ['RMSprop', 'SGD', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam']
 losses = ['mse', 'mae', 'mape', 'msle', 'squared_hinge', 'hinge', \
-          'kullback_leibler_divergence', 'poisson', 'cosine_proximity', 'binary_crossentropy']
+          'kullback_leibler_divergence', 'poisson', 'cosine_proximity', \
+          'binary_crossentropy', 'categorical_crossentropy']
 # params[symb+period, arg1, arg2, ..]
 params = ['EURUSD.pro1440', '-train', 100, '-graph']
 limit = 5000
@@ -74,7 +76,7 @@ np.random.seed(23)
 params[0] = 'EURUSD1440'
 path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 workfile = params[0]
-prefix = 'mas_research #3(maxdata-regr-regul)/'
+prefix = 'mas_research #4(maxdata-class-regul)/'
 research_prefix = ''
 file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
@@ -140,6 +142,8 @@ if run_type == 0:
 
     # batch_input_shape=( batch_size, timesteps, units )
     data_x = np.reshape(data_x, (data_x.shape[0], data_x.shape[1], 1))
+    
+    data_y = signal_to_class2(data_y)
 
     train_x, test_x = dataset_to_traintest(data_x, ratio=fit_train_test, limit=limit)
     train_y, test_y = dataset_to_traintest(data_y, ratio=fit_train_test, limit=limit)
@@ -180,7 +184,7 @@ if run_type == 0:
             model.add(BatchNormalization())
             model.add(Dense(16))
             model.add(Dense(8))
-            model.add(Dense(1))
+            model.add(Dense(2, activation='softmax'))
 
             research_prefix = optimizer + '-' + loss + '_'
             save_model(model, prefix + research_prefix + workfile + '.model')
@@ -203,6 +207,7 @@ if run_type == 0:
             print('\nPredicting...')
 
             data_yy = model.predict(data_xx, batch_size=batch_size)
+            data_yy = class2_to_signal(data_yy)
 
             file_yy = prefix + research_prefix + workfile + '_yy.csv'
 
@@ -224,7 +229,6 @@ if run_type == 0:
             plt.ylabel('direction')
             plt.xlabel('bar')
             plt.legend(['prediction'])
-#            plt.show()
             plt.savefig(prefix + research_prefix + workfile + '_prediction.png')
             plt.close()
 
@@ -235,7 +239,6 @@ if run_type == 0:
             plt.ylabel('loss')
             plt.xlabel('epoch')
             plt.legend(['train', 'test'], loc='best')
-#            plt.show()
             plt.savefig(prefix + research_prefix + workfile + '_loss.png')
             plt.close()
 
@@ -246,8 +249,17 @@ if run_type == 0:
             plt.ylabel('acc')
             plt.xlabel('epoch')
             plt.legend(['train', 'test'], loc='best')
-#            plt.show()
             plt.savefig(prefix + research_prefix + workfile + '_accuracy.png')
+            plt.close()
+
+            plt.figure()
+            plt.plot(history.history['acc'])
+            input_w = model.get_layer(index=2).get_weights()[0][0]
+            plt.plot(input_w)
+            plt.title('Trained first layer | ' + research_prefix)
+            plt.ylabel('weight')
+            plt.xlabel('feature')
+            plt.savefig(prefix + research_prefix + workfile + '_input-weights.png')
             plt.close()
 
 elif run_type == 1:

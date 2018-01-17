@@ -31,11 +31,13 @@ def concat(images):
 postfix1 = '_EURUSD1440_accuracy.png'
 postfix2 = '_EURUSD1440_loss.png'
 postfix3 = '_EURUSD1440_prediction.png'
+postfix4 = '_EURUSD1440_input-weights.png'
 optimizers = ['RMSprop', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam'] #del 'SGD'
 losses = ['mse', 'mae', 'mape', 'msle', 'squared_hinge', 'hinge', \
           'kullback_leibler_divergence', 'binary_crossentropy'] #del 'cosine_proximity', 'poison'
 
-concat(imagematrix(postfix1)).save('_research_table_' + postfix1)
-concat(imagematrix(postfix2)).save('_research_table_' + postfix2)
-concat(imagematrix(postfix3)).save('_research_table_' + postfix3)
+concat(imagematrix(postfix1)).save('_research_table' + postfix1)
+concat(imagematrix(postfix2)).save('_research_table' + postfix2)
+concat(imagematrix(postfix3)).save('_research_table' + postfix3)
+concat(imagematrix(postfix4)).save('_research_table' + postfix4)
 
