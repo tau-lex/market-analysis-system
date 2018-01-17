@@ -33,7 +33,7 @@ postfix2 = '_EURUSD1440_loss.png'
 postfix3 = '_EURUSD1440_prediction.png'
 optimizers = ['RMSprop', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam'] #del 'SGD'
 losses = ['mse', 'mae', 'mape', 'msle', 'squared_hinge', 'hinge', \
-          'kullback_leibler_divergence', 'poisson', 'binary_crossentropy'] #del 'cosine_proximity'
+          'kullback_leibler_divergence', 'binary_crossentropy'] #del 'cosine_proximity', 'poison'
 
 concat(imagematrix(postfix1)).save('_research_table_' + postfix1)
 concat(imagematrix(postfix2)).save('_research_table_' + postfix2)
