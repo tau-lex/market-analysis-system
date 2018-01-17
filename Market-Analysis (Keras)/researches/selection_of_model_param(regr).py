@@ -39,7 +39,7 @@ optimizers = ['RMSprop', 'SGD', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam'
 losses = ['mse', 'mae', 'mape', 'msle', 'squared_hinge', 'hinge', \
           'kullback_leibler_divergence', 'poisson', 'cosine_proximity', 'binary_crossentropy']
 # params[symb+period, arg1, arg2, ..]
-params = ['EURUSD.pro1440', '-train', 100, '-graph']
+params = ['EURUSD1440', '-train', 100, '-graph']
 limit = 5000
 batch_size = 128
 fit_epoch = 100
@@ -68,10 +68,7 @@ for idx in range(len(params) - 1):
 
 np.random.seed(23)
 
-# Main
-# path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
-# Server
-params[0] = 'EURUSD1440'
+# path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 workfile = params[0]
 prefix = 'mas_research #3(maxdata-regr-regul)/'
@@ -163,15 +160,15 @@ if run_type == 0:
             model = Sequential()
             model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], data_x.shape[2])))
             model.add(GRU(recurent_1,
-                           return_sequences=True,
-                           # bias_initializer='ones',
-                           activity_regularizer=regularizers.l2(0.01)
-            ))
+                          return_sequences=True,
+                          activity_regularizer=regularizers.l2(0.01)
+                         ))
             model.add(LeakyReLU())
             model.add(Dropout(0.5))
             model.add(GRU(recurent_2,
-                           return_sequences=True,
-                           activity_regularizer=regularizers.l2(0.01)))
+                          return_sequences=True,
+                          activity_regularizer=regularizers.l2(0.01)
+                         ))
             model.add(LeakyReLU())
             model.add(Dropout(0.4))
             model.add(GRU(recurent_2, activity_regularizer=regularizers.l2(0.01)))

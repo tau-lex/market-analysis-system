@@ -4,12 +4,11 @@
 #   Market Analysis System                                                    #
 #   https://www.mql5.com/ru/users/terentyev23                                 #
 #                                                                             #
-#   M A S   D A T A   F U N C T I O N                                         #
+#   M A R K E T   A N A L Y S I S   S C R I P T   W I T H   K E R A S         #
 #                                                                             #
-#   Aleksey Terentyev                                                         #
+#   Aleksey Terentew                                                          #
 #   terentew.aleksey@ya.ru                                                    #
 #                                                                             #
 ###############################################################################
-"""
-The module contains the data processing functions of the MAS project.
-"""
+
+

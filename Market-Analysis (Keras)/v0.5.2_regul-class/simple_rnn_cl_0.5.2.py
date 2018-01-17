@@ -11,13 +11,14 @@
 #                                                                             #
 ###############################################################################
 
-from __future__ import print_function
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import sys
+sys.path.append('../')
 from mas.include import get_parameters
 from mas.data import create_timeseries_matrix, dataset_to_traintest
-from mas.data import signal_to_class2, class2_to_signal
+from mas.classes import signal_to_class2, class2_to_signal
 from keras.backend import backend
 from keras.models import Sequential
 from keras.layers import Dense, GRU, Dropout, Activation
@@ -34,12 +35,9 @@ gru1 = 32
 gru2 = 32
 
 prefix = '052_v2_'
-workfile = 'EURUSD.pro1440'
-# workfile = 'EURUSD1440'
-# Main
-path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
-# Server
-# path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
+workfile = 'EURUSD1440'
+# path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
+path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 
 #=============================================================================#
 file_x = path + workfile + '_x.csv'
