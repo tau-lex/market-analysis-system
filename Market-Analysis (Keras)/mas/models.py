@@ -16,12 +16,13 @@ The module contains functions for working with the Keras models of the MAS proje
 
 from keras.models import Model, model_from_json #, Sequential
 
+
 def save_model(model: Model, filename: str):
     """Writes the model to a text file."""
 
     json_string = model.to_json()
 
-    with open(filename+'.model', 'w') as file:
+    with open(filename, 'w') as file:
         file.write(json_string)
 
 
@@ -30,7 +31,7 @@ def load_model(filename: str):
 
     json_string = ''
     try:
-        file = open(filename+'.model', 'r')
+        file = open(filename, 'r')
     except IOError as exc:
         print('Error! Model file not find', exc)
     else:

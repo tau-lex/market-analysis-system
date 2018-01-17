@@ -1,14 +1,10 @@
 # Market analysis with Keras
 
-Framework: [Keras](https://github.com/fchollet/keras)
+Framework: [Keras](https://github.com/keras-team/keras)
 
 ### Description (Eng)
 
 Scripts for forecasting timeseries.
-
-- [simple_rnn*] - scripts using hidden recurrent layers.
-
-- [mas_research*] - scripts for finding the loss function and optimization method.
 
 You can prepare data using:
 
@@ -19,10 +15,6 @@ You can prepare data using:
 ### Description (Rus)
 
 Скрипты для прогнозирования таймсерий.
-
-- [simple_rnn*] - скрипты с применением скрытых рекурентных слоев.
-
-- [mas_research*] - скрипты для подбора функции нахождения ошибки и метода оптимизации.
 
 Подготовить данные можно с помощью:
 
