@@ -99,13 +99,27 @@ def get_deltas_from_ohlc(data, index1=0):
 
 
 def get_diff(data, rate=1):
-    """Calculates a derivative and returns an array of length equal to
-	the length of the original array."""
+    """Computes a derivative and returns an array equal to
+    the length of the original array."""
 
     result = np.diff(data, rate)
 
     for idx in range(rate):
         result = np.append(result, 0.0)
+
+    return result
+
+
+def get_log_diff(data):
+    """Computes the log-differential and returns an array equal to
+    the length of the original array."""
+
+    result = np.array([])
+
+    result = np.append(result, 0.0)
+    for idx in range(1, len(data)):
+        ld = np.log(data[idx] / data[idx - 1])
+        result = np.append(result, ld)
 
     return result
 

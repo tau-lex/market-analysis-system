@@ -14,8 +14,8 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 
+import sys
 sys.path.append('../')
 from mas.include import get_parameters
 from mas.data import create_timeseries_matrix, dataset_to_traintest
