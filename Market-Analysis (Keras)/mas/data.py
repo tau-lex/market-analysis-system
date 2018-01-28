@@ -18,6 +18,17 @@ from math import exp
 import numpy as np
 
 
+def data_preview(data1, data2):
+    """Data graph"""
+
+    import matplotlib.pyplot as plt
+
+    plt.plot(data1)
+    plt.plot(data2)
+    plt.legend(['data1', 'data2'], loc='best')
+    plt.show()
+
+
 def create_timeseries_matrix(data_x, data_y=np.array([]), look_back=3):
     """Converts a dataset into a time series matrix."""
 
@@ -140,7 +151,7 @@ def get_sigmoid_to_zero(data):
     return result
 
 
-def get_sigmoid0(data):
+def get_sigmoid_stable(data):
     """Numerically-stable sigmoid function."""
 
     result = np.array([])
