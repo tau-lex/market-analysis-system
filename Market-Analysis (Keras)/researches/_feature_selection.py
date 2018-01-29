@@ -75,18 +75,18 @@ data_x = np.array([data[:, 0], data[:, 1], data[:, 2], data[:, 3], data[:, 4], d
                     data[:, 7], data[:, 8], data[:, 9], data[:, 10], # prices data [7, 10]
                     delta_prices[:, 0], delta_prices[:, 1], delta_prices[:, 2], # price deltas [11, 16]
                     delta_prices[:, 3], delta_prices[:, 4], delta_prices[:, 5],
-                    derivative1, derivative2, derivative3, derivative4,
-                    logdiff1, logdiff2, logdiff3, logdiff4,
-                    sigmoid1, sigmoid2, sigmoid3, sigmoid4,
-                    lowess1, lowess2, lowess3,
-                    detrend_close1, detrend_close2,
-                    data[:, 11], data[:, 12], data[:, 13], data[:, 14], # ema data
-                    delta_ema1, delta_ema2,
-                    derivative_ema1, derivative_ema2, derivative_ema3, derivative_ema4,
-                    logdiff_ema1, sigmoid_ema,
-                    data[:, 15], data[:, 16], # macd
-                    data[:, 17], data[:, 18], data[:, 19], # atr, cci, rsi
-                    data[:, 20], data[:, 21] # usdx, eurx
+                    derivative1, derivative2, derivative3, derivative4, # [17, 20]
+                    logdiff1, logdiff2, logdiff3, logdiff4, # [21, 24]
+                    sigmoid1, sigmoid2, sigmoid3, sigmoid4, # [25, 28]
+                    lowess1, lowess2, lowess3, # [29, 31]
+                    detrend_close1, detrend_close2, # [32, 33]
+                    data[:, 11], data[:, 12], data[:, 13], data[:, 14], # [34, 37]
+                    delta_ema1, delta_ema2, # [38, 39]
+                    derivative_ema1, derivative_ema2, derivative_ema3, derivative_ema4, # [40, 43]
+                    logdiff_ema1, sigmoid_ema, # [44, 45]
+                    data[:, 15], data[:, 16], # macd [46, 47]
+                    data[:, 17], data[:, 18], data[:, 19], # atr, cci, rsi [48, 50]
+                    data[:, 20], data[:, 21] # usdx, eurx [51, 52]
                   ]).swapaxes(0, 1)
 
 sigmoid_y = get_sigmoid_to_zero(data_out)
@@ -186,49 +186,109 @@ plt.legend(['usdx', 'eurx'], loc='best')
 plt.show()
 
 
-"""Chi-square."""
-from sklearn.feature_selection import chi2
-from sklearn.feature_selection import SelectKBest
+# """Chi-square."""
+# from sklearn.feature_selection import chi2
+# from sklearn.feature_selection import SelectKBest
 
-# x_chi = SelectKBest(chi2, k=10).fit_transform(np.abs(data_x), data_y)
-kbest = SelectKBest(chi2, k=20).fit(np.abs(data_x), data_out)
-kbest.scores_
-kbest.pvalues_
-plt.plot(kbest.scores_)
-plt.show()
-plt.plot(kbest.pvalues_)
-plt.show()
+# # x_chi = SelectKBest(chi2, k=10).fit_transform(np.abs(data_x), data_y)
+# kbest = SelectKBest(chi2, k=20).fit(np.abs(data_x), data_out)
+# kbest.scores_
+# kbest.pvalues_
+# plt.plot(kbest.scores_)
+# plt.show()
+# plt.plot(kbest.pvalues_)
+# plt.show()
+
 
 """Recursive feature elimination."""
 from sklearn.feature_selection import RFE
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import SGDClassifier, RidgeClassifier
 
 # select 10 the most informative features
 # x_rfe = RFE(LinearRegression(), 10).fit_transform(data_x, data_y)
-selector = RFE(LinearRegression(), 20).fit(data_x, data_out)
-selector.support_
-selector.ranking_
-plt.plot(selector.support_)
-plt.plot(selector.ranking_)
-plt.show()
+selectorR = RFE(RidgeClassifier(alpha=0.01, normalize=True), 20).fit(data_x, data_out)
+selectorR.support_
+selectorR.ranking_
+# plt.plot(selectorR.support_)
+# plt.plot(selectorR.ranking_)
+# plt.show()
+selectorS = RFE(SGDClassifier(), 20).fit(data_x, data_out)
+selectorS.support_
+selectorS.ranking_
+# plt.plot(selectorS.support_)
+# plt.plot(selectorS.ranking_)
+# plt.show()
 
 
 """Ridge regression (L2)."""
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, RidgeClassifier
 
-clr = Ridge(alpha=0.1)
+clr = Ridge(alpha=0.01, normalize=True)
 clr.fit(data_x, data_out)
 clr.coef_
-plt.plot(clr.coef_)
-plt.show()
+# plt.plot(clr.coef_)
+# plt.show()
+clrcl = RidgeClassifier(alpha=0.01, normalize=True)
+clrcl.fit(data_x, data_out)
+clrcl.coef_
+# plt.plot(clrcl.coef_[0])
+# plt.plot(clrcl.coef_[1])
+# plt.plot(clrcl.coef_[2])
+# plt.show()
 
 
-"""Lasso regression (L1)."""
-from sklearn.linear_model import Lasso
+# """Lasso regression (L1)."""
+# from sklearn.linear_model import Lasso
 
-cll = Lasso(alpha=0.01)
-cll.fit(data_x, data_out)
-cll.coef_
-plt.plot(cll.coef_)
-plt.show()
+# cll = Lasso(alpha=0.01, normalize=True)
+# cll.fit(data_x, data_out)
+# cll.coef_
+# plt.plot(cll.coef_)
+# plt.show()
+
+
+"""Table"""
+table = []
+col_names = ['metods', 'Year', 'Month', 'Day', 'DoW', 'DoY', 'h', 'm', 'Open', 'High', 'Low', 'Close',
+                'Delta ', 'Delta ', 'Delta ', 'Delta ', 'Delta ', 'Delta ',
+                'Derivative Open', 'Derivative High', 'Derivative Low', 'Derivative Close',
+                'Logdiff Open', 'Logdiff High', 'Logdiff Low', 'Logdiff Close',
+                'Sigmoid1', 'Sigmoid2', 'Sigmoid3', 'Sigmoid4',
+                'Lowess 1/100', 'Lowess 1/250', 'Lowess 1/250 it=0', 'Close - EMA 13', 'Close - Lowess',
+                'EMA 13', 'EMA 26', 'EMA 60', 'EMA 130', 'Delta EMA 13-26', 'Delta EMA 60-130',
+                'derivative_ema1', 'derivative_ema2', 'derivative_ema3', 'derivative_ema4',
+                'Logdiff EMA 13', 'Sigmoid EMA 13',
+                'MACD Line', 'MACD Hist', 'ATR', 'CCI', 'RSI', 'USDX', 'EURX'
+            ]
+row_names = ['RFE Ridge', 'RFE SGD', 'Ridge Regr', 'Ridge Class']
+
+for row in range(5):
+    for col in range(53):
+        if row == 0:
+            table.append(col_names[col])
+        if row == 1:
+            if col == 0:
+                table.append(row_names[0])
+            else:
+                table.append(str(selectorR.support_[col-1]))
+        if row == 2:
+            if col == 0:
+                table.append(row_names[1])
+            else:
+                table.append(str(selectorS.support_[col-1]))
+        if row == 3:
+            if col == 0:
+                table.append(row_names[2])
+            else:
+                table.append(str(bool(clr.coef_[col-1])))
+        if row == 4:
+            if col == 0:
+                table.append(row_names[3])
+            else:
+                table.append(str(bool(clrcl.coef_[0, col-1])))
+
+import numpy as np
+path = 'E:/Projects/market-analysis-system/Market-Analysis (Keras)/researches/'
+f_table = path + 'selected_features.csv'
+np.savetxt(f_table, np.array(table).reshape(5, 53), delimiter=';', fmt='%s')
 
