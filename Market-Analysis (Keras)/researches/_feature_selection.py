@@ -248,7 +248,6 @@ clrcl.coef_
 
 
 """Table"""
-table = []
 col_names = ['metods', 'Year', 'Month', 'Day', 'DoW', 'DoY', 'h', 'm', 'Open', 'High', 'Low', 'Close',
                 'Delta ', 'Delta ', 'Delta ', 'Delta ', 'Delta ', 'Delta ',
                 'Derivative Open', 'Derivative High', 'Derivative Low', 'Derivative Close',
@@ -262,8 +261,11 @@ col_names = ['metods', 'Year', 'Month', 'Day', 'DoW', 'DoY', 'h', 'm', 'Open', '
             ]
 row_names = ['RFE Ridge', 'RFE SGD', 'Ridge Regr', 'Ridge Class']
 
+import math
+
+table = []
 for row in range(5):
-    for col in range(53):
+    for col in range(54):
         if row == 0:
             table.append(col_names[col])
         if row == 1:
@@ -280,15 +282,20 @@ for row in range(5):
             if col == 0:
                 table.append(row_names[2])
             else:
-                table.append(str(bool(clr.coef_[col-1])))
+                if abs(clr.coef_[col-1]) > 0.1:
+                    table.append('True')
+                else:
+                    table.append('False')
         if row == 4:
             if col == 0:
                 table.append(row_names[3])
             else:
-                table.append(str(bool(clrcl.coef_[0, col-1])))
+                if abs(clrcl.coef_[0, col-1]) > 0.1:
+                    table.append('True')
+                else:
+                    table.append('False')
 
-import numpy as np
 path = 'E:/Projects/market-analysis-system/Market-Analysis (Keras)/researches/'
 f_table = path + 'selected_features.csv'
-np.savetxt(f_table, np.array(table).reshape(5, 53), delimiter=';', fmt='%s')
+np.savetxt(f_table, np.array(table).reshape(5, 54), delimiter=';', fmt='%s')
 
