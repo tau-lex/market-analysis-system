@@ -41,7 +41,7 @@ losses = ['mse', 'mae', 'mape', 'msle', 'squared_hinge', 'hinge', \
           'kullback_leibler_divergence', 'poisson', 'cosine_proximity', \
           'binary_crossentropy', 'categorical_crossentropy']
 # params[symb+period, arg1, arg2, ..]
-params = ['EURUSD.pro1440', '-train', 100, '-graph']
+params = ['EURUSD1440', '-train', 100, '-graph']
 limit = 5000
 batch_size = 128
 fit_epoch = 100
@@ -70,10 +70,7 @@ for idx in range(len(params) - 1):
 
 np.random.seed(23)
 
-# Main
-# path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/E63399EA98C6C836F270F6A0E01167D0/MQL4/Files/ML-Assistant/'
-# Server
-params[0] = 'EURUSD1440'
+# path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 path = 'C:/Users/Adminka/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
 workfile = params[0]
 prefix = 'mas_research #4(maxdata-class-regul)/'
@@ -214,21 +211,12 @@ if run_type == 0:
             np.savetxt(file_yy, data_yy, fmt='%.6f', delimiter=';')
             print("Predict saved:\n", file_yy)
 
-#            # calculate root mean squared error
-#            train_predict = model.predict(train_x)
-#            test_predict = model.predict(test_x)
-#            train_score = math.sqrt(mean_squared_error(train_y, train_predict))
-#            print('Train Score: %.6f RMSE' % (train_score))
-#            test_score = math.sqrt(mean_squared_error(test_y, test_predict))
-#            print('Test Score: %.6f RMSE' % (test_score))
-
-            print('Save graphs')
+            print('Save graphs...')
 
             plt.plot(data_yy)
             plt.title('Saved predict | ' + research_prefix)
             plt.ylabel('direction')
             plt.xlabel('bar')
-            plt.legend(['prediction'])
             plt.savefig(prefix + research_prefix + workfile + '_prediction.png')
             plt.close()
 
@@ -253,7 +241,6 @@ if run_type == 0:
             plt.close()
 
             plt.figure()
-            plt.plot(history.history['acc'])
             input_w = model.get_layer(index=2).get_weights()[0][0]
             plt.plot(input_w)
             plt.title('Trained first layer | ' + research_prefix)

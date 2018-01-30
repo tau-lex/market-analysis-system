@@ -60,12 +60,12 @@ f.write(text)
 f.close()
 
 input_w = model.get_layer(index=2).get_weights()[0][0]
-plt.plot(input_w)
+plt.plot(input_w, rot=45)
 plt.show()
 
-plt.plot(input_w[0:34])
-plt.plot(input_w[34:68])
-plt.plot(input_w[68:102])
+plt.plot(input_w[0:34], rot=45)
+plt.plot(input_w[34:68], rot=45)
+plt.plot(input_w[68:102], rot=45)
 plt.show()
 
 input('\nPress enter to exit...')
