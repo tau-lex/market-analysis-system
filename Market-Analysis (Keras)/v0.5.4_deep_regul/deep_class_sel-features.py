@@ -16,13 +16,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import sys
-sys.path.append('../')
+sys.path.append('E:\Projects\market-analysis-system\Market-Analysis (Keras)')
 from mas.include import get_parameters
 from mas.data import create_timeseries_matrix, dataset_to_traintest
 from mas.data import get_delta
 from mas.data import get_diff, get_log_diff, get_sigmoid_to_zero
 from mas.models import save_model, load_model
 from statsmodels.nonparametric.smoothers_lowess import lowess
+from mas.classes import signal_to_class2, class2_to_signal
 
 from keras.models import Sequential
 from keras.layers import Dense, GRU, LSTM, Dropout, Activation
@@ -41,14 +42,15 @@ from sklearn.metrics import mean_squared_error
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
 # params = get_parameters()
-params = ['EURUSD1440', '-train', 100, '-graph']
-limit = 5000
+params = ['EURUSD60', '-train', 100, '-graph']
+limit = 8000
 batch_size = 128
 fit_epoch = 100
-fit_train_test = 0.75
-ts_lookback = 3
-recurent_1 = 64
+fit_train_test = 0.8
+ts_lookback = 10
+recurent_1 = 128
 recurent_2 = 64
+normalize_class = True
 run_type = 0
 graph = False
 
@@ -134,7 +136,8 @@ if run_type == 0:
     target_data = np.genfromtxt(file_y, delimiter=';')
 
     data_x = prepare_data(train_data)
-    data_x, data_y = create_timeseries_matrix(data_x, target_data, ts_lookback)
+    data_y = signal_to_class2(target_data, normalize=normalize_class)
+    data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback)
 
     # batch_input_shape=(batch_size, timesteps, units)
     data_x = np.reshape(data_x, (data_x.shape[0], 1, data_x.shape[1]))
@@ -153,27 +156,33 @@ if run_type == 0:
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], data_x.shape[2])))
+    model.add(GRU(data_x.shape[2],
+                  activation='elu',
+                  kernel_initializer='lecun_uniform',
+                  return_sequences=True,
+                  activity_regularizer=regularizers.l2(0.01),
+                  dropout=0.0
+                 ))
     model.add(GRU(recurent_1,
+                  activation='elu',
+                  kernel_initializer='glorot_uniform',
                   return_sequences=True,
-                  activity_regularizer=regularizers.l2(0.01)
+                  activity_regularizer=regularizers.l2(0.01),
+                  dropout=0.5
                  ))
-    model.add(LeakyReLU())
-    model.add(Dropout(0.5))
     model.add(GRU(recurent_2,
-                  return_sequences=True,
-                  activity_regularizer=regularizers.l2(0.01)
+                  activation='elu',
+                  kernel_initializer='glorot_uniform',
+                  activity_regularizer=regularizers.l2(0.01),
+                  dropout=0.3
                  ))
-    model.add(LeakyReLU())
-    model.add(Dropout(0.4))
-    model.add(GRU(recurent_2,
-                  activity_regularizer=regularizers.l2(0.01)
-                 ))
-    model.add(LeakyReLU())
-    model.add(Dropout(0.3))
     model.add(BatchNormalization())
-    model.add(Dense(16))
-    model.add(Dense(8))
-    model.add(Dense(1))
+    model.add(Dropout(0.2))
+    model.add(Dense(32, activation='elu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(16, activation='elu'))
+    model.add(Dense(8, activation='elu'))
+    model.add(Dense(2, activation='softmax'))
 
     save_model(model, prefix + workfile + '.model')
 elif run_type == 1:
@@ -189,6 +198,7 @@ model.compile(loss='hinge', optimizer=opt, metrics=['acc'])
 if run_type == 0:
     print('\nTraining...')
 
+    # EarlyStopping, ModelCheckpoint
     reduce_lr = ReduceLROnPlateau(factor=0.9, patience=5, min_lr=0.000001, verbose=1)
 
     history = model.fit(train_x, train_y,
@@ -214,21 +224,24 @@ if run_type == 0:
 #=============================================================================#
 print('\nPredicting...')
 
-data_xx = np.genfromtxt(file_xx, delimiter=';')
-data_xx = prepare_data(data_xx)
+new_data = np.genfromtxt(file_xx, delimiter=';')
+data_xx = prepare_data(new_data)
 data_xx, empty = create_timeseries_matrix(data_xx, look_back=ts_lookback)
 data_xx = np.reshape(data_xx, (data_xx.shape[0], 1, data_xx.shape[1]))
 
 if run_type == 1:
     model.load_weights(prefix + workfile + '.hdf5')
 
+# Prediction model
 predicted_output = model.predict(data_xx, batch_size=batch_size)
 
 data_yy = np.array([])
 for i in range(ts_lookback-1):
-    data_yy = np.append(data_yy, 0.0)
+    data_yy = np.append(data_yy, [0.0, 0.0])
 
 data_yy = np.append(data_yy, predicted_output)
+data_yy = class2_to_signal(data_yy.reshape(new_data.shape[0], 2), normalized=normalize_class)
+
 np.savetxt(file_yy, data_yy, fmt='%.6f', delimiter=';')
 print("Predict saved:\n", file_yy)
 
@@ -237,18 +250,18 @@ print("Predict saved:\n", file_yy)
 #       P L O T                                                               #
 #=============================================================================#
 if graph:
-    plt.plot(data_yy)
-    plt.title('Saved predict')
-    plt.ylabel('direction')
-    plt.xlabel('bar')
-    plt.legend(['prediction'])
-    plt.show()
-
     plt.plot(predicted_output)
     plt.title('Predicted')
     plt.ylabel('direction')
     plt.xlabel('bar')
     plt.legend(['buy', 'sell'], loc='best')
+    plt.show()
+
+    plt.plot(data_yy)
+    plt.title('Saved predict')
+    plt.ylabel('direction')
+    plt.xlabel('bar')
+    plt.legend(['prediction'])
     plt.show()
 
     if run_type == 0:
