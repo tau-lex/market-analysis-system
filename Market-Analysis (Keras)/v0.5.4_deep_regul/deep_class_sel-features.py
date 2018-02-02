@@ -41,8 +41,8 @@ from sklearn.metrics import mean_squared_error
 #       P R E P A R E   V A R I A B L E S                                     #
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
-# params = get_parameters()
-params = ['EURUSD60', '-train', 100, '-graph']
+params = get_parameters()
+# params = ['EURUSD60', '-train', 100]
 limit = 8000
 batch_size = 128
 fit_epoch = 100
@@ -50,7 +50,8 @@ fit_train_test = 0.8
 ts_lookback = 10
 recurent_1 = 128
 recurent_2 = 64
-normalize_class = True
+nclasses = 2
+normalize_class = False
 run_type = 0
 graph = False
 
@@ -84,7 +85,7 @@ file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
 file_xx = path + workfile + '_xx.csv'
 file_yy = path + workfile + '_yy.csv'
-prefix = 'deep_regr_sf_'
+prefix = 'c:/mas/deep_regr_sf_'
 model = None
 data_x = np.array([])
 data_y = np.array([])
@@ -104,6 +105,9 @@ print('Work file:', workfile)
 def prepare_data(data):
     # for market (0, 3), ema (4, 7)
     close = data[:, 3]
+    sigm1 = get_sigmoid_to_zero(data[:, 1])
+    sigm2 = get_sigmoid_to_zero(data[:, 2])
+    sigm3 = get_sigmoid_to_zero(data[:, 3])
     delta_oc = get_delta(data, 0, 3)
     diff1 = get_diff(data[:, 1])
     diff2 = get_diff(data[:, 2])
@@ -122,9 +126,10 @@ def prepare_data(data):
     diff_ema1 = get_diff(data[:, 4])
     diff_ema2 = get_diff(data[:, 5])
 
-    return np.array([close, delta_oc, diff1, diff2, diff3,
+    return np.array([sigm1, sigm2, sigm3, delta_oc,
+                     diff1, diff2, diff3,
                      logdiff1, logdiff2, logdiff3,
-                     lowess1, lowess2, lowess3,
+                     # lowess1, lowess2, lowess3,
                      detrend1, detrend2, detrend3,
                      ema1, ema2, diff_ema1, diff_ema2
                     ]).swapaxes(0, 1)
@@ -134,6 +139,8 @@ if run_type == 0:
 
     train_data = np.genfromtxt(file_x, delimiter=';')
     target_data = np.genfromtxt(file_y, delimiter=';')
+
+    train_data, target_data = train_data[-limit:,], target_data[-limit:]
 
     data_x = prepare_data(train_data)
     data_y = signal_to_class2(target_data, normalize=normalize_class)
@@ -182,7 +189,7 @@ if run_type == 0:
     model.add(Dropout(0.2))
     model.add(Dense(16, activation='elu'))
     model.add(Dense(8, activation='elu'))
-    model.add(Dense(2, activation='softmax'))
+    model.add(Dense(nclasses, activation='softmax'))
 
     save_model(model, prefix + workfile + '.model')
 elif run_type == 1:
@@ -237,10 +244,11 @@ predicted_output = model.predict(data_xx, batch_size=batch_size)
 
 data_yy = np.array([])
 for i in range(ts_lookback-1):
-    data_yy = np.append(data_yy, [0.0, 0.0])
+    for j in range(nclasses):
+        data_yy = np.append(data_yy, [0.0])
 
 data_yy = np.append(data_yy, predicted_output)
-data_yy = class2_to_signal(data_yy.reshape(new_data.shape[0], 2), normalized=normalize_class)
+data_yy = class2_to_signal(data_yy.reshape(new_data.shape[0], nclasses), normalized=normalize_class)
 
 np.savetxt(file_yy, data_yy, fmt='%.6f', delimiter=';')
 print("Predict saved:\n", file_yy)
