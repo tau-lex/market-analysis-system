@@ -23,7 +23,7 @@ from mas.data import get_delta
 from mas.data import get_diff, get_log_diff, get_sigmoid_to_zero
 from mas.models import save_model, load_model
 from statsmodels.nonparametric.smoothers_lowess import lowess
-from mas.classes import signal_to_class2, class2_to_signal
+from mas.classes import signal_to_class, class_to_signal
 
 from keras.models import Sequential
 from keras.layers import Dense, GRU, LSTM, Dropout, Activation
@@ -42,16 +42,20 @@ from sklearn.metrics import mean_squared_error
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
 params = get_parameters()
-# params = ['EURUSD60', '-train', 100]
-limit = 8000
+# params = ['EURUSD15', '-train', '-graph']
+limit = 5000
 batch_size = 128
 fit_epoch = 100
 fit_train_test = 0.8
-ts_lookback = 10
-recurent_1 = 128
+ts_lookback = 6
+
+Recurent = LSTM
+recurent_1 = 100
 recurent_2 = 64
-nclasses = 2
+
+nclasses = 3
 normalize_class = False
+
 run_type = 0
 graph = False
 
@@ -115,12 +119,14 @@ def prepare_data(data):
     logdiff1 = get_log_diff(data[:, 1])
     logdiff2 = get_log_diff(data[:, 2])
     logdiff3 = get_log_diff(data[:, 3])
-    lowess1 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./100)
-    lowess2 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./250)
-    lowess3 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./250, it=0)
-    detrend1 = close - lowess1
-    detrend2 = close - lowess2
-    detrend3 = close - lowess3
+    # lowess1 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./100)
+    # lowess2 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./250)
+    # lowess3 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./250, it=0)
+    # detrend1 = close - lowess1
+    # detrend2 = close - lowess2
+    # detrend3 = close - lowess3
+    detrend1 = close - data[:, 4]
+    detrend2 = close - data[:, 5]
     ema1 = data[:, 4]
     ema2 = data[:, 5]
     diff_ema1 = get_diff(data[:, 4])
@@ -130,7 +136,7 @@ def prepare_data(data):
                      diff1, diff2, diff3,
                      logdiff1, logdiff2, logdiff3,
                      # lowess1, lowess2, lowess3,
-                     detrend1, detrend2, detrend3,
+                     detrend1, detrend2, #detrend3,
                      ema1, ema2, diff_ema1, diff_ema2
                     ]).swapaxes(0, 1)
 
@@ -143,7 +149,7 @@ if run_type == 0:
     train_data, target_data = train_data[-limit:,], target_data[-limit:]
 
     data_x = prepare_data(train_data)
-    data_y = signal_to_class2(target_data, normalize=normalize_class)
+    data_y = signal_to_class(target_data, n=nclasses, normalize=normalize_class)
     data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback)
 
     # batch_input_shape=(batch_size, timesteps, units)
@@ -163,30 +169,31 @@ if run_type == 0:
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], data_x.shape[2])))
-    model.add(GRU(data_x.shape[2],
-                  activation='elu',
-                  kernel_initializer='lecun_uniform',
-                  return_sequences=True,
-                  activity_regularizer=regularizers.l2(0.01),
-                  dropout=0.0
-                 ))
-    model.add(GRU(recurent_1,
-                  activation='elu',
-                  kernel_initializer='glorot_uniform',
-                  return_sequences=True,
-                  activity_regularizer=regularizers.l2(0.01),
-                  dropout=0.5
-                 ))
-    model.add(GRU(recurent_2,
-                  activation='elu',
-                  kernel_initializer='glorot_uniform',
-                  activity_regularizer=regularizers.l2(0.01),
-                  dropout=0.3
-                 ))
+    model.add(Recurent(data_x.shape[2],
+                        activation='elu',
+                        kernel_initializer='lecun_uniform',
+                        return_sequences=True,
+                        kernel_regularizer=regularizers.l2(0.01),
+                        activity_regularizer=regularizers.l2(0.01),
+                        dropout=0.5
+                       ))
+    model.add(Recurent(recurent_1,
+                        activation='elu',
+                        kernel_initializer='lecun_uniform',
+                        return_sequences=True,
+                        activity_regularizer=regularizers.l2(0.01),
+                        dropout=0.5
+                       ))
+    model.add(Recurent(recurent_2,
+                        activation='elu',
+                        kernel_initializer='lecun_uniform',
+                        activity_regularizer=regularizers.l2(0.01),
+                        dropout=0.3
+                       ))
     model.add(BatchNormalization())
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.3))
     model.add(Dense(32, activation='elu'))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.1))
     model.add(Dense(16, activation='elu'))
     model.add(Dense(8, activation='elu'))
     model.add(Dense(nclasses, activation='softmax'))
@@ -248,9 +255,11 @@ for i in range(ts_lookback-1):
         data_yy = np.append(data_yy, [0.0])
 
 data_yy = np.append(data_yy, predicted_output)
-data_yy = class2_to_signal(data_yy.reshape(new_data.shape[0], nclasses), normalized=normalize_class)
+data_yy = class_to_signal(data_yy.reshape(new_data.shape[0], nclasses),
+                           n=nclasses, 
+                           normalized=normalize_class)
 
-np.savetxt(file_yy, data_yy, fmt='%.6f', delimiter=';')
+np.savetxt(file_yy, data_yy, fmt='%.2f', delimiter=';')
 print("Predict saved:\n", file_yy)
 
 
