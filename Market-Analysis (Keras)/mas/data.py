@@ -18,17 +18,6 @@ from math import exp
 import numpy as np
 
 
-def data_preview(data1, data2):
-    """Data graph"""
-
-    import matplotlib.pyplot as plt
-
-    plt.plot(data1)
-    plt.plot(data2)
-    plt.legend(['data1', 'data2'], loc='best')
-    plt.show()
-
-
 def create_timeseries_matrix(data_x, data_y=np.array([]), look_back=3):
     """Converts a dataset into a time series matrix."""
 
@@ -51,7 +40,7 @@ def create_timeseries_matrix(data_x, data_y=np.array([]), look_back=3):
     new_shape = (data_x.shape[0] - look_back + 1, data_x.shape[1] * look_back)
     result = np.reshape(result, new_shape)
 
-    return result, data_y[look_back - 1:]
+    return result, data_y[look_back-1:]
 
 
 def dataset_to_traintest(data, ratio=0.6, limit=0):
@@ -141,6 +130,8 @@ def get_sigmoid(data):
     result = 1 / (1 + np.exp(-data))
 
     return result
+    # return exp(-np.logaddexp(0, -data))
+    # return 0.5 * (1 + data / (1 + abs(data)))
 
 
 def get_sigmoid_to_zero(data):
@@ -166,14 +157,3 @@ def get_sigmoid_stable(data):
 
     return result
 
-
-def get_sigmoid1(data):
-    """More variant."""
-
-    return exp(-np.logaddexp(0, -data))
-
-
-def get_sigmoid2(data):
-    """More variant."""
-
-    return 0.5 * (1 + data / (1 + abs(data)))
