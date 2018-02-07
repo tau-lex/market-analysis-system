@@ -75,13 +75,22 @@ def class_to_signal(data, n=2, normalized=True):
             for item in data:
                 result = np.append(result, item[0] - item[1])
     elif n == 3:
-        for item in data:
-            if item[0] > item[2]:
-                result = np.append(result, abs(item[0]))
-            elif item[0] < item[2]:
-                result = np.append(result, 0.0-abs(item[2]))
-            else:
-                result = np.append(result, 0.0)
+        if normalized:
+            for item in data:
+                if item[0] > item[1] and item[0] > item[2]:
+                    result = np.append(result, 1.0)
+                elif item[2] > item[1] and item[2] > item[0]:
+                    result = np.append(result, -1.0)
+                elif item[1] > item[0] and item[1] > item[2]:
+                    result = np.append(result, 0.0)
+        else:
+            for item in data:
+                if item[0] > item[1] and item[0] > item[2]:
+                    result = np.append(result, abs(item[0]))
+                elif item[2] > item[1] and item[2] > item[0]:
+                    result = np.append(result, 0.0-abs(item[2]))
+                elif item[1] > item[0] and item[1] > item[2]:
+                    result = np.append(result, 0.0)
 
     return result
 
