@@ -49,7 +49,7 @@ fit_epoch = 100
 fit_train_test = 0.8
 ts_lookback = 6
 
-Recurent = LSTM
+Recurent = GRU
 recurent_1 = 100
 recurent_2 = 64
 
@@ -89,7 +89,7 @@ file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
 file_xx = path + workfile + '_xx.csv'
 file_yy = path + workfile + '_yy.csv'
-prefix = 'c:/mas/deep_regr_sf_'
+prefix = 'c:/mas/deep_classifier_fs_'
 model = None
 data_x = np.array([])
 data_y = np.array([])
@@ -171,29 +171,34 @@ if run_type == 0:
     model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1], data_x.shape[2])))
     model.add(Recurent(data_x.shape[2],
                         activation='elu',
+                        recurrent_activation='relu',
                         kernel_initializer='lecun_uniform',
                         return_sequences=True,
-                        kernel_regularizer=regularizers.l2(0.01),
+                        # kernel_regularizer=regularizers.l2(0.01),
                         activity_regularizer=regularizers.l2(0.01),
                         dropout=0.5
                        ))
-    model.add(Recurent(recurent_1,
-                        activation='elu',
-                        kernel_initializer='lecun_uniform',
-                        return_sequences=True,
-                        activity_regularizer=regularizers.l2(0.01),
-                        dropout=0.5
-                       ))
+    # model.add(Recurent(recurent_1,
+    #                     activation='elu',
+    #                     recurrent_activation='relu',
+    #                     kernel_initializer='lecun_uniform',
+    #                     return_sequences=True,
+    #                     # kernel_regularizer=regularizers.l2(0.01),
+    #                     activity_regularizer=regularizers.l2(0.01),
+    #                     dropout=0.5
+    #                    ))
     model.add(Recurent(recurent_2,
                         activation='elu',
+                        recurrent_activation='relu',
                         kernel_initializer='lecun_uniform',
+                        # kernel_regularizer=regularizers.l2(0.01),
                         activity_regularizer=regularizers.l2(0.01),
-                        dropout=0.3
+                        dropout=0.5
                        ))
     model.add(BatchNormalization())
     model.add(Dropout(0.3))
     model.add(Dense(32, activation='elu'))
-    model.add(Dropout(0.1))
+    model.add(Dropout(0.3))
     model.add(Dense(16, activation='elu'))
     model.add(Dense(8, activation='elu'))
     model.add(Dense(nclasses, activation='softmax'))
@@ -203,7 +208,8 @@ elif run_type == 1:
     model = load_model(prefix + workfile + '.model')
 
 opt = Nadam()
-model.compile(loss='hinge', optimizer=opt, metrics=['acc'])
+# 'categorial_crossentropy'
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc'])
 
 
 #=============================================================================#
@@ -225,12 +231,12 @@ if run_type == 0:
     model.save_weights(prefix + workfile + '.hdf5')
 
     # calculate root mean squared error
-    train_predict = model.predict(train_x)
-    test_predict = model.predict(test_x)
-    train_score = math.sqrt(mean_squared_error(train_y, train_predict))
-    print('Train Score: %.6f RMSE' % (train_score))
-    test_score = math.sqrt(mean_squared_error(test_y, test_predict))
-    print('Test Score: %.6f RMSE' % (test_score))
+    # train_predict = model.predict(train_x)
+    # test_predict = model.predict(test_x)
+    # train_score = math.sqrt(mean_squared_error(train_y, train_predict))
+    # print('Train Score: %.6f RMSE' % (train_score))
+    # test_score = math.sqrt(mean_squared_error(test_y, test_predict))
+    # print('Test Score: %.6f RMSE' % (test_score))
 
 
 #=============================================================================#
