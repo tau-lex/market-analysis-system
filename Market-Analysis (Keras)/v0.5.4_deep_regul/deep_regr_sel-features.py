@@ -19,9 +19,10 @@ import sys
 sys.path.append('../')
 from mas.include import get_parameters
 from mas.data import create_timeseries_matrix, dataset_to_traintest
-from mas.data import get_delta, get_deltas_from_ohlc
-from mas.data import get_diff, get_sigmoid_to_zero
+from mas.data import get_delta
+from mas.data import get_diff, get_log_diff, get_sigmoid_to_zero
 from mas.models import save_model, load_model
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
 from keras.models import Sequential
 from keras.layers import Dense, GRU, LSTM, Dropout, Activation
@@ -32,7 +33,6 @@ from keras.optimizers import Adam, Nadam, Adagrad, Adamax, Adadelta
 from keras.callbacks import ReduceLROnPlateau
 from keras import regularizers
 
-from statsmodels.nonparametric.smoothers_lowess import lowess
 from sklearn.metrics import mean_squared_error
 
 
@@ -82,7 +82,7 @@ file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
 file_xx = path + workfile + '_xx.csv'
 file_yy = path + workfile + '_yy.csv'
-prefix = 'deep_regr_md_'
+prefix = 'deep_regr_sf_'
 model = None
 data_x = np.array([])
 data_y = np.array([])
@@ -100,35 +100,31 @@ print('Work file:', workfile)
 #       L O A D   D A T A                                                     #
 #=============================================================================#
 def prepare_data(data):
-    delta_prices = get_deltas_from_ohlc(data, 7)
-    derivative1 = get_diff(data[:, 7], 1)
-    derivative2 = get_diff(data[:, 8], 1)
-    derivative3 = get_diff(data[:, 9], 1)
-    derivative4 = get_diff(data[:, 10], 1)
-    sigmoid = get_sigmoid_to_zero(data[:, 10])
-    _lowess = lowess(data[:, 10], range(data.shape[0]), return_sorted=False)
+    # for market (0, 3), ema (4, 7)
+    close = data[:, 3]
+    delta_oc = get_delta(data, 0, 3)
+    diff1 = get_diff(data[:, 1])
+    diff2 = get_diff(data[:, 2])
+    diff3 = get_diff(data[:, 3])
+    logdiff1 = get_log_diff(data[:, 1])
+    logdiff2 = get_log_diff(data[:, 2])
+    logdiff3 = get_log_diff(data[:, 3])
+    lowess1 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./100)
+    lowess2 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./250)
+    lowess3 = lowess(data[:, 3], range(data.shape[0]), return_sorted=False, frac=1./250, it=0)
+    detrend1 = close - lowess1
+    detrend2 = close - lowess2
+    detrend3 = close - lowess3
+    ema1 = data[:, 4]
+    ema2 = data[:, 5]
+    diff_ema1 = get_diff(data[:, 4])
+    diff_ema2 = get_diff(data[:, 5])
 
-    delta_ema1 = get_delta(data, 4, 5)
-    delta_ema2 = get_delta(data, 6, 7)
-
-    return np.array([data[:, 0], data[:, 1], # time data
-                     data[:, 2], data[:, 3], # time data
-                     data[:, 4], data[:, 5], # time data
-                     data[:, 6], # time data
-                     data[:, 7], data[:, 8], # prices data
-                     data[:, 9], data[:, 10], # prices data
-                     delta_prices[:, 0], delta_prices[:, 1], delta_prices[:, 2],
-                     delta_prices[:, 3], delta_prices[:, 4], delta_prices[:, 5],
-                     derivative1, derivative2,
-                     derivative3, derivative4,
-                     sigmoid,
-                     _lowess,
-                     data[:, 11], data[:, 12], # ema data
-                     data[:, 13], data[:, 14], # ema data
-                     delta_ema1, delta_ema2,
-                     data[:, 15], data[:, 16], # macd
-                     data[:, 17], data[:, 18], # atr, cci
-                     data[:, 19] # rsi
+    return np.array([close, delta_oc, diff1, diff2, diff3,
+                     logdiff1, logdiff2, logdiff3,
+                     lowess1, lowess2, lowess3,
+                     detrend1, detrend2, detrend3,
+                     ema1, ema2, diff_ema1, diff_ema2
                     ]).swapaxes(0, 1)
 
 if run_type == 0:
