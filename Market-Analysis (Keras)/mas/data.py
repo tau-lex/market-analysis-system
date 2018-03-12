@@ -4,7 +4,7 @@
 #   Market Analysis System                                                    #
 #   https://www.mql5.com/ru/users/terentyev23                                 #
 #                                                                             #
-#   M A S   D A T A   F U N C T I O N                                         #
+#   M A S   D A T A   F U N C T I O N S                                       #
 #                                                                             #
 #   Aleksey Terentyev                                                         #
 #   terentew.aleksey@ya.ru                                                    #
@@ -18,27 +18,35 @@ from math import exp
 import numpy as np
 
 
-def create_timeseries_matrix(data_x, data_y=np.array([]), look_back=3):
+def create_timeseries_matrix(data_x, data_y=[], look_back=3, last_bar_is_new=[]):
     """Converts a dataset into a time series matrix."""
 
     if look_back <= 1:
         return np.array(data_x), np.array(data_y)
 
     if look_back >= data_x.shape[0]:
-        print('create_timeseries_matrix() error')
+        print('create_timeseries_matrix() error = look back size is large')
         return None
 
     result = np.array([])
     data_x = np.array(data_x)
     data_y = np.array(data_y)
 
-    for i in range(len(data_x) - look_back + 1):
-        row = data_x[i:(i + look_back), :]
+    for idx in range(len(data_x) - look_back + 1):
+        row = data_x[idx:(idx + look_back), :]
         np.reshape(row, data_x.shape[1] * look_back)
         result = np.append(result, row)
 
     new_shape = (data_x.shape[0] - look_back + 1, data_x.shape[1] * look_back)
     result = np.reshape(result, new_shape)
+
+    if len(last_bar_is_new) > 0:
+        if len(last_bar_is_new) != data_x.shape[1]:
+            print('create_timeseries_matrix() error = last_bar_is_new list not equal shape of data_x')
+        else:
+            for idx in range(len(last_bar_is_new)):
+                if last_bar_is_new[idx]:
+                    result[:, idx + (look_back - 1) * data_x.shape[1]] = 0.0
 
     return result, data_y[look_back-1:]
 
