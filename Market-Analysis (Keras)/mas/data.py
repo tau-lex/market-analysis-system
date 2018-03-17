@@ -76,6 +76,23 @@ def dataset_to_traintest(data, ratio=0.6, limit=0):
     return data[start:(start + train_size), :], data[(start + train_size):len(data), :]
 
 
+def shuffle_xy(data_a = [], data_b = []):
+    """"""
+    data_a = np.array(data_a)
+    data_b = np.array(data_b)
+    width_a = data_a.shape[1]
+    if len(data_b.shape) > 1:
+        width_b = data_b.shape[1]
+    else:
+        width_b = data_b.shape[0]
+    # if width_a != width_b:
+    #     print()
+    #     return ([], [])
+    temp = np.column_stack((data_a, data_b))
+    np.random.shuffle(temp)
+    return np.hsplit(temp, np.array([width_a]))
+
+
 def get_delta(data, index1=0, index2=1):
     """Returns the difference between index1 and index2."""
 
