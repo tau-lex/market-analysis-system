@@ -106,7 +106,7 @@ def get_delta(data, index1=0, index2=1):
 
 def get_deltas_from_ohlc(data, index1=0):
     """Calculates the delta prices (open, high, low, close) between index1 and index2.
-    Returns the numpy array with the shape (x, 6): [O-C, H-L, H-O, H-C, O-L, C-L]"""
+    Returns the numpy array with the shape (:, 6): [O-C, H-L, H-O, H-C, O-L, C-L]"""
 
     result = np.array([])
     data = np.array(data)
@@ -182,3 +182,10 @@ def get_sigmoid_stable(data):
 
     return result
 
+
+def get_sigmoid_ration(data, alpha=2.0):
+    """Rationaly sigmoid."""
+
+    result = data / (np.abs(data) + alpha)
+
+    return result
