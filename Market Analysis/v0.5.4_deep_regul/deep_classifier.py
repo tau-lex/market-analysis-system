@@ -144,12 +144,9 @@ if run_type == 0:
 
     train_data, target_data = train_data[-limit:,], target_data[-limit:]
 
-    # Last bar to zero [sigm1, sigm2, sigm3, delta, diff1, diff2, diff3, logd1, logd2, logd3, detr1, detr2, dife1, dife2]
-    # last_bar_to_zero = [True,  True,  True,  True,  True,  True,  True,  True,  True,  True,  True,  True,  True,  True]
-    last_bar_to_zero = []
     data_x = prepare_data(train_data)
     data_y = signal_to_class(target_data, n=nclasses, normalize=normalize_class)
-    data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback, last_bar_to_zero)
+    data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback)
 
     # batch_input_shape=(batch_size, timesteps, units)
     data_x = np.reshape(data_x, (data_x.shape[0], 1, data_x.shape[1]))
