@@ -4,7 +4,7 @@
 #   Market Analysis System                                                    #
 #   https://www.mql5.com/ru/users/terentyev23                                 #
 #                                                                             #
-#   M A S   D A T A   F U N C T I O N                                         #
+#   M A S   D A T A   F U N C T I O N S                                       #
 #                                                                             #
 #   Aleksey Terentyev                                                         #
 #   terentew.aleksey@ya.ru                                                    #
@@ -18,27 +18,35 @@ from math import exp
 import numpy as np
 
 
-def create_timeseries_matrix(data_x, data_y=np.array([]), look_back=3):
+def create_timeseries_matrix(data_x, data_y=[], look_back=3, last_bar_is_new=[]):
     """Converts a dataset into a time series matrix."""
 
     if look_back <= 1:
         return np.array(data_x), np.array(data_y)
 
     if look_back >= data_x.shape[0]:
-        print('create_timeseries_matrix() error')
+        print('create_timeseries_matrix() error = look back size is large')
         return None
 
     result = np.array([])
     data_x = np.array(data_x)
     data_y = np.array(data_y)
 
-    for i in range(len(data_x) - look_back + 1):
-        row = data_x[i:(i + look_back), :]
+    for idx in range(len(data_x) - look_back + 1):
+        row = data_x[idx:(idx + look_back), :]
         np.reshape(row, data_x.shape[1] * look_back)
         result = np.append(result, row)
 
     new_shape = (data_x.shape[0] - look_back + 1, data_x.shape[1] * look_back)
     result = np.reshape(result, new_shape)
+
+    if len(last_bar_is_new) > 0:
+        if len(last_bar_is_new) != data_x.shape[1]:
+            print('create_timeseries_matrix() error = last_bar_is_new list not equal shape of data_x')
+        else:
+            for idx in range(len(last_bar_is_new)):
+                if last_bar_is_new[idx]:
+                    result[:, idx + (look_back - 1) * data_x.shape[1]] = 0.0
 
     return result, data_y[look_back-1:]
 
@@ -68,6 +76,23 @@ def dataset_to_traintest(data, ratio=0.6, limit=0):
     return data[start:(start + train_size), :], data[(start + train_size):len(data), :]
 
 
+def shuffle_xy(data_a = [], data_b = []):
+    """"""
+    data_a = np.array(data_a)
+    data_b = np.array(data_b)
+    width_a = data_a.shape[1]
+    if len(data_b.shape) > 1:
+        width_b = data_b.shape[1]
+    else:
+        width_b = data_b.shape[0]
+    # if width_a != width_b:
+    #     print()
+    #     return ([], [])
+    temp = np.column_stack((data_a, data_b))
+    np.random.shuffle(temp)
+    return np.hsplit(temp, np.array([width_a]))
+
+
 def get_delta(data, index1=0, index2=1):
     """Returns the difference between index1 and index2."""
 
@@ -81,7 +106,7 @@ def get_delta(data, index1=0, index2=1):
 
 def get_deltas_from_ohlc(data, index1=0):
     """Calculates the delta prices (open, high, low, close) between index1 and index2.
-    Returns the numpy array with the shape (x, 6): [O-C, H-L, H-O, H-C, O-L, C-L]"""
+    Returns the numpy array with the shape (:, 6): [O-C, H-L, H-O, H-C, O-L, C-L]"""
 
     result = np.array([])
     data = np.array(data)
@@ -157,3 +182,10 @@ def get_sigmoid_stable(data):
 
     return result
 
+
+def get_sigmoid_ration(data, alpha=2.0):
+    """Rationaly sigmoid."""
+
+    result = data / (np.abs(data) + alpha)
+
+    return result

@@ -112,6 +112,10 @@ history = model.fit(train_x, train_y, #train_x, train_y, data_x, data_y,
                     validation_data=(test_x, test_y),
                     callbacks=[reduce_lr])
 
+# for i in range( epochs ):
+#     print( 'Epoch', i+1, '/', epochs )
+#     model.fit( data_x, data_y, batch_size=batch_size,
+#               nb_epoch=nb_epoch)
 
 #=============================================================================#
 #       P R E D I C T I N G                                                   #

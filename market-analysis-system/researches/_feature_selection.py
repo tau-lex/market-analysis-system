@@ -19,19 +19,19 @@ sys.path.append('E:\Projects\market-analysis-system\Market-Analysis (Keras)')
 from mas.data import get_deltas_from_ohlc, get_delta
 from mas.data import get_diff, get_log_diff
 from mas.data import get_sigmoid_to_zero
-from mas.data import data_preview
 
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
-from mas.classes import signal_to_class2, class2_to_signal
-from mas.classes import signal_to_class3, class3_to_signal
+from mas.classes import signal_to_class, class_to_signal
 
 import matplotlib.pyplot as plt
 
 
-"""Load data."""
+#=============================================================================#
+#       L O A D   D A T A                                                     #
+#=============================================================================#
 path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
-symbol = 'EURUSD1440'
+symbol = 'XAUUSD15'
 file_x = path + symbol + '_x.csv'
 file_y = path + symbol + '_y.csv'
 
@@ -41,59 +41,59 @@ data_out = np.genfromtxt(file_y, delimiter=';')
 print('data_x shape: ', data.shape)
 print('data_y shape: ', data_out.shape)
 
+limit = 100000
 
-"""Transform data."""
-delta_prices = get_deltas_from_ohlc(data, 7)
-derivative1 = get_diff(data[:, 7], 1)
-derivative2 = get_diff(data[:, 8], 1)
-derivative3 = get_diff(data[:, 9], 1)
-derivative4 = get_diff(data[:, 10], 1)
-logdiff1 = get_log_diff(data[:, 7])
-logdiff2 = get_log_diff(data[:, 8])
-logdiff3 = get_log_diff(data[:, 9])
-logdiff4 = get_log_diff(data[:, 10])
-sigmoid1 = get_sigmoid_to_zero(data[:, 7])
-sigmoid2 = get_sigmoid_to_zero(data[:, 8])
-sigmoid3 = get_sigmoid_to_zero(data[:, 9])
-sigmoid4 = get_sigmoid_to_zero(data[:, 10])
-lowess1 = lowess(data[:, 10], range(data.shape[0]), return_sorted=False, frac= 1./100)
-lowess2 = lowess(data[:, 10], range(data.shape[0]), return_sorted=False, frac= 1./250)
-lowess3 = lowess(data[:, 10], range(data.shape[0]), return_sorted=False, frac= 1./250, it=0)
-detrend_close1 = data[:, 10] - data[:, 11]
-detrend_close2 = data[:, 10] - lowess3
+if data.shape[0] > limit:
+    data = data[-limit:, :]
+    data_out = data_out[-limit:, ]
+    #
+    print('data_x shape: ', data.shape)
+    print('data_y shape: ', data_out.shape)
 
-delta_ema1 = get_delta(data, 4, 5)
-delta_ema2 = get_delta(data, 6, 7)
-derivative_ema1 = get_diff(data[:, 11])
-derivative_ema2 = get_diff(data[:, 12])
-derivative_ema3 = get_diff(data[:, 13])
-derivative_ema4 = get_diff(data[:, 14])
-logdiff_ema1 = get_log_diff(data[:, 11])
-sigmoid_ema = get_sigmoid_to_zero(data[:, 11])
 
-data_x = np.array([data[:, 0], data[:, 1], data[:, 2], data[:, 3], data[:, 4], data[:, 5], data[:, 6], # time data [0,6]
-                    data[:, 7], data[:, 8], data[:, 9], data[:, 10], # prices data [7, 10]
-                    delta_prices[:, 0], delta_prices[:, 1], delta_prices[:, 2], # price deltas [11, 16]
-                    delta_prices[:, 3], delta_prices[:, 4], delta_prices[:, 5],
-                    derivative1, derivative2, derivative3, derivative4, # [17, 20]
-                    logdiff1, logdiff2, logdiff3, logdiff4, # [21, 24]
-                    sigmoid1, sigmoid2, sigmoid3, sigmoid4, # [25, 28]
-                    lowess1, lowess2, lowess3, # [29, 31]
-                    detrend_close1, detrend_close2, # [32, 33]
-                    data[:, 11], data[:, 12], data[:, 13], data[:, 14], # [34, 37]
-                    delta_ema1, delta_ema2, # [38, 39]
-                    derivative_ema1, derivative_ema2, derivative_ema3, derivative_ema4, # [40, 43]
-                    logdiff_ema1, sigmoid_ema, # [44, 45]
-                    data[:, 15], data[:, 16], # macd [46, 47]
-                    data[:, 17], data[:, 18], data[:, 19], # atr, cci, rsi [48, 50]
-                    data[:, 20], data[:, 21] # usdx, eurx [51, 52]
-                  ]).swapaxes(0, 1)
+#=============================================================================#
+#       P R E P A R E   D A T A                                               #
+#=============================================================================#
+"""Time [0, 6]"""
+time = data[:, 0:7]
+logdiff_time = np.column_stack((get_log_diff(time[:, 5]), get_log_diff(time[:, 6])))
+"""Price [7, 10]"""
+prices = data[:, 7:11]
+delta_prices = get_deltas_from_ohlc(prices)
+derivative = np.column_stack((get_diff(data[:, 7], 1), get_diff(data[:, 8], 1),
+                                get_diff(data[:, 9], 1), get_diff(data[:, 10], 1)))
+logdiff = np.column_stack((get_log_diff(data[:, 7]), get_log_diff(data[:, 8]),
+                                get_log_diff(data[:, 9]), get_log_diff(data[:, 10])))
+sigmoid = np.column_stack((get_sigmoid_to_zero(data[:, 7]), get_sigmoid_to_zero(data[:, 8]),
+                                get_sigmoid_to_zero(data[:, 9]), get_sigmoid_to_zero(data[:, 10])))
+lowess = lowess(data[:, 10], range(data.shape[0]), return_sorted=False, frac=1./250, it=0)
+detrend_close = [prices[:, 3] - data[:, 11], prices[:, 3] - data[:, 12], prices[:, 3] - lowess]
+"""EMAs [11, 14]"""
+ema = data[:, 11:15]
+delta_ema = np.column_stack((get_delta(ema, 0, 1), get_delta(ema, 2, 3)))
+diff_ema = np.column_stack((get_diff(ema[:, 0]), get_diff(ema[:, 1]),
+                                get_diff(ema[:, 2]), get_diff(ema[:, 3])))
+logdiff_ema = np.column_stack((get_log_diff(ema[:, 0]), get_log_diff(ema[:, 1])))
+sigmoid_ema = np.column_stack((get_sigmoid_to_zero(ema[:, 0]), get_sigmoid_to_zero(ema[:, 1])))
+"""MACD [15, 16]"""
+macd = data[:, 15:17]
+
+data_x = np.column_stack(time, logdiff_time,
+                            prices, delta_prices, derivative, logdiff,
+                            sigmoid, lowess, detrend_close,
+                            ema, delta_ema, diff_ema, logdiff_ema, sigmoid_ema,
+                            macd, 
+                            data[:, 17], data[:, 18], data[:, 19], # atr, cci, rsi [48, 50]
+                            data[:, 20], data[:, 21] # usdx, eurx [51, 52]
+                        ).swapaxes(0, 1)
 
 sigmoid_y = get_sigmoid_to_zero(data_out)
-data_y = signal_to_class2(data_out)
+data_y = signal_to_class(data_out, n=2)
 
 
-"""Plot data"""
+#=============================================================================#
+#       P L O T   D A T A                                                     #
+#=============================================================================#
 idx_start = -100
 idx_stop = -1
 # plot prices
