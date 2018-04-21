@@ -29,11 +29,13 @@ def save_model(model: Model, filename: str):
 def load_model(filename: str):
     """Loads the model from a text file."""
 
+    # GOTO: load models from models lib
+    # 'model/' + filename
     json_string = ''
     try:
         file = open(filename, 'r')
-    except IOError as exc:
-        print('Error! Model file not find', exc)
+    except IOError as e:
+        print('Error! Model file not found', e)
     else:
         json_string = file.read()
         file.close()
