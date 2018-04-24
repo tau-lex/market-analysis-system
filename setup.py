@@ -1,13 +1,13 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-import market-analysis-system
+import market_analysis_system
 
 
 setup(
     name='market analysis system',
-    version=market-analysis-system.__version__,
-    packages=['market-analysis-system'],
-    long_description=open('market-analysis-system/readme.md').read(),
+    version=market_analysis_system.__version__,
+    packages=find_packages(),
+    long_description=open('market_analysis_system/README.md').read(),
     keywords='trade',
     url='https://github.com/terentjew-alexey/market-analysis-system',
     author='Terentyev Aleksey',

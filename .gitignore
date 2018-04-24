@@ -1,5 +1,7 @@
-build-*/
+build*/
 __pycache__/
+dist/
+market_analysis_system.egg-info/
 *.autosave
 *.hdf5
 *.model
