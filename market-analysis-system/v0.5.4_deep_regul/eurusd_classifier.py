@@ -17,7 +17,7 @@ import numpy as np
 
 import sys
 sys.path.append('E:/Projects/market-analysis-system/market-analysis-system')
-from mas.include import get_parameters
+from mas.include import get_parameters, plot_history
 from mas.data import create_timeseries_matrix
 from mas.data import get_delta
 from mas.data import get_diff, get_log_diff, get_sigmoid_to_zero
@@ -31,10 +31,14 @@ from keras.layers import BatchNormalization
 from keras.layers import LeakyReLU, PReLU
 from keras.optimizers import RMSprop, SGD
 from keras.optimizers import Adam, Nadam, Adagrad, Adamax, Adadelta
-from keras.callbacks import ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import CSVLogger, EarlyStopping
 from keras import regularizers
 
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.metrics import matthews_corrcoef
 
 
 #=============================================================================#
@@ -45,7 +49,7 @@ from sklearn.metrics import mean_squared_error
 params = ['EURUSD15', '-train', '-graph']
 limit = 5000
 batch_size = 128
-fit_epoch = 100
+fit_epoch = 200
 train_test = 0.2
 ts_lookback = 12
 
@@ -54,7 +58,7 @@ recurent_1 = 100
 recurent_2 = 64
 
 nclasses = 3
-normalize_class = False
+normalize_class = True
 
 run_type = 0
 graph = False
@@ -104,7 +108,7 @@ print('Work file:', workfile)
 #       L O A D   D A T A                                                     #
 #=============================================================================#
 def prepare_data(data):
-    # for market (0, 3), ema (4, 7)
+    # for market(0, 3), ema(4, 7), macd(8, 9)
     close = data[:, 3]
     sigm0 = get_sigmoid_to_zero(data[:, 0])
     sigm1 = get_sigmoid_to_zero(data[:, 1])
@@ -123,13 +127,14 @@ def prepare_data(data):
     ema2 = data[:, 5]
     diff_ema1 = get_diff(data[:, 4])
     diff_ema2 = get_diff(data[:, 5])
-
-    return np.array([sigm0, sigm1, sigm2, sigm3, delta_oc,
-                     diff1, diff2, diff3,
-                     logdiff1, logdiff2, logdiff3,
-                     detrend1, detrend2,
-                     diff_ema1, diff_ema2
-                    ]).swapaxes(0, 1)
+    #
+    return np.column_stack((sigm0, sigm1, sigm2, sigm3, delta_oc,
+                            diff1, diff2, diff3,
+                            logdiff1, logdiff2, logdiff3,
+                            detrend1, detrend2,
+                            diff_ema1, diff_ema2,
+                            data[:, 8], data[:, 9]
+                          ))
 
 if run_type == 0:
     print('\nLoading Data...')
@@ -144,7 +149,7 @@ if run_type == 0:
     data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback)
 
     # batch_input_shape=(batch_size, timesteps, units)
-    data_x = np.reshape(data_x, (data_x.shape[0], 1, data_x.shape[1]))
+    data_x = np.reshape(data_x, (data_x.shape[0], ts_lookback, train_data.shape[1]-ts_lookback+1))
 
     # For training validation
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
@@ -186,7 +191,7 @@ if run_type == 0:
                         dropout=0.5
                        ))
     model.add(BatchNormalization())
-    # model.add(Dropout(0.3))
+    model.add(Dropout(0.3))
     model.add(Dense(32, activation='elu'))
     model.add(Dropout(0.3))
     model.add(Dense(16, activation='elu'))
@@ -198,7 +203,6 @@ elif run_type == 1:
     model = load_model(prefix + workfile + '.model')
 
 opt = Nadam()
-# 'categorial_crossentropy'
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc'])
 
 
@@ -208,25 +212,18 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc'])
 if run_type == 0:
     print('\nTraining...')
 
-    # EarlyStopping, ModelCheckpoint
     reduce_lr = ReduceLROnPlateau(factor=0.9, patience=5, min_lr=0.000001, verbose=1)
+    checkpointer = ModelCheckpoint(filepath=prefix + workfile + '.hdf5', verbose=0, save_best_only=True)
+    es = EarlyStopping(patience=100, min_delta=0.0001)
 
     history = model.fit(train_x, train_y,
                         batch_size=batch_size,
                         epochs=fit_epoch,
-                        callbacks=[reduce_lr],
+                        callbacks=[reduce_lr, checkpointer, es],
                         validation_data=(test_x, test_y)
                        )
 
-    model.save_weights(prefix + workfile + '.hdf5')
-
-    # calculate root mean squared error
-    # train_predict = model.predict(train_x)
-    # test_predict = model.predict(test_x)
-    # train_score = math.sqrt(mean_squared_error(train_y, train_predict))
-    # print('Train Score: %.6f RMSE' % (train_score))
-    # test_score = math.sqrt(mean_squared_error(test_y, test_predict))
-    # print('Test Score: %.6f RMSE' % (test_score))
+    model.save_weights(prefix + workfile + '_ended.hdf5')
 
 
 #=============================================================================#
@@ -236,16 +233,15 @@ print('\nPredicting...')
 
 data_xx = prepare_data(np.genfromtxt(file_xx, delimiter=';'))
 data_xx, empty = create_timeseries_matrix(data_xx, look_back=ts_lookback)
-data_xx = np.reshape(data_xx, (data_xx.shape[0], 1, data_xx.shape[1]))
+data_xx = np.reshape(data_xx, (data_xx.shape[0], ts_lookback, train_data.shape[1]-ts_lookback+1))
 
-if run_type == 1:
-    model.load_weights(prefix + workfile + '.hdf5')
+model.load_weights(prefix + workfile + '.hdf5')
 
 # Prediction model
 data_yy = model.predict(data_xx, batch_size=batch_size)
 predicted = data_yy
 data_yy = class_to_signal(data_yy.reshape(data_xx.shape[0], nclasses),
-                           n=nclasses, 
+                           n=nclasses,
                            normalized=normalize_class)
 
 np.savetxt(file_yy, data_yy, fmt='%.2f', delimiter=';')
@@ -256,6 +252,34 @@ print("Predict saved:\n", file_yy)
 #       P L O T                                                               #
 #=============================================================================#
 if graph:
+    # calculate root mean squared error
+    train_y = class_to_signal(train_y,
+                               n=nclasses,
+                               normalized=normalize_class)
+    test_y = class_to_signal(test_y,
+                               n=nclasses,
+                               normalized=normalize_class)
+    train_predict = class_to_signal(model.predict(train_x).reshape(train_x.shape[0], nclasses),
+                                       n=nclasses,
+                                       normalized=normalize_class)
+    test_predict = class_to_signal(model.predict(test_x).reshape(test_x.shape[0], nclasses),
+                                       n=nclasses,
+                                       normalized=normalize_class)
+    train_score = math.sqrt(mean_squared_error(train_y, train_predict))
+    print('Train Score: %.6f RMSE' % (train_score))
+    test_score = math.sqrt(mean_squared_error(test_y, test_predict))
+    print('Test Score: %.6f RMSE' % (test_score))
+
+    CM = confusion_matrix(test_y, test_predict)
+    print('MATTHEWS CORRELATION')
+    print(matthews_corrcoef(test_y, test_predict))
+    print('CONFUSION MATRIX')
+    print(CM / CM.astype(np.float).sum(axis=1))
+    print('CLASSIFICATION REPORT')
+    print(classification_report(test_y, test_predict))
+    print('-' * 20)
+
+
     plt.plot(predicted)
     plt.title('Predict')
     plt.ylabel('class')
@@ -271,20 +295,5 @@ if graph:
     plt.show()
 
     if run_type == 0:
-        plt.figure()
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('Model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='best')
-        plt.show()
+        plot_history(history)
 
-        plt.figure()
-        plt.plot(history.history['acc'])
-        plt.plot(history.history['val_acc'])
-        plt.title('Model accuracy')
-        plt.ylabel('acc')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='best')
-        plt.show()
