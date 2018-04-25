@@ -14,29 +14,29 @@
 The module contains functions for the MAS project.
 """
 
-import sys
-import matplotlib.pyplot as plt
+
+def get_home():
+    """Return directory path of user."""
+
+    from os.path import expanduser
+
+    return expanduser("~")
 
 
 def get_parameters():
     """Returns a list of parameters."""
 
-    idx = 0
-    result = []
+    import sys
 
-    for item in sys.argv:
-        if idx > 0:
-            result.append(item)
-        idx += 1
-
-    return result
+    return sys.argv[1:]
 
 
 def plot_history(history):
-    """Plot functions graph"""
+    """Plot functions graph."""
+
+    import matplotlib.pyplot as plt
 
     # summarize history for accuracy
-    # plt.subplot(2, 1, 1)
     plt.plot(history.history['acc'])
     plt.plot(history.history['val_acc'])
     plt.axhline(y=0.5, color='grey', linestyle='--')
@@ -47,10 +47,9 @@ def plot_history(history):
     plt.show()
 
     # summarize history for loss
-    # plt.subplot(2, 1, 2)
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
-    plt.axhline(y=0.693, color='grey', linestyle='--')
+    plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.title('Model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
