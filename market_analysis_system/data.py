@@ -18,7 +18,7 @@ from math import exp
 import numpy as np
 
 
-def create_timeseries_matrix(data_x, data_y=[], look_back=3, last_bar_is_new=[]):
+def create_timeseries_matrix(data_x, data_y=[], look_back=3):
     """Converts a dataset into a time series matrix."""
 
     if look_back <= 1:
@@ -40,20 +40,12 @@ def create_timeseries_matrix(data_x, data_y=[], look_back=3, last_bar_is_new=[])
     new_shape = (data_x.shape[0] - look_back + 1, data_x.shape[1] * look_back)
     result = np.reshape(result, new_shape)
 
-    if len(last_bar_is_new) > 0:
-        if len(last_bar_is_new) != data_x.shape[1]:
-            print('create_timeseries_matrix() error = last_bar_is_new list not equal shape of data_x')
-        else:
-            for idx in range(len(last_bar_is_new)):
-                if last_bar_is_new[idx]:
-                    result[:, idx + (look_back - 1) * data_x.shape[1]] = 0.0
-
     return result, data_y[look_back-1:]
 
 
-def dataset_to_traintest(data, ratio=0.6, limit=0):
+def dataset_to_traintest(data, train_ratio=0.6, limit=0):
     """Returns a data set divided into two matrices.
-    train = ratio * data.
+    train = train_ratio * data.
     limit > 0 - limits the size of the dataset."""
 
     data = np.array(data)
@@ -62,13 +54,16 @@ def dataset_to_traintest(data, ratio=0.6, limit=0):
     if limit > 0:
         if size > limit:
             start, size = size - limit, limit
+    elif limit < 0:
+        if size > abs(limit):
+            start, size = 0, abs(limit)
 
-    if ratio <= 0.0:
+    if train_ratio <= 0.0:
         return None, data[start:len(data), :]
-    elif ratio >= 1.0:
+    elif train_ratio >= 1.0:
         return data[start:len(data), :], None
 
-    train_size = int(size * ratio)
+    train_size = int(size * train_ratio)
     # test_size = len(data) - train_size
 
     if len(data.shape) == 1:

@@ -15,8 +15,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-import sys
-sys.path.append('E:/Projects/market-analysis-system/market-analysis-system')
+import market_analysis_system as mas
 from mas.include import get_parameters, plot_history
 from mas.data import create_timeseries_matrix
 from mas.data import get_delta
