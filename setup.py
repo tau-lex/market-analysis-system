@@ -15,7 +15,7 @@ setup(
     license='MIT',
 #    include_package_data=True,
     install_requires=[
-            'numpy', 'pandas', 'matplotlib', 'sklearn',
-            'keras', 'tensorflow'
+            'numpy', 'pandas', 'matplotlib',
+            'scikit-learn', 'keras', 'tensorflow'
         ]
 )

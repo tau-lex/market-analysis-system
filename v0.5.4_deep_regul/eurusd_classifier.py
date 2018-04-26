@@ -15,13 +15,12 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-import market_analysis_system as mas
-from mas.include import get_parameters, plot_history
-from mas.data import create_timeseries_matrix
-from mas.data import get_delta
-from mas.data import get_diff, get_log_diff, get_sigmoid_to_zero
-from mas.models import save_model, load_model
-from mas.classes import signal_to_class, class_to_signal
+from market_analysis_system.include import get_parameters, plot_history
+from market_analysis_system.data import create_timeseries_matrix
+from market_analysis_system.data import get_delta, get_diff, get_log_diff
+from market_analysis_system.data import get_sigmoid_to_zero, get_sigmoid_ration
+from market_analysis_system.models import save_model, load_model
+from market_analysis_system.classes import signal_to_class, class_to_signal
 from sklearn.model_selection import train_test_split
 
 from keras.models import Sequential
@@ -45,10 +44,11 @@ from sklearn.metrics import matthews_corrcoef
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
 # params = get_parameters()
-params = ['EURUSD15', '-train', '-graph']
+params = ['EURUSD15', '-train', '60', '-graph']
+# params = ['EURUSD15', '-predict']
 limit = 5000
 batch_size = 128
-fit_epoch = 200
+fit_epoch = 100
 train_test = 0.2
 ts_lookback = 12
 
@@ -100,7 +100,7 @@ test_y = np.array([])
 history = None
 
 # print('Backend:', backend())
-print('Work file:', workfile)
+print('\nWork file:', workfile)
 
 
 #=============================================================================#
@@ -108,11 +108,11 @@ print('Work file:', workfile)
 #=============================================================================#
 def prepare_data(data):
     # for market(0, 3), ema(4, 7), macd(8, 9)
-    close = data[:, 3]
-    sigm0 = get_sigmoid_to_zero(data[:, 0])
-    sigm1 = get_sigmoid_to_zero(data[:, 1])
-    sigm2 = get_sigmoid_to_zero(data[:, 2])
-    sigm3 = get_sigmoid_to_zero(data[:, 3])
+    sigmoid = get_sigmoid_ration
+    sigm0 = sigmoid(data[:, 0])
+    sigm1 = sigmoid(data[:, 1])
+    sigm2 = sigmoid(data[:, 2])
+    sigm3 = sigmoid(data[:, 3])
     delta_oc = get_delta(data, 0, 3)
     diff1 = get_diff(data[:, 1])
     diff2 = get_diff(data[:, 2])
@@ -120,35 +120,37 @@ def prepare_data(data):
     logdiff1 = get_log_diff(data[:, 1])
     logdiff2 = get_log_diff(data[:, 2])
     logdiff3 = get_log_diff(data[:, 3])
-    detrend1 = close - data[:, 4]
-    detrend2 = close - data[:, 5]
-    ema1 = data[:, 4]
-    ema2 = data[:, 5]
+    detrend1 = get_delta(data, 3, 4) # close - ema13
+    detrend2 = get_delta(data, 3, 5) # close - ema26
     diff_ema1 = get_diff(data[:, 4])
     diff_ema2 = get_diff(data[:, 5])
+    delta_ema1 = get_delta(data, 4, 5)
+    delta_ema2 = get_delta(data, 6, 7)
     #
-    return np.column_stack((sigm0, sigm1, sigm2, sigm3, delta_oc,
+    return np.array(np.column_stack((sigm0, sigm1, sigm2, sigm3, delta_oc,
                             diff1, diff2, diff3,
                             logdiff1, logdiff2, logdiff3,
                             detrend1, detrend2,
                             diff_ema1, diff_ema2,
+                            delta_ema1, delta_ema2,
                             data[:, 8], data[:, 9]
                           ))
+                    )
 
 if run_type == 0:
-    print('\nLoading Data...')
+    print('Loading Data...')
 
     train_data = np.genfromtxt(file_x, delimiter=';')
     target_data = np.genfromtxt(file_y, delimiter=';')
 
     train_data, target_data = train_data[-limit:,], target_data[-limit:]
 
-    data_x = prepare_data(train_data)
+    train_data = prepare_data(train_data)
     data_y = signal_to_class(target_data, n=nclasses, normalize=normalize_class)
-    data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback)
+    data_x, data_y = create_timeseries_matrix(train_data, data_y, ts_lookback)
 
     # batch_input_shape=(batch_size, timesteps, units)
-    data_x = np.reshape(data_x, (data_x.shape[0], ts_lookback, train_data.shape[1]-ts_lookback+1))
+    data_x = np.reshape(data_x, (data_x.shape[0], ts_lookback, train_data.shape[1]))
 
     # For training validation
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
@@ -209,7 +211,7 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc'])
 #       T R A I N I N G                                                       #
 #=============================================================================#
 if run_type == 0:
-    print('\nTraining...')
+    print('Training...')
 
     reduce_lr = ReduceLROnPlateau(factor=0.9, patience=5, min_lr=0.000001, verbose=1)
     checkpointer = ModelCheckpoint(filepath=prefix + workfile + '.hdf5', verbose=0, save_best_only=True)
@@ -230,9 +232,12 @@ if run_type == 0:
 #=============================================================================#
 print('\nPredicting...')
 
-data_xx = prepare_data(np.genfromtxt(file_xx, delimiter=';'))
-data_xx, empty = create_timeseries_matrix(data_xx, look_back=ts_lookback)
-data_xx = np.reshape(data_xx, (data_xx.shape[0], ts_lookback, train_data.shape[1]-ts_lookback+1))
+predict_data = prepare_data(np.genfromtxt(file_xx, delimiter=';'))
+print(predict_data.shape)
+data_xx, empty = create_timeseries_matrix(predict_data, look_back=ts_lookback)
+print(data_xx.shape)
+data_xx = np.reshape(data_xx, (data_xx.shape[0], ts_lookback, predict_data.shape[1]))
+print(data_xx.shape)
 
 model.load_weights(prefix + workfile + '.hdf5')
 
