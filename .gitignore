@@ -1,5 +1,6 @@
 build*/
 __pycache__/
+tmp/
 dist/
 market_analysis_system.egg-info/
 *.autosave
