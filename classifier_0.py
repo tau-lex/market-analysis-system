@@ -103,7 +103,7 @@ print('\nWork file:', workfile)
 #=============================================================================#
 def prepare_data(data):
     # for market(0, 3), ema(4, 7), macd(8, 9)
-    sigmoid = get_sigmoid_ration
+    # sigmoid = get_sigmoid_ration
     # sigm0 = sigmoid(data[:, 0])
     # sigm1 = sigmoid(data[:, 1])
     # sigm2 = sigmoid(data[:, 2])
@@ -115,8 +115,8 @@ def prepare_data(data):
     # logdiff1 = get_log_diff(data[:, 1])
     # logdiff2 = get_log_diff(data[:, 2])
     # logdiff3 = get_log_diff(data[:, 3])
-    # detrend1 = get_delta(data, 3, 4) # close - ema13
-    # detrend2 = get_delta(data, 3, 5) # close - ema26
+    detrend1 = get_delta(data, 3, 4) # close - ema13
+    detrend2 = get_delta(data, 3, 5) # close - ema26
     # diff_ema1 = get_diff(data[:, 4])
     # diff_ema2 = get_diff(data[:, 5])
     # delta_ema1 = get_delta(data, 4, 5)
@@ -126,7 +126,7 @@ def prepare_data(data):
                             delta_oc,
                             diff1, diff2, diff3,
                             # logdiff1, logdiff2, logdiff3,
-                            # detrend1, detrend2,
+                            detrend1, detrend2,
                             # diff_ema1, diff_ema2,
                             # delta_ema1, delta_ema2,
                             # data[:, 8], data[:, 9]
@@ -152,7 +152,6 @@ if run_type == 0:
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
     
     print('Input data shape :', data_x.shape)
-    # print('Input data shape :', data_x.shape[0], data_x.shape[1], data_x.shape[2])
     print('Train/Test :', len(train_y), '/', len(test_y))
 
 
