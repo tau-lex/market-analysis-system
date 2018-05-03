@@ -301,10 +301,10 @@ train_y = class_to_signal(train_y,
 test_y = class_to_signal(test_y,
                             n=nclasses,
                             normalized=normalize_class)
-train_predict = class_to_signal(estimator.predict(train_x).reshape(train_x.shape[0], nclasses),
+train_predict = class_to_signal(estimator.predict(train_x),
                                     n=nclasses,
                                     normalized=normalize_class)
-test_predict = class_to_signal(estimator.predict(test_x).reshape(test_x.shape[0], nclasses),
+test_predict = class_to_signal(estimator.predict(test_x),
                                     n=nclasses,
                                     normalized=normalize_class)
 
