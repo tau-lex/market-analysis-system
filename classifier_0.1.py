@@ -34,6 +34,10 @@ from keras.optimizers import Adam, Nadam, Adagrad, Adamax, Adadelta
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.callbacks import CSVLogger, EarlyStopping
 
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
@@ -187,47 +191,51 @@ init_b = 'random_uniform'
 reg = regularizers.l2
 rs = 0.01
 
-model = Sequential()
-model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1])))
-model.add(Dense(data_x.shape[1], 
-                # activation=fa,
-                kernel_initializer=init,
-                bias_initializer=init_b,
-                # kernel_regularizer=reg(rs)
+def get_model():
+    model = Sequential()
+    model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1])))
+    model.add(Dense(data_x.shape[1], 
+                    # activation=fa,
+                    kernel_initializer=init,
+                    bias_initializer=init_b,
+                    # kernel_regularizer=reg(rs)
+                    )
                 )
-            )
-model.add(LeakyReLU())
-model.add(Dense(50, 
-                # activation=fa,
-                kernel_initializer=init,
-                bias_initializer=init_b,
-                # kernel_regularizer=reg(rs)
+    model.add(LeakyReLU())
+    model.add(Dense(50, 
+                    # activation=fa,
+                    kernel_initializer=init,
+                    bias_initializer=init_b,
+                    # kernel_regularizer=reg(rs)
+                    )
                 )
-            )
-model.add(LeakyReLU())
-model.add(ActivityRegularization(l1=0.01, l2=0.01))
-model.add(Dropout(0.3))
-model.add(Dense(25, 
-                # activation=fa,
-                kernel_initializer=init,
-                bias_initializer=init_b,
-                # kernel_regularizer=reg(rs)
+    model.add(LeakyReLU())
+    model.add(ActivityRegularization(l1=0.01, l2=0.01))
+    model.add(Dropout(0.3))
+    model.add(Dense(25, 
+                    # activation=fa,
+                    kernel_initializer=init,
+                    bias_initializer=init_b,
+                    # kernel_regularizer=reg(rs)
+                    )
                 )
-            )
-model.add(LeakyReLU())
-model.add(ActivityRegularization(l1=0.01, l2=0.01))
-model.add(Dense(nclasses,
-                activation='softmax',
-                kernel_initializer='lecun_normal',
-                bias_initializer=init_b,
-                # kernel_regularizer=regularizers.l2(rs)
+    model.add(LeakyReLU())
+    model.add(ActivityRegularization(l1=0.01, l2=0.01))
+    model.add(Dense(nclasses,
+                    activation='softmax',
+                    kernel_initializer='lecun_normal',
+                    bias_initializer=init_b,
+                    # kernel_regularizer=regularizers.l2(rs)
+                    )
                 )
-            )
+    # opt = SGD(lr=0.1, momentum=0.5, nesterov=True)
+    # opt = Adadelta(lr=0.1) #Adamax, Adadelta
+    opt = Nadam(lr=0.002)
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc']) #, metrics=['acc']
 
-# opt = SGD(lr=0.01, momentum=0.5, nesterov=True)
-# opt = Adadelta(lr=0.1) #Adamax, Adadelta
-opt = Nadam(lr=0.002)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc']) #, metrics=['acc']
+    return model
+
+estimator = KerasClassifier(build_fn=get_model, epochs=100, batch_size=128, verbose=0)
 
 
 #=============================================================================#
@@ -235,17 +243,30 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['acc']) #
 #=============================================================================#
 print('Training...')
 
-reduce_lr = ReduceLROnPlateau(factor=0.05, patience=5, min_lr=0.000001, verbose=1)
+# reduce_lr = ReduceLROnPlateau(factor=0.05, patience=5, min_lr=0.000001, verbose=1)
 # checkpointer = ModelCheckpoint(filepath=(prefix+workfile+"_{epoch:02d}-{val_loss:.2f}"+'.hdf5'), verbose=0, save_best_only=True)
 # es = EarlyStopping(patience=40, min_delta=0.0001)
 
-history = model.fit(train_x, train_y,
-                    batch_size=batch_size,
-                    epochs=fit_epoch,
-                    callbacks=[reduce_lr],
-                    validation_data=(test_x, test_y)
-                    )
+# history = model.fit(train_x, train_y,
+#                     batch_size=batch_size,
+#                     epochs=fit_epoch,
+#                     callbacks=[reduce_lr],
+#                     validation_data=(test_x, test_y)
+#                     )
 
+kfold = KFold(n_splits=10)
+
+results = cross_val_score(estimator,
+                            # X=data_x, y=data_y,
+                            X=train_x, y=train_y,
+                            cv=kfold,
+                            verbose=1,
+                            # fit_params={}
+                            )
+
+print("Baseline: %.2f%% (%.2f%%)" % (results.mean()*100, results.std()*100))
+
+history = estimator.fit(x=train_x, y=train_y, epochs=100)
 
 #=============================================================================#
 #       P R E D I C T I N G                                                   #
@@ -260,11 +281,11 @@ print(data_xx.shape)
 # print(data_xx.shape)
 
 # Prediction model
-data_yy = model.predict(data_xx, batch_size=batch_size)
+data_yy = estimator.predict(data_xx, batch_size=batch_size)
 predicted = data_yy
-data_yy = class_to_signal(data_yy.reshape(data_xx.shape[0], nclasses),
-                           n=nclasses,
-                           normalized=normalize_class)
+# data_yy = class_to_signal(data_yy.reshape(data_xx.shape[0], nclasses),
+#                            n=nclasses,
+#                            normalized=normalize_class)
 
 np.savetxt(file_yy, data_yy, fmt='%.2f', delimiter=';')
 print("Predict saved:\n", file_yy)
@@ -280,12 +301,13 @@ train_y = class_to_signal(train_y,
 test_y = class_to_signal(test_y,
                             n=nclasses,
                             normalized=normalize_class)
-train_predict = class_to_signal(model.predict(train_x).reshape(train_x.shape[0], nclasses),
+train_predict = class_to_signal(estimator.predict(train_x).reshape(train_x.shape[0], nclasses),
                                     n=nclasses,
                                     normalized=normalize_class)
-test_predict = class_to_signal(model.predict(test_x).reshape(test_x.shape[0], nclasses),
+test_predict = class_to_signal(estimator.predict(test_x).reshape(test_x.shape[0], nclasses),
                                     n=nclasses,
                                     normalized=normalize_class)
+
 train_score = math.sqrt(mean_squared_error(train_y, train_predict))
 print('\nTrain Score: %.6f RMSE' % (train_score))
 test_score = math.sqrt(mean_squared_error(test_y, test_predict))
