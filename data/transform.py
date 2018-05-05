@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import os
-import numpy as np
 import pandas as pd
-from datetime import datetime
 
 
 def get_script_dir(follow_symlinks=True):
@@ -23,21 +21,15 @@ directory = get_script_dir()
 
 files = os.listdir(directory + '/exported')
 
-files_tf_one = list(filter(lambda x: x.endswith('240.csv'), files))
+files_tf_one = list(filter(lambda x: x.endswith('.csv'), files))
 
-print(files_tf_one)
+# print(files_tf_one)
 
+for filename in files_tf_one:
+    table = pd.read_csv(directory + '/exported/' + filename, sep=',', header=None)
 
-# for filename in files_tf_one:
-filename = files_tf_one[0]
-table = 
+    table[1] = pd.to_datetime(table[0] + ' ' + table[1])
+    del table[0]
 
-print(table)
-#datetime.strptime('Jun 1 2005  1:33PM', '%b %d %Y %I:%M%p')
-# new_table = np.column_stack((np.array(list(map(lambda x: datetime.strptime(x, '%Y.%m.%d'), table[:, 0].astype(np.str)))) + 
-#                              np.array(list(map(lambda x: datetime.strptime(x, '%H:%M'), table[:, 1].astype(np.str)))),
-#                              table[:, 2:]
-#                             ))
-
-np.savetxt(directory + '/transformed/' + filename, table, delimiter=';')
-
+    table.to_csv(directory + '/transformed/' + filename, sep=';', header=False, index=False,
+                    date_format="%Y.%m.%d %H:%M")
