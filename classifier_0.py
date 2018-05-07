@@ -102,34 +102,54 @@ print('\nWork file:', workfile)
 #       L O A D   D A T A                                                     #
 #=============================================================================#
 def prepare_data(data):
-    # for market(0, 3), ema(4, 7), macd(8, 9)
-    # sigmoid = get_sigmoid_ration
-    # sigm0 = sigmoid(data[:, 0])
-    # sigm1 = sigmoid(data[:, 1])
-    # sigm2 = sigmoid(data[:, 2])
-    # sigm3 = sigmoid(data[:, 3])
-    delta_oc = get_delta(data, 0, 3)
-    diff1 = get_diff(data[:, 1])
-    diff2 = get_diff(data[:, 2])
-    diff3 = get_diff(data[:, 3])
-    # logdiff1 = get_log_diff(data[:, 1])
-    # logdiff2 = get_log_diff(data[:, 2])
-    # logdiff3 = get_log_diff(data[:, 3])
-    detrend1 = get_delta(data, 3, 4) # close - ema13
-    detrend2 = get_delta(data, 3, 5) # close - ema26
-    # diff_ema1 = get_diff(data[:, 4])
-    # diff_ema2 = get_diff(data[:, 5])
-    # delta_ema1 = get_delta(data, 4, 5)
-    # delta_ema2 = get_delta(data, 6, 7)
+    # for time(0, 6), market(7, 10), ema(11, 14), macd(15, 16)
+    # for atr(17), cci(18), rsi(19), usdx(20), eurx(21)
     #
-    return np.array(np.column_stack(( #sigm1, sigm2, sigm3, #sigm0,
-                            delta_oc,
+    # delta = get_delta(data, 7, 10)
+    # sigmoid = get_sigmoid_to_zero
+    # sigmoid = get_sigmoid_ration
+    # sigm1 = sigmoid(data[:, 8])
+    # sigm2 = sigmoid(data[:, 9])
+    # sigm3 = sigmoid(data[:, 10])
+    diff1 = get_diff(data[:, 8])
+    diff2 = get_diff(data[:, 9])
+    diff3 = get_diff(data[:, 10])
+    # logdiff1 = get_log_diff(data[:, 8])
+    # logdiff2 = get_log_diff(data[:, 9])
+    # logdiff3 = get_log_diff(data[:, 10])
+    detrend1 = get_delta(data, 10, 11) # close - ema13
+    detrend2 = get_delta(data, 10, 12) # close - ema26
+    #
+    # edelta1 = get_delta(data, 11, 12)
+    # edelta2 = get_delta(data, 13, 14)
+    # ediff1 = get_diff(data[:, 11])
+    # ediff2 = get_diff(data[:, 12])
+    # elogdiff1 = get_log_diff(data[:, 11])
+    # elogdiff2 = get_log_diff(data[:, 12])
+    #
+    # xdelta = get_delta(data, 20, 21)
+    xdiff1 = get_diff(data[:, 20])
+    xdiff2 = get_diff(data[:, 21])
+    # xlogdiff1 = get_log_diff(data[:, 20])
+    # xlogdiff2 = get_log_diff(data[:, 21])
+    return np.array(np.column_stack((
+                            # data[:, 5:6], # hours and minutes
+                            # data[:, 8:11], # prices (without open)
+                            # delta,
+                            # sigm1, sigm2, sigm3,
                             diff1, diff2, diff3,
                             # logdiff1, logdiff2, logdiff3,
                             detrend1, detrend2,
-                            # diff_ema1, diff_ema2,
-                            # delta_ema1, delta_ema2,
-                            # data[:, 8], data[:, 9]
+                            # data[:, 11:15], # ema's
+                            # edelta1, edelta2,
+                            # ediff1, ediff2,
+                            # elogdiff1, elogdiff2,
+                            # data[:, 15:17], # macd
+                            data[:, 17:20], # atr, cci, rsi
+                            # data[:, 20:22], # usd and eur indexes
+                            # xdelta,
+                            # xdiff1, xdiff2,
+                            # xlogdiff1, xlogdiff2,
                           ))
                     )
 
@@ -162,11 +182,11 @@ if run_type == 0:
     print('\nCreating Model...')
 
     batch_size = 256
-    fa = 'relu'
+    fa = 'tanh'
     init = 'lecun_normal' #'lecun_uniform' #'random_uniform'
     init_b = 'random_uniform'
     reg = regularizers.l2
-    rs = 0.001
+    rs = 0.01
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1])))
@@ -178,14 +198,16 @@ if run_type == 0:
                     )
                 )
     model.add(LeakyReLU())
-    model.add(Dense(50, 
-                    # activation=fa,
-                    kernel_initializer=init,
-                    bias_initializer=init_b,
-                    kernel_regularizer=reg(rs)
-                    )
-                )
-    model.add(LeakyReLU())
+    # model.add(Dense(50, 
+    #                 # activation=fa,
+    #                 kernel_initializer=init,
+    #                 bias_initializer=init_b,
+    #                 kernel_regularizer=reg(rs)
+    #                 )
+    #             )
+    # model.add(LeakyReLU())
+    model.add(ActivityRegularization(l1=0.01, l2=0.01))
+    model.add(Dropout(0.3))
     model.add(Dense(25, 
                     # activation=fa,
                     kernel_initializer=init,
@@ -219,8 +241,8 @@ if run_type == 0:
     print('Training...')
 
     reduce_lr = ReduceLROnPlateau(factor=0.05, patience=5, min_lr=0.000001, verbose=1)
-    checkpointer = ModelCheckpoint(filepath=(prefix+workfile+"_{epoch:02d}-{val_loss:.2f}"+'.hdf5'), verbose=0, save_best_only=True)
-    es = EarlyStopping(patience=40, min_delta=0.0001)
+    # checkpointer = ModelCheckpoint(filepath=(prefix+workfile+"_{epoch:02d}-{val_loss:.2f}"+'.hdf5'), verbose=0, save_best_only=True)
+    # es = EarlyStopping(patience=40, min_delta=0.0001)
 
     history = model.fit(train_x, train_y,
                         batch_size=batch_size,
