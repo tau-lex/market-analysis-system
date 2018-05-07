@@ -29,7 +29,7 @@ for filename in files_tf_one:
     table = pd.read_csv(directory + '/exported/' + filename, sep=',', header=None)
 
     table[1] = pd.to_datetime(table[0] + ' ' + table[1])
-    del table[0]
+    table.drop([0], axis='columns')
 
     table.to_csv(directory + '/transformed/' + filename, sep=';', header=False, index=False,
                     date_format="%Y.%m.%d %H:%M")

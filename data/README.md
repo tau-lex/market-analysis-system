@@ -1,0 +1,1 @@
+To download the history of the major fx pairs, follow the link: https://goo.gl/q4S5Qu
