@@ -106,36 +106,47 @@ def prepare_data(data):
     # for time(0, 6), market(7, 10), ema(11, 14), macd(15, 16)
     # for atr(17), cci(18), rsi(19), usdx(20), eurx(21)
     #
-    delta = get_delta(data, 7, 10)
-    # diff1 = get_diff(data[:, 8])
-    # diff2 = get_diff(data[:, 9])
-    # diff3 = get_diff(data[:, 10])
-    logdiff1 = get_log_diff(data[:, 8])
-    logdiff2 = get_log_diff(data[:, 9])
-    logdiff3 = get_log_diff(data[:, 10])
+    # delta = get_delta(data, 7, 10)
+    # sigmoid = get_sigmoid_to_zero
+    # sigmoid = get_sigmoid_ration
+    # sigm1 = sigmoid(data[:, 8])
+    # sigm2 = sigmoid(data[:, 9])
+    # sigm3 = sigmoid(data[:, 10])
+    diff1 = get_diff(data[:, 8])
+    diff2 = get_diff(data[:, 9])
+    diff3 = get_diff(data[:, 10])
+    # logdiff1 = get_log_diff(data[:, 8])
+    # logdiff2 = get_log_diff(data[:, 9])
+    # logdiff3 = get_log_diff(data[:, 10])
     detrend1 = get_delta(data, 10, 11) # close - ema13
     detrend2 = get_delta(data, 10, 12) # close - ema26
     #
+    # edelta1 = get_delta(data, 11, 12)
+    # edelta2 = get_delta(data, 13, 14)
     # ediff1 = get_diff(data[:, 11])
     # ediff2 = get_diff(data[:, 12])
-    # ediff3 = get_diff(data[:, 13])
-    elogdiff1 = get_log_diff(data[:, 11])
-    elogdiff2 = get_log_diff(data[:, 12])
-    elogdiff3 = get_log_diff(data[:, 13])
+    # elogdiff1 = get_log_diff(data[:, 11])
+    # elogdiff2 = get_log_diff(data[:, 12])
     #
-    # xdiff1 = get_diff(data[:, 20])
-    # xdiff2 = get_diff(data[:, 21])
+    # xdelta = get_delta(data, 20, 21)
+    xdiff1 = get_diff(data[:, 20])
+    xdiff2 = get_diff(data[:, 21])
+    # xlogdiff1 = get_log_diff(data[:, 20])
+    # xlogdiff2 = get_log_diff(data[:, 21])
     return np.array(np.column_stack((
                             # data[:, 5:6], # hours and minutes
-                            # data[:, 8:11], # prices (without open)
-                            delta,
+                            data[:, 8:11], # prices (without open)
+                            # delta,
+                            # sigm1, sigm2, sigm3,
                             # diff1, diff2, diff3,
                             # logdiff1, logdiff2, logdiff3,
-                            detrend1, detrend2,
-                            # ediff1, ediff2, ediff3,
-                            # elogdiff1, elogdiff2, elogdiff3,
+                            # detrend1, detrend2,
+                            data[:, 11:15], # ema's
+                            # edelta1, edelta2,
+                            # ediff1, ediff2,
+                            # elogdiff1, elogdiff2,
                             # data[:, 15:17], # macd
-                            data[:, 17:19], data[:, 19]-50, # atr, cci, rsi
+                            # data[:, 17:20], # atr, cci, rsi
                             # data[:, 20:22], # usd and eur indexes
                             # xdelta,
                             # xdiff1, xdiff2,

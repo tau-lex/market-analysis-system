@@ -173,7 +173,7 @@ if run_type == 0:
     print('\nCreating Model...')
 
     batch_size = 256
-    fa = 'elu'
+    fa = 'tanh'
     init = 'lecun_normal' #'lecun_uniform' #'random_uniform'
     init_b = 'random_uniform'
     reg = regularizers.l2
