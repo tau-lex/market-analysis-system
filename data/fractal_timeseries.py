@@ -24,7 +24,7 @@ files = os.listdir(directory + '/transformed')
 
 # '1', '5' and not x[6:8].isdigit(), '15', '30', '60',
 # '240', '1440', '10080', '43200'
-minor, major = '240', '1440'
+minor, major = '15', '60'
 files_minor = list(filter(lambda x: x.endswith(minor+'.csv'), files))
 files_major = list(filter(lambda x: x.endswith(major+'.csv'), files))
 
