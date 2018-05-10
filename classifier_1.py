@@ -50,7 +50,7 @@ limit = 8000
 batch_size = 256
 fit_epoch = 100
 train_test = 0.2
-ts_lookback = 12
+ts_lookback = 6
 
 nclasses = 3
 normalize_class = True
@@ -153,6 +153,7 @@ if run_type == 0:
 
     data_x = prepare_data(train_data)
     data_y = signal_to_class(target_data, n=nclasses, normalize=normalize_class)
+    data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback)
 
     # For training validation
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
@@ -161,10 +162,9 @@ if run_type == 0:
     print('Train/Test :', len(train_y), '/', len(test_y))
 
 
-#=============================================================================#
-#       P R E P A R E   M O D E L                                             #
-#=============================================================================#
-if run_type == 0:
+    #=============================================================================#
+    #       P R E P A R E   M O D E L                                             #
+    #=============================================================================#
     print('\nCreating Model...')
 
     batch_size = 256
@@ -192,13 +192,6 @@ if run_type == 0:
     model.add(LeakyReLU())
     # model.add(ActivityRegularization(l1=0.01, l2=0.01))
     # model.add(Dropout(0.3))
-    model.add(Dense(32, 
-                    # activation=fa,
-                    # kernel_initializer=init,
-                    # bias_initializer=init_b,
-                    # kernel_regularizer=reg(rs)
-                    ))
-    model.add(LeakyReLU())
     model.add(Dense(nclasses,
                     activation='softmax',
                     # kernel_initializer='lecun_uniform',
@@ -242,13 +235,14 @@ if run_type == 0:
 print('\nPredicting...')
 
 data_xx = prepare_data(np.genfromtxt(file_xx, delimiter=';'))
+data_xx, empty = create_timeseries_matrix(data_xx, look_back=ts_lookback)
 print(data_xx.shape)
 
 if run_type == 1:
     model.load_weights(prefix + workfile + '.hdf5')
 
 # Prediction model
-data_yy = model.predict(data_xx, batch_size=batch_size)
+data_yy = model.predict(data_xx)
 predicted = data_yy
 data_yy = class_to_signal(data_yy.reshape(data_xx.shape[0], nclasses),
                            n=nclasses,
