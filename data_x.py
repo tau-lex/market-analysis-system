@@ -24,7 +24,7 @@ np.random.seed(13)
 
 
 path = 'C:/Users/Alexey/AppData/Roaming/MetaQuotes/Terminal/287469DEA9630EA94D0715D755974F1B/MQL4/Files/ML-Assistant/'
-workfile = 'EURUSD15'
+workfile = 'EURUSD30'
 file_x = path + workfile + '_x.csv'
 file_y = path + workfile + '_y.csv'
 prefix = 'tmp/data_x_'
@@ -76,11 +76,15 @@ data_x, data_y = create_timeseries_matrix(train_data, data_y, ts_lookback)
 # batch_input_shape=(batch_size, timesteps, units)
 # data_x = np.reshape(data_x, (data_x.shape[0], ts_lookback, train_data.shape[1]))
 
+sum(data_y[:, 0] == 1)
+sum(data_y[:, 1] == 1)
+sum(data_y[:, 2] == 1)
+
 # For training validation
 train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
 
-print('Input data shape :', data_x.shape)
-# print('Input data shape :', data_x.shape[0], data_x.shape[1], data_x.shape[2])
+print('Features data shape :', data_x.shape)
+print('Target data shape :', data_x.shape)
 print('Train/Test :', len(train_y), '/', len(test_y))
 
 
