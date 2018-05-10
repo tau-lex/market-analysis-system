@@ -59,7 +59,7 @@ def plot_history(history):
     # summarize history for accuracy
     plt.plot(history.history['acc'])
     plt.plot(history.history['val_acc'])
-    plt.axhline(y=0.5, color='grey', linestyle='--')
+    # plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.title('Model accuracy')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
@@ -69,7 +69,7 @@ def plot_history(history):
     # summarize history for loss
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
-    plt.axhline(y=0.5, color='grey', linestyle='--')
+    # plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.title('Model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
