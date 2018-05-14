@@ -58,6 +58,20 @@ def signal_to_class(data, n=2, normalize=True):
                     result = np.append(result, [0.0, (1.0-abs(item)), abs(item)])
                 if item == 0:       # pass
                     result = np.append(result, [0.0, 1.0, 0.0])
+    elif n == 6:
+        for item in data:
+            if item >= 0.9:
+                result = np.append(result, [1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            elif item >= 0.6:
+                result = np.append(result, [0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
+            elif item >= 0.0:
+                result = np.append(result, [0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
+            elif item >= -0.4:
+                result = np.append(result, [0.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+            elif item >= -0.7:
+                result = np.append(result, [0.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+            else:
+                result = np.append(result, [0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
 
     return np.reshape(result, (data.shape[0], n))
 
@@ -91,6 +105,21 @@ def class_to_signal(data, n=2, normalized=True):
                     result = np.append(result, -item[2])
                 elif item[1] > item[0] and item[1] > item[2]:
                     result = np.append(result, 0.0)
+    elif n == 6:
+        for item in data:
+            _class = np.argmax(item)
+            if _class == 0:
+                result = np.append(result, 1.0)
+            elif _class == 1:
+                result = np.append(result, 0.66)
+            elif _class == 2:
+                result = np.append(result, 0.33)
+            elif _class == 3:
+                result = np.append(result, -0.33)
+            elif _class == 4:
+                result = np.append(result, -0.66)
+            elif _class == 5:
+                result = np.append(result, -1.0)
 
     return result
 

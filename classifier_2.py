@@ -54,7 +54,7 @@ fit_epoch = 100
 train_test = 0.2
 ts_lookback = 6
 
-nclasses = 3
+nclasses = 6
 normalize_class = True
 
 run_type = 0
@@ -178,11 +178,11 @@ if run_type == 0:
 
     batch_size = 256
     fa = 'elu'
-    init = 'lecun_normal' #'lecun_uniform' #'random_uniform'
+    init = 'lecun_uniform'
     init_b = 'random_uniform'
     reg = regularizers.l2
     rs = 0.01
-    Rcrnt = LSTM
+    Rcrnt = GRU
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, ts_lookback, shape_x[1])))
@@ -271,12 +271,8 @@ print("Predict saved:\n", file_yy)
 #       P L O T                                                               #
 #=============================================================================#
 if graph:
-    test_y = class_to_signal(test_y,
-                               n=nclasses,
-                               normalized=normalize_class)
-    test_yy = class_to_signal(model.predict(test_x).reshape(test_x.shape[0], nclasses),
-                                       n=nclasses,
-                                       normalized=normalize_class)
+    test_y = np.argmax(test_y)
+    test_yy = np.argmax(model.predict(test_x).reshape(test_x.shape[0], nclasses))
 
     print('-' * 20)
     print('\nMATTHEWS CORRELATION')
