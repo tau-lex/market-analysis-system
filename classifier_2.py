@@ -20,7 +20,7 @@ from market_analysis_system.data import create_timeseries_matrix
 from market_analysis_system.data import get_delta, get_diff, get_log_diff
 from market_analysis_system.data import get_sigmoid_to_zero, get_sigmoid_ration
 from market_analysis_system.models import save_model, load_model
-from market_analysis_system.classes import signal_to_class, class_to_signal
+from market_analysis_system.classes import signal_to_class, class_to_signal, print_classification_scores
 from sklearn.model_selection import train_test_split
 
 from keras.models import Sequential
@@ -35,11 +35,6 @@ from keras.optimizers import RMSprop, SGD
 from keras.optimizers import Adam, Nadam, Adagrad, Adamax, Adadelta
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.callbacks import CSVLogger, EarlyStopping
-
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
-from sklearn.metrics import matthews_corrcoef
 
 
 #=============================================================================#
@@ -118,8 +113,8 @@ def prepare_data(data):
     # logdiff1 = get_log_diff(data[:, mrkt[1]])
     # logdiff2 = get_log_diff(data[:, mrkt[2]])
     # logdiff3 = get_log_diff(data[:, mrkt[3]])
-    # detrend1 = get_delta(data, 10, 11) # close - ema13
-    # detrend2 = get_delta(data, 10, 12) # close - ema26
+    detrend1 = get_delta(data, mrkt[3], ema[0]) # close - ema13
+    detrend2 = get_delta(data, mrkt[3], ema[1]) # close - ema26
     #
     ediff1 = get_diff(data[:, ema[0]])
     ediff2 = get_diff(data[:, ema[1]])
@@ -133,7 +128,7 @@ def prepare_data(data):
                             # delta,
                             diff1, diff2, diff3,
                             # logdiff1, logdiff2, logdiff3,
-                            # detrend1, detrend2,
+                            detrend1, detrend2,
                             ediff1, ediff2, ediff3,
                             # elogdiff1, elogdiff2, elogdiff3,
                             # data[:, 15:17], # macd
@@ -188,21 +183,29 @@ if run_type == 0:
     model.add(BatchNormalization(batch_input_shape=(None, ts_lookback, shape_x[1])))
     model.add(Rcrnt(50,
                     return_sequences=True,
-                    # activation=fa,
-                    kernel_initializer=init,
+                    activation=fa,
+                    # kernel_initializer=init,
                     # bias_initializer=init_b,
                     # kernel_regularizer=reg(rs)
                     ))
-    model.add(LeakyReLU())
-    model.add(Dropout(0.3))
-    model.add(Rcrnt(32, 
-                    # activation=fa,
-                    kernel_initializer=init,
-                    # bias_initializer=init_b,
-                    # kernel_regularizer=reg(rs)
-                    ))
-    model.add(LeakyReLU())
+#    model.add(LeakyReLU())
     # model.add(ActivityRegularization(l1=0.01, l2=0.01))
+    model.add(Rcrnt(32,
+                    return_sequences=True,
+                    activation=fa,
+                    # kernel_initializer=init,
+                    # bias_initializer=init_b,
+                    # kernel_regularizer=reg(rs)
+                    ))
+#    model.add(LeakyReLU())
+    model.add(Dropout(0.3))
+    model.add(Rcrnt(32,
+                    activation=fa,
+                    # kernel_initializer=init,
+                    # bias_initializer=init_b,
+                    # kernel_regularizer=reg(rs)
+                    ))
+#    model.add(LeakyReLU())
     model.add(Dropout(0.5))
     model.add(Dense(nclasses,
                     activation='softmax',
@@ -229,7 +232,7 @@ if run_type == 0:
 
     reduce_lr = ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.00001, verbose=1)
     # checkpointer = ModelCheckpoint(filepath=(prefix+workfile+"_{epoch:02d}-{val_loss:.2f}"+'.hdf5'), verbose=0, save_best_only=True)
-    es = EarlyStopping(patience=20, min_delta=0.0001)
+    es = EarlyStopping(patience=20, min_delta=0.001)
 
     history = model.fit(train_x, train_y,
                         batch_size=batch_size,
@@ -271,24 +274,16 @@ print("Predict saved:\n", file_yy)
 #       P L O T                                                               #
 #=============================================================================#
 if graph:
-    test_y = np.argmax(test_y)
-    test_yy = np.argmax(model.predict(test_x).reshape(test_x.shape[0], nclasses))
+    test_y_ = [np.argmax(x) for x in test_y]
+    test_yy = [np.argmax(x) for x in model.predict(test_x).reshape(test_x.shape[0], nclasses)]
 
-    print('-' * 20)
-    print('\nMATTHEWS CORRELATION')
-    print(matthews_corrcoef(test_y, test_yy))
-    CM = confusion_matrix(test_y, test_yy, labels=[1, 0, -1])
-    print('\nCONFUSION MATRIX')
-    print(CM / CM.astype(np.float).sum(axis=1))
-    print('\nCLASSIFICATION REPORT')
-    print(classification_report(test_y, test_yy, labels=[1, 0, -1], target_names=['buy', 'hold', 'sell']))
-    print('-' * 20)
+    print_classification_scores(test_y_, test_yy, nclasses)
 
     plt.plot(predicted)
     plt.title('Predict')
     plt.ylabel('class')
     plt.xlabel('bar')
-    plt.legend(['buy', 'hold', 'sell'])
+    plt.legend(['buy', 'med', 'hold', '-hold', '-med', 'sell'])
     plt.show()
 
     plt.plot(data_yy)

@@ -20,12 +20,13 @@ from market_analysis_system.data import create_timeseries_matrix
 from market_analysis_system.data import get_delta, get_diff, get_log_diff
 from market_analysis_system.data import get_sigmoid_to_zero, get_sigmoid_ration
 from market_analysis_system.models import save_model, load_model
-from market_analysis_system.classes import signal_to_class, class_to_signal
+from market_analysis_system.classes import signal_to_class, class_to_signal, print_classification_scores
 from sklearn.model_selection import train_test_split
 
 from keras.models import Sequential
 from keras.layers import BatchNormalization
-from keras.layers import Convolution1D, MaxPooling1D
+from keras.layers import Conv1D, MaxPooling1D
+from keras.layers import AveragePooling1D, GlobalMaxPooling1D, GlobalAveragePooling1D
 from keras.layers import Dense, Activation
 from keras.layers import LSTM, GRU
 from keras.layers import LeakyReLU
@@ -53,9 +54,9 @@ limit = 8000
 batch_size = 256
 fit_epoch = 100
 train_test = 0.2
-ts_lookback = 6
+ts_lookback = 9
 
-nclasses = 3
+nclasses = 6
 normalize_class = True
 
 run_type = 0
@@ -112,15 +113,15 @@ def prepare_data(data):
     # for market(0, 3), ema(4, 7),
     # for atr(8), cci(9), rsi(10)
     mrkt, ema = range(4), range(4, 8)
-    # delta = get_delta(data, mrkt[0], mrkt[3])
+    delta = get_delta(data, mrkt[0], mrkt[3])
     diff1 = get_diff(data[:, mrkt[1]])
     diff2 = get_diff(data[:, mrkt[2]])
     diff3 = get_diff(data[:, mrkt[3]])
     # logdiff1 = get_log_diff(data[:, mrkt[1]])
     # logdiff2 = get_log_diff(data[:, mrkt[2]])
     # logdiff3 = get_log_diff(data[:, mrkt[3]])
-    # detrend1 = get_delta(data, 10, 11) # close - ema13
-    # detrend2 = get_delta(data, 10, 12) # close - ema26
+    detrend1 = get_delta(data, mrkt[3], ema[0]) # close - ema13
+    detrend2 = get_delta(data, mrkt[3], ema[1]) # close - ema26
     #
     ediff1 = get_diff(data[:, ema[0]])
     ediff2 = get_diff(data[:, ema[1]])
@@ -131,14 +132,14 @@ def prepare_data(data):
     return np.array(np.column_stack((
                             # data[:, 5:6], # hours and minutes
                             # data[:, 8:11], # prices (without open)
-                            # delta,
+                            delta,
                             diff1, diff2, diff3,
                             # logdiff1, logdiff2, logdiff3,
-                            # detrend1, detrend2,
+                            detrend1, detrend2,
                             ediff1, ediff2, ediff3,
                             # elogdiff1, elogdiff2, elogdiff3,
                             # data[:, 15:17], # macd
-                            # data[:, 17:19], data[:, 19]-50, # atr, cci, rsi
+                            data[:, 8:10], data[:, 10]-50, # atr, cci, rsi
                             # data[:, 20:22], # usd and eur indexes
                           ))
                     )
@@ -154,7 +155,7 @@ def prepare_target(data, close_index=3, classes=6):
     data = np.array(data)
     new_target = data[1:, close_index] / data[:-1, close_index]
     new_target = np.insert(new_target, obj=0, values=[1.0])
-    # 
+    #
     n, bins = np.histogram(new_target, bins=200, range=(0.99, 1.01))
     #
     sixth = sum(n) / classes
@@ -180,7 +181,7 @@ def prepare_target(data, close_index=3, classes=6):
             break
     #
     def select(a):
-        a > point[2]
+        a > points[2]
         return 1
     new_target = [select(x) for x in new_target]
 
@@ -205,7 +206,7 @@ if run_type == 0:
 
     # For training validation
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
-    
+
     print('Input data shape :', data_x.shape)
     print('Train/Test :', len(train_y), '/', len(test_y))
 
@@ -216,20 +217,16 @@ if run_type == 0:
     print('\nCreating Model...')
 
     batch_size = 256
-    fa = 'elu'
+    fa = 'tanh'
     init = 'lecun_normal' #'lecun_uniform' #'random_uniform'
     init_b = 'random_uniform'
     reg = regularizers.l2
     rs = 0.01
+    Pooling = MaxPooling1D#GlobalMaxPooling1D # GlobalAveragePooling1D
     Rcrnt = LSTM
 
     # model.add(Convolution1D(input_shape = (WINDOW, EMB_SIZE),
     #                         nb_filter=16,
-    #                         filter_length=4,
-    #                         border_mode='same'))
-    # model.add(MaxPooling1D(2))
-    # model.add(LeakyReLU())
-    # model.add(Convolution1D(nb_filter=32,
     #                         filter_length=4,
     #                         border_mode='same'))
     # model.add(MaxPooling1D(2))
@@ -242,47 +239,38 @@ if run_type == 0:
     #                     border_mode='same'))
     # model.add(BatchNormalization())
     # model.add(LeakyReLU())
-    # model.add(Dropout(0.5))
-
-    # model.add(Convolution1D(nb_filter=8,
-    #                         filter_length=4,
-    #                         border_mode='same'))
-    # model.add(BatchNormalization())
-    # model.add(LeakyReLU())
-    # model.add(Dropout(0.5))
-
     # model.add(Flatten())
-    
+
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, ts_lookback, shape_x[1])))
-    model.add(Convolution1D(#input_shape = (None, ts_lookback, shape_x[1]),
-                            nb_filter=16,
-                            filter_length=4,
-                            padding='same'))
-    model.add(MaxPooling1D(2))
+    model.add(Conv1D(#input_shape = (None, ts_lookback, shape_x[1]),
+                     filters=36,
+                     kernel_size=3,
+                     padding='same'))
+    model.add(Pooling(2))
     model.add(LeakyReLU())
-    model.add(Convolution1D(nb_filter=32,
-                            filter_length=4,
-                            padding='same'))
-    model.add(MaxPooling1D(2))
+    model.add(Conv1D(filters=16,
+                     kernel_size=3,
+                     padding='same'))
+    model.add(Pooling(2))
     model.add(LeakyReLU())
     # model.add(Flatten())
-    # model.add(Rcrnt(50,
-    #                 return_sequences=True,
-    #                 # activation=fa,
-    #                 kernel_initializer=init,
-    #                 # bias_initializer=init_b,
-    #                 # kernel_regularizer=reg(rs)
-    #                 ))
-    # model.add(LeakyReLU())
-    # model.add(Dropout(0.3))
-    model.add(Rcrnt(32, 
-                    # activation=fa,
+    model.add(Rcrnt(50,
+                    return_sequences=True,
+                    activation=fa,
                     kernel_initializer=init,
                     # bias_initializer=init_b,
                     # kernel_regularizer=reg(rs)
                     ))
-    model.add(LeakyReLU())
+#    model.add(LeakyReLU())
+    model.add(Dropout(0.3))
+    model.add(Rcrnt(32,
+                    activation=fa,
+                    kernel_initializer=init,
+                    # bias_initializer=init_b,
+                    # kernel_regularizer=reg(rs)
+                    ))
+#    model.add(LeakyReLU())
     # model.add(ActivityRegularization(l1=0.01, l2=0.01))
     model.add(Dropout(0.5))
     model.add(Dense(nclasses,
@@ -352,22 +340,10 @@ print("Predict saved:\n", file_yy)
 #       P L O T                                                               #
 #=============================================================================#
 if graph:
-    test_y = class_to_signal(test_y,
-                               n=nclasses,
-                               normalized=normalize_class)
-    test_yy = class_to_signal(model.predict(test_x).reshape(test_x.shape[0], nclasses),
-                                       n=nclasses,
-                                       normalized=normalize_class)
+    test_y = [np.argmax(x) for x in test_y]
+    test_yy = [np.argmax(x) for x in model.predict(test_x).reshape(test_x.shape[0], nclasses)]
 
-    print('-' * 20)
-    print('\nMATTHEWS CORRELATION')
-    print(matthews_corrcoef(test_y, test_yy))
-    CM = confusion_matrix(test_y, test_yy, labels=[1, 0, -1])
-    print('\nCONFUSION MATRIX')
-    print(CM / CM.astype(np.float).sum(axis=1))
-    print('\nCLASSIFICATION REPORT')
-    print(classification_report(test_y, test_yy, labels=[1, 0, -1], target_names=['buy', 'hold', 'sell']))
-    print('-' * 20)
+    print_classification_scores(test_y_, test_yy, nclasses)
 
     plt.plot(predicted)
     plt.title('Predict')

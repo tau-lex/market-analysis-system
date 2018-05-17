@@ -22,7 +22,7 @@ def signal_to_class(data, n=2, normalize=True):
     normalize = True, it normalizes to unity.
     normalize = False, the signal changes only the sign."""
 
-    result = np.array([], ndmin=n)
+    result = np.array([])
     data = np.array(data)
 
     if len(data.shape) > 1:
@@ -60,20 +60,20 @@ def signal_to_class(data, n=2, normalize=True):
                     result = np.append(result, [0.0, 1.0, 0.0])
     elif n == 6:
         for item in data:
-            if item >= 0.9:
+            if item >= 0.8 and item <= 1.0:
                 result = np.append(result, [1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-            elif item >= 0.6:
+            elif item >= 0.4 and item < 0.8:
                 result = np.append(result, [0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
-            elif item >= 0.0:
+            elif item >= 0.0 and item < 0.4:
                 result = np.append(result, [0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
-            elif item >= -0.4:
+            elif item > -0.4 and item < 0.0:
                 result = np.append(result, [0.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-            elif item >= -0.7:
+            elif item > -0.8 and item <= 0.4:
                 result = np.append(result, [0.0, 0.0, 0.0, 0.0, 1.0, 0.0])
-            else:
+            elif item >= -1.0 and item <= 0.8:
                 result = np.append(result, [0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
 
-    return np.reshape(result, (data.shape[0], n))
+    return result.reshape((data.shape[0], n))
 
 
 def class_to_signal(data, n=2, normalized=True):
@@ -122,4 +122,44 @@ def class_to_signal(data, n=2, normalized=True):
                 result = np.append(result, -1.0)
 
     return result
+
+def print_classification_scores(true_y, test_y, n=3):
+    """"""
+
+    from sklearn.metrics import confusion_matrix
+    from sklearn.metrics import classification_report
+    from sklearn.metrics import matthews_corrcoef
+
+    print('-' * 20)
+    if n == 2:
+        print('\nMATTHEWS CORRELATION')
+        print(matthews_corrcoef(true_y, test_y))
+        CM = confusion_matrix(true_y, test_y, labels=[0, 1])
+        print('\nCONFUSION MATRIX')
+        print(CM / CM.astype(np.float).sum(axis=1))
+        print('\nCLASSIFICATION REPORT')
+        print(classification_report(true_y, test_y,
+                                    labels=[0, 1],
+                                    target_names=['zero', 'one']))
+    elif n == 3:
+        print('\nMATTHEWS CORRELATION')
+        print(matthews_corrcoef(true_y, test_y))
+        CM = confusion_matrix(true_y, test_y, labels=[1, 0, -1])
+        print('\nCONFUSION MATRIX')
+        print(CM / CM.astype(np.float).sum(axis=1))
+        print('\nCLASSIFICATION REPORT')
+        print(classification_report(true_y, test_y,
+                                    labels=[1, 0, -1],
+                                    target_names=['buy', 'hold', 'sell']))
+    elif n == 6:
+        print('\nMATTHEWS CORRELATION')
+        print(matthews_corrcoef(true_y, test_y))
+        CM = confusion_matrix(true_y, test_y) #, labels=[1., 0.66, 0.33, -0.33, -0.66, -1.]
+        print('\nCONFUSION MATRIX')
+        print(CM / CM.astype(np.float).sum(axis=1))
+        print('\nCLASSIFICATION REPORT')
+        print(classification_report(true_y, test_y,
+                                    labels=[1, 0.6, 0.3, -0.3, -0.6, -1],
+                                    target_names=['buy', 'med', 'hold', '-hold', '-med', 'sell']))
+    print('-' * 20)
 

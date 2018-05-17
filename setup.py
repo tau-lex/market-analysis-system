@@ -7,7 +7,7 @@ setup(
     name='market analysis system',
     version=market_analysis_system.__version__,
     packages=find_packages(),
-    long_description=open('market_analysis_system/README.md', encoding='utf-8').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     keywords='trade',
     url='https://github.com/terentjew-alexey/market-analysis-system',
     author='Terentyev Aleksey',
