@@ -20,7 +20,7 @@ from market_analysis_system.data import create_timeseries_matrix
 from market_analysis_system.data import get_delta, get_diff, get_log_diff
 from market_analysis_system.data import get_sigmoid_to_zero, get_sigmoid_ration
 from market_analysis_system.models import save_model, load_model
-from market_analysis_system.classes import signal_to_class, class_to_signal
+from market_analysis_system.classes import signal_to_class, class_to_signal, print_classification_scores
 from sklearn.model_selection import train_test_split
 
 from keras.models import Sequential
@@ -44,13 +44,13 @@ from sklearn.metrics import matthews_corrcoef
 #       P R E P A R E   V A R I A B L E S                                     #
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
-params = ['EURUSD15', '-train', '100', '-graph']
+params = ['EURUSD30', '-train', '100', '-graph']
 # params = ['EURUSD15', '-predict']
 limit = 8000
 batch_size = 256
 fit_epoch = 100
 train_test = 0.2
-ts_lookback = 12
+ts_lookback = 6
 
 nclasses = 3
 normalize_class = True
@@ -106,22 +106,23 @@ def prepare_data(data):
     # for time(0, 6), market(7, 10), ema(11, 14), macd(15, 16)
     # for atr(17), cci(18), rsi(19), usdx(20), eurx(21)
     #
-    delta = get_delta(data, 7, 10)
+    # return data
+    delta = get_delta(data, 0, 3)
+    detrend1 = get_delta(data, 3, 4) # close - ema13
+    detrend2 = get_delta(data, 3, 5) # close - ema26
     # diff1 = get_diff(data[:, 8])
     # diff2 = get_diff(data[:, 9])
     # diff3 = get_diff(data[:, 10])
-    logdiff1 = get_log_diff(data[:, 8])
-    logdiff2 = get_log_diff(data[:, 9])
-    logdiff3 = get_log_diff(data[:, 10])
-    detrend1 = get_delta(data, 10, 11) # close - ema13
-    detrend2 = get_delta(data, 10, 12) # close - ema26
+    # logdiff1 = get_log_diff(data[:, 8])
+    # logdiff2 = get_log_diff(data[:, 9])
+    # logdiff3 = get_log_diff(data[:, 10])
     #
     # ediff1 = get_diff(data[:, 11])
     # ediff2 = get_diff(data[:, 12])
     # ediff3 = get_diff(data[:, 13])
-    elogdiff1 = get_log_diff(data[:, 11])
-    elogdiff2 = get_log_diff(data[:, 12])
-    elogdiff3 = get_log_diff(data[:, 13])
+    # elogdiff1 = get_log_diff(data[:, 11])
+    # elogdiff2 = get_log_diff(data[:, 12])
+    # elogdiff3 = get_log_diff(data[:, 13])
     #
     # xdiff1 = get_diff(data[:, 20])
     # xdiff2 = get_diff(data[:, 21])
@@ -135,7 +136,7 @@ def prepare_data(data):
                             # ediff1, ediff2, ediff3,
                             # elogdiff1, elogdiff2, elogdiff3,
                             # data[:, 15:17], # macd
-                            data[:, 17:19], data[:, 19]-50, # atr, cci, rsi
+                            data[:, 8:10], data[:, 10]-50, # atr, cci, rsi
                             # data[:, 20:22], # usd and eur indexes
                             # xdelta,
                             # xdiff1, xdiff2,
@@ -153,6 +154,19 @@ if run_type == 0:
 
     data_x = prepare_data(train_data)
     data_y = signal_to_class(target_data, n=nclasses, normalize=normalize_class)
+    # data_x, data_y = create_timeseries_matrix(data_x, data_y, ts_lookback)
+
+    # m_ind = sum(data_y[:, 1]) - max((sum(data_y[:, 0]), sum(data_y[:, 2])))
+    # col, ind = 0, 0
+    # indexes = []
+    # while col < m_ind:
+    #     if data_y[ind, 1] == 1.0:
+    #         indexes.append(ind)
+    #         col += 1
+    #     ind += 1
+
+    # data_y = np.delete(data_y, indexes, axis=0)
+    # data_x = np.delete(data_x, indexes, axis=0)
 
     # For training validation
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
@@ -161,48 +175,40 @@ if run_type == 0:
     print('Train/Test :', len(train_y), '/', len(test_y))
 
 
-#=============================================================================#
-#       P R E P A R E   M O D E L                                             #
-#=============================================================================#
-if run_type == 0:
+    #=============================================================================#
+    #       P R E P A R E   M O D E L                                             #
+    #=============================================================================#
     print('\nCreating Model...')
 
     batch_size = 256
     fa = 'elu'
-    init = 'lecun_normal' #'lecun_uniform' #'random_uniform'
-    init_b = 'random_uniform'
+    init = 'lecun_uniform' #'lecun_uniform' #'random_normal'
+    init_b = 'lecun_uniform'
     reg = regularizers.l2
-    rs = 0.01
+    rs = 0.001
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, data_x.shape[1])))
     model.add(Dense(32, 
                     # activation=fa,
-                    # kernel_initializer=init,
-                    # bias_initializer=init_b,
-                    # kernel_regularizer=reg(rs)
+                    kernel_initializer=init,
+                    bias_initializer=init_b,
+                    kernel_regularizer=reg(rs)
                     ))
     model.add(LeakyReLU())
     model.add(Dense(32, 
                     # activation=fa,
-                    # kernel_initializer=init,
-                    # bias_initializer=init_b,
-                    # kernel_regularizer=reg(rs)
+                    kernel_initializer=init,
+                    bias_initializer=init_b,
+                    kernel_regularizer=reg(rs)
                     ))
     model.add(LeakyReLU())
     # model.add(ActivityRegularization(l1=0.01, l2=0.01))
-    # model.add(Dropout(0.3))
-    model.add(Dense(32, 
-                    # activation=fa,
-                    # kernel_initializer=init,
-                    # bias_initializer=init_b,
-                    # kernel_regularizer=reg(rs)
-                    ))
-    model.add(LeakyReLU())
+    model.add(Dropout(0.3))
     model.add(Dense(nclasses,
                     activation='softmax',
-                    # kernel_initializer='lecun_uniform',
-                    # bias_initializer=init_b,
+                    kernel_initializer='lecun_normal',
+                    bias_initializer=init_b,
                     # kernel_regularizer=regularizers.l2(rs)
                     ))
 
@@ -210,10 +216,8 @@ if run_type == 0:
 elif run_type == 1:
     model = load_model(prefix + workfile + '.model')
 
-# opt = SGD(lr=0.1, momentum=0.0, nesterov=True)
-# opt = RMSprop(lr=0.001)
 opt = Nadam(lr=0.002)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['categorical_accuracy'])
 
 
 #=============================================================================#
@@ -242,13 +246,14 @@ if run_type == 0:
 print('\nPredicting...')
 
 data_xx = prepare_data(np.genfromtxt(file_xx, delimiter=';'))
+# data_xx, empty = create_timeseries_matrix(data_xx, look_back=ts_lookback)
 print(data_xx.shape)
 
 if run_type == 1:
     model.load_weights(prefix + workfile + '.hdf5')
 
 # Prediction model
-data_yy = model.predict(data_xx, batch_size=batch_size)
+data_yy = model.predict(data_xx)
 predicted = data_yy
 data_yy = class_to_signal(data_yy.reshape(data_xx.shape[0], nclasses),
                            n=nclasses,
@@ -269,15 +274,7 @@ if graph:
                                        n=nclasses,
                                        normalized=normalize_class)
 
-    print('-' * 20)
-    print('\nMATTHEWS CORRELATION')
-    print(matthews_corrcoef(test_y, test_yy))
-    CM = confusion_matrix(test_y, test_yy, labels=[1, 0, -1])
-    print('\nCONFUSION MATRIX')
-    print(CM / CM.astype(np.float).sum(axis=1))
-    print('\nCLASSIFICATION REPORT')
-    print(classification_report(test_y, test_yy, labels=[1, 0, -1], target_names=['buy', 'hold', 'sell']))
-    print('-' * 20)
+    print_classification_scores(test_y, test_yy, nclasses)
 
     plt.plot(predicted)
     plt.title('Predict')
@@ -294,5 +291,5 @@ if graph:
     plt.show()
 
     if run_type == 0:
-        plot_history(history)
+        plot_history(history, acc='categorical_accuracy')
 
