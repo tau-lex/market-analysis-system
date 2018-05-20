@@ -51,14 +51,14 @@ def get_script_dir(follow_symlinks=True):
     return os.path.dirname(path)
 
 
-def plot_history(history):
+def plot_history(history, acc='accuracy'):
     """Plot functions graph."""
 
     import matplotlib.pyplot as plt
 
     # summarize history for accuracy
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
+    plt.plot(history.history[acc])
+    plt.plot(history.history['val_'+acc])
     # plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.title('Model accuracy')
     plt.ylabel('accuracy')

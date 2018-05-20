@@ -36,8 +36,6 @@ def signal_to_class(data, n=2, normalize=True):
                     result = np.append(result, [1.0, 0.0])
                 if item < 0:        # sell
                     result = np.append(result, [0.0, 1.0])
-                if item == 0:       # pass
-                    result = np.append(result, [0.0, 0.0])
         else:
             for item in data:
                 result = np.append(result, [0.5+item/2.0, 0.5-item/2.0])
@@ -84,27 +82,29 @@ def class_to_signal(data, n=2, normalized=True):
     if n == 2:
         if normalized:
             for item in data:
-                result = np.append(result, item[0] - item[1])
+                result = np.append(result, 1 if item[0] > item[1] else -1)
         else:
             for item in data:
                 result = np.append(result, item[0] * 2 - 1.0)
     elif n == 3:
         if normalized:
             for item in data:
-                if item[0] > item[1] and item[0] > item[2]:
+                _class = np.argmax(item)
+                if _class == 0:
                     result = np.append(result, 1.0)
-                elif item[2] > item[1] and item[2] > item[0]:
-                    result = np.append(result, -1.0)
-                elif item[1] > item[0] and item[1] > item[2]:
+                elif _class == 1:
                     result = np.append(result, 0.0)
+                elif _class == 2:
+                    result = np.append(result, -1.0)
         else:
             for item in data:
-                if item[0] > item[1] and item[0] > item[2]:
+                _class = np.argmax(item)
+                if _class == 0:
                     result = np.append(result, item[0])
-                elif item[2] > item[1] and item[2] > item[0]:
-                    result = np.append(result, -item[2])
-                elif item[1] > item[0] and item[1] > item[2]:
+                elif _class == 1:
                     result = np.append(result, 0.0)
+                elif _class == 2:
+                    result = np.append(result, -item[2])
     elif n == 6:
         for item in data:
             _class = np.argmax(item)
@@ -122,6 +122,7 @@ def class_to_signal(data, n=2, normalized=True):
                 result = np.append(result, -1.0)
 
     return result
+
 
 def print_classification_scores(true_y, test_y, n=3):
     """"""
@@ -144,22 +145,22 @@ def print_classification_scores(true_y, test_y, n=3):
     elif n == 3:
         print('\nMATTHEWS CORRELATION')
         print(matthews_corrcoef(true_y, test_y))
-        CM = confusion_matrix(true_y, test_y, labels=[1, 0, -1])
+        CM = confusion_matrix(true_y, test_y, labels=[0, 1, 2])
         print('\nCONFUSION MATRIX')
         print(CM / CM.astype(np.float).sum(axis=1))
         print('\nCLASSIFICATION REPORT')
         print(classification_report(true_y, test_y,
-                                    labels=[1, 0, -1],
+                                    labels=[0, 1, 2],
                                     target_names=['buy', 'hold', 'sell']))
     elif n == 6:
         print('\nMATTHEWS CORRELATION')
         print(matthews_corrcoef(true_y, test_y))
-        CM = confusion_matrix(true_y, test_y) #, labels=[1., 0.66, 0.33, -0.33, -0.66, -1.]
+        CM = confusion_matrix(true_y, test_y, labels=[0, 1, 2, 3, 4, 5])
         print('\nCONFUSION MATRIX')
         print(CM / CM.astype(np.float).sum(axis=1))
         print('\nCLASSIFICATION REPORT')
         print(classification_report(true_y, test_y,
-                                    labels=[1, 0.6, 0.3, -0.3, -0.6, -1],
+                                    labels=[0, 1, 2, 3, 4, 5],
                                     target_names=['buy', 'med', 'hold', '-hold', '-med', 'sell']))
     print('-' * 20)
 
