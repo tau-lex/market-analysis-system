@@ -71,14 +71,46 @@ delta_ema1 = get_delta(data, 4, 5)
 delta_ema2 = get_delta(data, 6, 7)
 
 data_y = signal_to_class(data_y, n=nclasses, normalize=normalize_class)
-data_x, data_y = create_timeseries_matrix(train_data, data_y, ts_lookback)
 
+# data_x, data_y = create_timeseries_matrix(train_data, data_y, ts_lookback)
+data_x = data
 # batch_input_shape=(batch_size, timesteps, units)
 # data_x = np.reshape(data_x, (data_x.shape[0], ts_lookback, train_data.shape[1]))
 
-sum(data_y[:, 0] == 1)
-sum(data_y[:, 1] == 1)
-sum(data_y[:, 2] == 1)
+print('Shapes', data_x.shape, data_y.shape)
+
+# m_ind = sum(data_y[:, 1]) - max((sum(data_y[:, 0]), sum(data_y[:, 2])))
+# col, ind = 0, 0
+# indexes = []
+# while col < m_ind:
+#     if data_y[ind, 1] == 1.0:
+#         indexes.append(ind)
+#         col += 1
+#     ind += 1
+
+# data_y = np.delete(data_y, indexes, axis=0)
+# data_x = np.delete(data, indexes, axis=0)
+# print('buy:', sum(data_y[:, 0]))
+# print('hold:', sum(data_y[:, 1]))
+# print('sell:', sum(data_y[:, 2]))
+
+size = 100
+# plt.plot(data[-size:, 3])
+# plt.plot(sigm3[-size:])
+# plt.plot(diff3[-size:])
+# plt.plot(logdiff3[-size:])
+plt.plot(delta_oc[-size:])
+plt.plot(detrend1[-size:])
+plt.plot(detrend2[-size:])
+plt.ylabel('price')
+plt.xlabel('bar')
+# plt.legend(['close', 'sigm''])
+# plt.legend(['diff', 'logdiff'])
+plt.legend(['delta', '-ema13', '-ema26'])
+plt.show()
+
+
+
 
 # For training validation
 train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
