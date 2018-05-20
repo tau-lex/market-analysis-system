@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from market_analysis_system.include import get_parameters, plot_history
-from market_analysis_system.data import create_timeseries_matrix
+from market_analysis_system.data import create_timeseries_matrix, shuffle_xy
 from market_analysis_system.data import get_delta, get_diff, get_log_diff
 from market_analysis_system.data import get_sigmoid_to_zero, get_sigmoid_ration
 from market_analysis_system.models import save_model, load_model
@@ -48,15 +48,15 @@ from sklearn.metrics import matthews_corrcoef
 #       P R E P A R E   V A R I A B L E S                                     #
 #=============================================================================#
 # params[symb+period, arg1, arg2, ..]
-params = ['EURUSD30', '-train', '50', '-graph']
+params = ['EURUSD30', '-train', '100', '-graph']
 # params = ['EURUSD15', '-predict']
 limit = 8000
 batch_size = 256
 fit_epoch = 100
 train_test = 0.2
-ts_lookback = 9
+ts_lookback = 20
 
-nclasses = 6
+nclasses = 3
 normalize_class = True
 
 run_type = 0
@@ -107,6 +107,7 @@ print('\nWork file:', workfile)
 #       L O A D   D A T A                                                     #
 #=============================================================================#
 def prepare_data(data):
+    return data
     # for time(0, 6), market(7, 10), ema(11, 14), macd(15, 16)
     # for atr(17), cci(18), rsi(19), usdx(20), eurx(21)
     #----------------------------
@@ -114,18 +115,18 @@ def prepare_data(data):
     # for atr(8), cci(9), rsi(10)
     mrkt, ema = range(4), range(4, 8)
     delta = get_delta(data, mrkt[0], mrkt[3])
-    diff1 = get_diff(data[:, mrkt[1]])
-    diff2 = get_diff(data[:, mrkt[2]])
-    diff3 = get_diff(data[:, mrkt[3]])
+    # diff1 = get_diff(data[:, mrkt[1]])
+    # diff2 = get_diff(data[:, mrkt[2]])
+    # diff3 = get_diff(data[:, mrkt[3]])
     # logdiff1 = get_log_diff(data[:, mrkt[1]])
     # logdiff2 = get_log_diff(data[:, mrkt[2]])
     # logdiff3 = get_log_diff(data[:, mrkt[3]])
     detrend1 = get_delta(data, mrkt[3], ema[0]) # close - ema13
     detrend2 = get_delta(data, mrkt[3], ema[1]) # close - ema26
     #
-    ediff1 = get_diff(data[:, ema[0]])
-    ediff2 = get_diff(data[:, ema[1]])
-    ediff3 = get_diff(data[:, ema[2]])
+    # ediff1 = get_diff(data[:, ema[0]])
+    # ediff2 = get_diff(data[:, ema[1]])
+    # ediff3 = get_diff(data[:, ema[2]])
     # elogdiff1 = get_log_diff(data[:, 11])
     # elogdiff2 = get_log_diff(data[:, 12])
     # elogdiff3 = get_log_diff(data[:, 13])
@@ -133,59 +134,16 @@ def prepare_data(data):
                             # data[:, 5:6], # hours and minutes
                             # data[:, 8:11], # prices (without open)
                             delta,
-                            diff1, diff2, diff3,
+                            # diff1, diff2, diff3,
                             # logdiff1, logdiff2, logdiff3,
                             detrend1, detrend2,
-                            ediff1, ediff2, ediff3,
+                            # ediff1, ediff2, ediff3,
                             # elogdiff1, elogdiff2, elogdiff3,
                             # data[:, 15:17], # macd
                             data[:, 8:10], data[:, 10]-50, # atr, cci, rsi
                             # data[:, 20:22], # usd and eur indexes
                           ))
                     )
-
-
-def prepare_target(data, close_index=3, classes=6):
-    """
-    Hello (=
-    """
-    # while const
-    classes = 6
-    #
-    data = np.array(data)
-    new_target = data[1:, close_index] / data[:-1, close_index]
-    new_target = np.insert(new_target, obj=0, values=[1.0])
-    #
-    n, bins = np.histogram(new_target, bins=200, range=(0.99, 1.01))
-    #
-    sixth = sum(n) / classes
-    #
-    points = [0., 0., 1., 0., 0.]
-    _sum = n[100]/2
-    p_idx = 1
-    for idx in range(99, -1):
-        _sum += n[idx]
-        if _sum >= sixth:
-            points[p_idx] = (idx - 100) / 10**4 + 1
-            p_idx -= 1
-        if p_idx < 0:
-            break
-    _sum = n[100]/2
-    p_idx = 3
-    for idx in range(101, 201):
-        _sum += n[idx]
-        if _sum >= sixth:
-            points[p_idx] = (idx - 100) / 10**4 + 1
-            p_idx += 1
-        if p_idx > 4:
-            break
-    #
-    def select(a):
-        a > points[2]
-        return 1
-    new_target = [select(x) for x in new_target]
-
-    return new_target
 
 
 if run_type == 0:
@@ -204,8 +162,11 @@ if run_type == 0:
     # batch_input_shape=(batch_size, timesteps, units)
     data_x = np.reshape(data_x, (data_x.shape[0], ts_lookback, shape_x[1]))
 
+    # data_x, data_y = shuffle_xy(data_x, data_y)
+
     # For training validation
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, test_size=train_test)
+    train_x, train_y = shuffle_xy(train_x, train_y)
 
     print('Input data shape :', data_x.shape)
     print('Train/Test :', len(train_y), '/', len(test_y))
@@ -219,60 +180,44 @@ if run_type == 0:
     batch_size = 256
     fa = 'tanh'
     init = 'lecun_normal' #'lecun_uniform' #'random_uniform'
-    init_b = 'random_uniform'
+    init_b = 'lecun_normal'
     reg = regularizers.l2
-    rs = 0.01
-    Pooling = MaxPooling1D#GlobalMaxPooling1D # GlobalAveragePooling1D
+    rs = 0.001
+    Pooling = MaxPooling1D #MaxPooling1D #GlobalMaxPooling1D #GlobalAveragePooling1D
     Rcrnt = LSTM
-
-    # model.add(Convolution1D(input_shape = (WINDOW, EMB_SIZE),
-    #                         nb_filter=16,
-    #                         filter_length=4,
-    #                         border_mode='same'))
-    # model.add(MaxPooling1D(2))
-    # model.add(LeakyReLU())
-    # model.add(Flatten())
-
-    # model.add(Convolution1D(input_shape = (WINDOW, EMB_SIZE),
-    #                     nb_filter=16,
-    #                     filter_length=4,
-    #                     border_mode='same'))
-    # model.add(BatchNormalization())
-    # model.add(LeakyReLU())
-    # model.add(Flatten())
 
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, ts_lookback, shape_x[1])))
     model.add(Conv1D(#input_shape = (None, ts_lookback, shape_x[1]),
                      filters=36,
                      kernel_size=3,
-                     padding='same'))
+                     padding='valid'))
     model.add(Pooling(2))
     model.add(LeakyReLU())
-    model.add(Conv1D(filters=16,
-                     kernel_size=3,
-                     padding='same'))
-    model.add(Pooling(2))
-    model.add(LeakyReLU())
+    # model.add(Conv1D(filters=36,
+    #                  kernel_size=3,
+    #                  padding='valid'))
+    # model.add(Pooling(2))
+    # model.add(LeakyReLU())
     # model.add(Flatten())
-    model.add(Rcrnt(50,
+    model.add(Rcrnt(300,
                     return_sequences=True,
-                    activation=fa,
+                    # activation=fa,
                     kernel_initializer=init,
-                    # bias_initializer=init_b,
+                    bias_initializer=init_b,
                     # kernel_regularizer=reg(rs)
                     ))
-#    model.add(LeakyReLU())
+    model.add(LeakyReLU())
     model.add(Dropout(0.3))
-    model.add(Rcrnt(32,
-                    activation=fa,
+    model.add(Rcrnt(64,
+                    # activation=fa,
                     kernel_initializer=init,
-                    # bias_initializer=init_b,
+                    bias_initializer=init_b,
                     # kernel_regularizer=reg(rs)
                     ))
-#    model.add(LeakyReLU())
+    model.add(LeakyReLU())
     # model.add(ActivityRegularization(l1=0.01, l2=0.01))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
     model.add(Dense(nclasses,
                     activation='softmax',
                     # kernel_initializer='lecun_uniform',
@@ -284,10 +229,8 @@ if run_type == 0:
 elif run_type == 1:
     model = load_model(prefix + workfile + '.model')
 
-# opt = SGD(lr=0.1, momentum=0.0, nesterov=True)
-# opt = RMSprop(lr=0.001)
 opt = Nadam(lr=0.002)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['categorical_accuracy'])
 
 
 #=============================================================================#
@@ -343,7 +286,7 @@ if graph:
     test_y = [np.argmax(x) for x in test_y]
     test_yy = [np.argmax(x) for x in model.predict(test_x).reshape(test_x.shape[0], nclasses)]
 
-    print_classification_scores(test_y_, test_yy, nclasses)
+    print_classification_scores(test_y, test_yy, nclasses)
 
     plt.plot(predicted)
     plt.title('Predict')
@@ -360,5 +303,5 @@ if graph:
     plt.show()
 
     if run_type == 0:
-        plot_history(history)
+        plot_history(history, acc='categorical_accuracy')
 
