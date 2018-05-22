@@ -29,7 +29,7 @@ from keras.layers import Conv1D, MaxPooling1D
 from keras.layers import AveragePooling1D, GlobalMaxPooling1D, GlobalAveragePooling1D
 from keras.layers import Dense, Activation
 from keras.layers import LSTM, GRU
-from keras.layers import LeakyReLU
+from keras.layers import LeakyReLU, Flatten
 from keras.layers import Dropout, ActivityRegularization
 from keras.layers.wrappers import Bidirectional
 from keras import regularizers
@@ -177,9 +177,9 @@ if run_type == 0:
 #=============================================================================#
     print('\nCreating Model...')
 
-    batch_size = 256
+    batch_size = 512
     fa = 'tanh'
-    init = 'lecun_normal' #'lecun_uniform' #'random_uniform'
+    init = 'lecun_normal' #'lecun_uniform' #'random_uniform', 'glorot_uniform'
     init_b = 'lecun_normal'
     reg = regularizers.l2
     rs = 0.001
@@ -189,16 +189,16 @@ if run_type == 0:
     model = Sequential()
     model.add(BatchNormalization(batch_input_shape=(None, ts_lookback, shape_x[1])))
     model.add(Conv1D(#input_shape = (None, ts_lookback, shape_x[1]),
-                     filters=36,
+                     filters=16,
+                     kernel_size=4,
+                     padding='valid'))
+    # model.add(Pooling(2))
+    # model.add(LeakyReLU())
+    model.add(Conv1D(filters=8,
                      kernel_size=3,
                      padding='valid'))
     model.add(Pooling(2))
     model.add(LeakyReLU())
-    # model.add(Conv1D(filters=36,
-    #                  kernel_size=3,
-    #                  padding='valid'))
-    # model.add(Pooling(2))
-    # model.add(LeakyReLU())
     # model.add(Flatten())
     model.add(Rcrnt(300,
                     return_sequences=True,
