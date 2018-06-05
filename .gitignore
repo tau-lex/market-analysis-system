@@ -13,3 +13,4 @@ mas_tools.egg-info/
 *.user
 *.pyc
 *.rar
+*.h5f

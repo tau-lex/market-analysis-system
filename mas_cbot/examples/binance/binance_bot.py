@@ -7,8 +7,8 @@ from datetime import datetime
 
 from binance_api import Binance
 bot = Binance(
-    API_KEY='cNJBekTal8lT7WOCYXB8v8yj4m9VGo1rLRPIoqIdi58g3VKKwsX5EYT8iUOGqd7e',
-    API_SECRET='sEkfMaDI3C2wUIBQBpcod3N5EDccCUKzVbCs8F38U5HdzAMXcudzW6wsZgUSw3bV'
+    API_KEY='---',
+    API_SECRET='---'
 )
 
 """

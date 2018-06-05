@@ -15,8 +15,8 @@ from cbot.environments import VirtualMarket
 #=============================================================================#
 #   G L O B A L   V A R I A B L E S                                           #
 #=============================================================================#
-MY_API_KEY = 'cNJBekTal8lT7WOCYXB8v8yj4m9VGo1rLRPIoqIdi58g3VKKwsX5EYT8iUOGqd7e'
-MY_API_SECRET = 'sEkfMaDI3C2wUIBQBpcod3N5EDccCUKzVbCs8F38U5HdzAMXcudzW6wsZgUSw3bV'
+MY_API_KEY = '---'
+MY_API_SECRET = '---'
 ENV_NAME = 'BinanceVirt'
 
 
