@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from keras import backend as K, initializers, regularizers, constraints
 from keras.engine.topology import Layer
 

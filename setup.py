@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
-import market_analysis_system
+import mas_tools
 
 
 setup(
     name='market analysis system',
-    version=market_analysis_system.__version__,
+    version=mas_tools.__version__,
     packages=find_packages(),
-    long_description=open('README.md', encoding='utf-8').read(),
-    keywords='trade',
+    long_description=open('mas_tools/README.md', encoding='utf-8').read(),
+    keywords=['trade', 'ml'],
     url='https://github.com/terentjew-alexey/market-analysis-system',
     author='Terentyev Aleksey',
     author_email='terentjew.alexey@ya.ru',
@@ -16,6 +16,7 @@ setup(
 #    include_package_data=True,
     install_requires=[
             'numpy', 'pandas', 'matplotlib',
-            'scikit-learn', 'keras', 'tensorflow'
+            'scikit-learn', 'keras', 'tensorflow',
+            'gym', 'keras-rl'
         ]
 )

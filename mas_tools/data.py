@@ -1,21 +1,12 @@
 # -*- coding: utf-8 -*-
-###############################################################################
-#                                                                             #
-#   Market Analysis System                                                    #
-#   https://www.mql5.com/ru/users/terentyev23                                 #
-#                                                                             #
-#   M A S   D A T A   F U N C T I O N S                                       #
-#                                                                             #
-#   Aleksey Terentyev                                                         #
-#   terentew.aleksey@ya.ru                                                    #
-#                                                                             #
-###############################################################################
 """
 The module contains the data processing functions of the MAS project.
 """
 
 from math import exp
+
 import numpy as np
+from numpy.random import shuffle
 
 
 def create_timeseries_matrix(data_x, data_y=[], look_back=3):
@@ -77,16 +68,9 @@ def shuffle_xy(data_a = [], data_b = []):
     data_a = np.array(data_a)
     data_b = np.array(data_b)
     width_a = data_a.shape[1]
-    # if len(data_b.shape) > 1:
-    #     width_b = data_b.shape[1]
-    # else:
-    #     width_b = data_b.shape[0]
-    # if width_a != width_b:
-    #     print()
-    #     return ([], [])
     try:
         temp = np.hstack((data_a, data_b))
-        np.random.shuffle(temp)
+        shuffle(temp)
     except:
         print('Exception: non equal shapes. A:', data_a.shape, 'B:', data_b.shape)
         return data_a, data_b
@@ -100,15 +84,15 @@ def prepare_target(data, close_index=3, classes=6):
     """
     # while const
     classes = 6
-    #
+    
     data = np.array(data)
     new_target = data[1:, close_index] / data[:-1, close_index]
     new_target = np.insert(new_target, obj=0, values=[1.0])
-    #
+    
     n, bins = np.histogram(new_target, bins=200, range=(0.99, 1.01))
-    #
+    
     sixth = sum(n) / classes
-    #
+    
     points = [0., 0., 1., 0., 0.]
     _sum = n[100]/2
     p_idx = 1

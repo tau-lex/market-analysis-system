@@ -1,33 +1,28 @@
 # -*- coding: utf-8 -*-
-###############################################################################
-#                                                                             #
-#   Market Analysis System                                                    #
-#   https://www.mql5.com/ru/users/terentyev23                                 #
-#                                                                             #
-#   M A S   D A T A   F U N C T I O N                                         #
-#                                                                             #
-#   Aleksey Terentyev                                                         #
-#   terentew.aleksey@ya.ru                                                    #
-#                                                                             #
-###############################################################################
 """
-The module contains the data processing functions of the MAS project.
+The module contains the data processing functions.
 """
 
 import numpy as np
 
 
 def signal_to_class(data, n=2, normalize=True):
-    """Converts a list of signals to a n-dimensional list of classes [buy, .., sell].
-    normalize = True, it normalizes to unity.
-    normalize = False, the signal changes only the sign."""
+    """
+    Converts a list of signals to a n-dimensional list of classes [buy, .., sell].
+
+    Arguments:
+        n (int): Number of classes.
+        normalize (bool): It normalizes to unity. False - the signal changes only the sign.
+        
+    Returns:
+        Array of classes.
+    """
 
     result = np.array([])
     data = np.array(data)
 
     if len(data.shape) > 1:
-        print('signal_to_class() error')
-        return None
+        raise ValueError("Array shape should be .. ebaniy anglish=)")
 
     if n == 2:
         if normalize:
