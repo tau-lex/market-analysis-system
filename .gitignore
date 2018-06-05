@@ -1,7 +1,8 @@
 build*/
 __pycache__/
+tmp/
 dist/
-market_analysis_system.egg-info/
+mas_tools.egg-info/
 *.autosave
 *.hdf5
 *.model
@@ -11,3 +12,5 @@ market_analysis_system.egg-info/
 *.png
 *.user
 *.pyc
+*.rar
+*.h5f

@@ -1,21 +1,12 @@
 # -*- coding: utf-8 -*-
-###############################################################################
-#                                                                             #
-#   Market Analysis System                                                    #
-#   https://www.mql5.com/ru/users/terentyev23                                 #
-#                                                                             #
-#   M A S   D A T A   F U N C T I O N S                                       #
-#                                                                             #
-#   Aleksey Terentyev                                                         #
-#   terentew.aleksey@ya.ru                                                    #
-#                                                                             #
-###############################################################################
 """
 The module contains the data processing functions of the MAS project.
 """
 
 from math import exp
+
 import numpy as np
+from numpy.random import shuffle
 
 
 def create_timeseries_matrix(data_x, data_y=[], look_back=3):
@@ -59,9 +50,9 @@ def dataset_to_traintest(data, train_ratio=0.6, limit=0):
             start, size = 0, abs(limit)
 
     if train_ratio <= 0.0:
-        return None, data[start:len(data), :]
+        return None, data[start:size, :]
     elif train_ratio >= 1.0:
-        return data[start:len(data), :], None
+        return data[start:size, :], None
 
     train_size = int(size * train_ratio)
     # test_size = len(data) - train_size
@@ -72,73 +63,110 @@ def dataset_to_traintest(data, train_ratio=0.6, limit=0):
 
 
 def shuffle_xy(data_a = [], data_b = []):
-    """"""
+    """Shuffle data sets."""
+
     data_a = np.array(data_a)
     data_b = np.array(data_b)
     width_a = data_a.shape[1]
-    if len(data_b.shape) > 1:
-        width_b = data_b.shape[1]
-    else:
-        width_b = data_b.shape[0]
-    # if width_a != width_b:
-    #     print()
-    #     return ([], [])
-    temp = np.column_stack((data_a, data_b))
-    np.random.shuffle(temp)
+    try:
+        temp = np.hstack((data_a, data_b))
+        shuffle(temp)
+    except:
+        print('Exception: non equal shapes. A:', data_a.shape, 'B:', data_b.shape)
+        return data_a, data_b
+        
     return np.hsplit(temp, np.array([width_a]))
 
 
+def prepare_target(data, close_index=3, classes=6):
+    """
+    Hello (=
+    """
+    # while const
+    classes = 6
+    
+    data = np.array(data)
+    new_target = data[1:, close_index] / data[:-1, close_index]
+    new_target = np.insert(new_target, obj=0, values=[1.0])
+    
+    n, bins = np.histogram(new_target, bins=200, range=(0.99, 1.01))
+    
+    sixth = sum(n) / classes
+    
+    points = [0., 0., 1., 0., 0.]
+    _sum = n[100]/2
+    p_idx = 1
+    for idx in range(99, -1):
+        _sum += n[idx]
+        if _sum >= sixth:
+            points[p_idx] = (idx - 100) / 10**4 + 1
+            p_idx -= 1
+        if p_idx < 0:
+            break
+    _sum = n[100]/2
+    p_idx = 3
+    for idx in range(101, 201):
+        _sum += n[idx]
+        if _sum >= sixth:
+            points[p_idx] = (idx - 100) / 10**4 + 1
+            p_idx += 1
+        if p_idx > 4:
+            break
+    # TODO
+    def select(a):
+        a > points[2]
+        return 1
+    new_target = [select(x) for x in new_target]
+
+    return new_target
+
+
 def get_delta(data, index1=0, index2=1):
-    """Returns the difference between index1 and index2."""
+    """Returns the difference between [,index1] and [,index2] in 2-D array."""
 
-    result = np.array([])
-
-    for item in data:
-        result = np.append(result, item[index1] - item[index2])
-
-    return result
+    return data[:, index1] - data[:, index2]
 
 
 def get_deltas_from_ohlc(data, index1=0):
     """Calculates the delta prices (open, high, low, close) between index1 and index2.
     Returns the numpy array with the shape (:, 6): [O-C, H-L, H-O, H-C, O-L, C-L]"""
 
-    result = np.array([])
-    data = np.array(data)
-
-    for item in data:
-        result = np.append(result, [item[index1] - item[index1 + 3],    # Open - Close
-                                    item[index1 + 1] - item[index1 + 2],# High - Low
-                                    item[index1 + 1] - item[index1],    # High - Open
-                                    item[index1 + 1] - item[index1 + 3],# High - Close
-                                    item[index1] - item[index1 + 2],    # Open - Low
-                                    item[index1 + 3] - item[index1 + 2] # Close - Low
-                                   ])
-
-    return np.reshape(result, (data.shape[0], 6))
+    return np.column_stack((get_delta(data, index1, index1 + 3),    # Open - Close
+                                get_delta(data, index1 + 1, index1 + 2),# High - Low
+                                get_delta(data, index1 + 1, index1),    # High - Open
+                                get_delta(data, index1 + 1, index1 + 3),# High - Close
+                                get_delta(data, index1, index1 + 2),    # Open - Low
+                                get_delta(data, index1 + 3, index1 + 2) # Close - Low
+                            ))
 
 
 def get_diff(data, rate=1):
     """Computes a derivative and returns an array equal to
     the length of the original array."""
 
-    result = np.diff(data, rate)
-
+    result = np.array([])
     for idx in range(rate):
         result = np.append(result, 0.0)
+
+    if rate == 1:
+        return np.append(result, np.diff(data))
+
+    for idx in range(rate, len(data)):
+        result = np.append(result, data[idx] - data[idx-rate])
 
     return result
 
 
-def get_log_diff(data):
+def get_log_diff(data, rate=1):
     """Computes the log-differential and returns an array equal to
     the length of the original array."""
 
     result = np.array([])
+    for idx in range(rate):
+        result = np.append(result, 0.0)
 
-    result = np.append(result, 0.0)
-    for idx in range(1, len(data)):
-        ld = np.log(data[idx] / data[idx - 1])
+    for idx in range(rate, len(data)):
+        ld = np.log(data[idx] / data[idx-rate])
         result = np.append(result, ld)
 
     return result
@@ -148,10 +176,10 @@ def get_sigmoid(data):
     """Sigmoid function."""
 
     result = 1 / (1 + np.exp(-data))
-
-    return result
     # return exp(-np.logaddexp(0, -data))
     # return 0.5 * (1 + data / (1 + abs(data)))
+
+    return result
 
 
 def get_sigmoid_to_zero(data):
