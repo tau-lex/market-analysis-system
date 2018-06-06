@@ -4,7 +4,7 @@ import mas_tools
 
 
 setup(
-    name='market analysis system',
+    name='mas_tools',
     version=mas_tools.__version__,
     packages=find_packages(),
     long_description=open('mas_tools/README.md', encoding='utf-8').read(),

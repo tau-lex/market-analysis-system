@@ -21,7 +21,7 @@ class MarketEnv(Env):
                 'video.frames_per_second' : 15}
     viewer = None
 
-    def __init__(self, market: AbstractMarket, window=1, **kwargs):
+    def __init__(self, market: AbstractMarket, **kwargs):
         """MarketEnv constructor.
         
         Arguments:
@@ -30,13 +30,10 @@ class MarketEnv(Env):
         """
 
         self.market = market
-        self.window = window
-        self.position = self.window
 
         self.action_space = Discrete(3)
-        # TODO
-        self.observation_space = Box(low=0.0, high=self.market.data.max(0)[2],
-                                        shape=(self.window, self.market.data.shape[1]),
+        self.observation_space = Box(low=0.0, high=self.market.max(2),
+                                        shape=(self.market.window, self.market.shape(1)),
                                         dtype=np.float)
 
     def step(self, action):
@@ -60,18 +57,18 @@ class MarketEnv(Env):
 
         done = False
 
-        observation = self.market.observation(self.position, self.window)
+        observation = self.market.observation()
+        window = self.market.window
 
         if action == 0:
-            self.market.buy_order(observation[self.window-1, 1])
+            self.market.buy_order(observation[window-1, 1])
         elif action == 1:
             pass
         elif action == 2:
-            self.market.sell_order(observation[self.window-1, 1])
+            self.market.sell_order(observation[window-1, 1])
 
-        self.position += 1
         reward = self.market.balance
-        if self.position >= len(self.market) or reward <= 0:
+        if self.market.done or reward <= 0:
             done = True
 
         info = {}
@@ -81,11 +78,12 @@ class MarketEnv(Env):
     def reset(self):
         """Resets the state of the environment and returns an initial observation.
 
-        Returns: observation (object): the initial observation of the space.
+        Returns:
+            observation (object): the initial observation of the space.
         """
-        self.position = self.window
+
         self.market.reset()
-        observation = self.market.observation(self.position, self.window)
+        observation = self.market.observation()
 
         return observation
 
@@ -114,7 +112,8 @@ class MarketEnv(Env):
         """
 
         if mode == 'rgb_array':
-            return np.array(...) # return RGB frame suitable for video
+            data = self.market.get_window(len=20)
+            return np.array([]) # return RGB frame suitable for video
         elif mode is 'human':
             pass # pop up a window and render
         else:

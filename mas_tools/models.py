@@ -41,9 +41,9 @@ def simple_model(input_shape, nb_output, act='linear'):
     """Simple model for RL."""
 
     model = Sequential()
-#    model.add(Reshape((input_shape[0], input_shape[1]), batch_input_shape=(None, 1, input_shape[0], input_shape[1])))
-#    model.add(BatchNormalization())
-    model.add(BatchNormalization(batch_input_shape=(None, input_shape[0], input_shape[1])))
+    model.add(Reshape((input_shape[0], input_shape[1]), batch_input_shape=(None, 1, input_shape[0], input_shape[1])))
+    model.add(BatchNormalization())
+    # model.add(BatchNormalization(batch_input_shape=(None, input_shape[0], input_shape[1])))
     model.add(LSTM(16))
     model.add(Activation('relu'))
     model.add(Dense(16))
