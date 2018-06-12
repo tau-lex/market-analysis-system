@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# From: https://gist.github.com/cbaziotis/6428df359af27d58078ca5ed9792bd6d
 from keras import backend as K, initializers, regularizers, constraints
 from keras.engine.topology import Layer
 

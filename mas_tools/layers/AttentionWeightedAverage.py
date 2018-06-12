@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# From: https://github.com/bfelbo/DeepMoji/blob/master/deepmoji/attlayer.py
 from __future__ import absolute_import, division
 
 import sys
