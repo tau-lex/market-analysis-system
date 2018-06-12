@@ -118,7 +118,7 @@ def prepare_data(data):
     # elogdiff1 = get_log_diff(data[:, 11])
     # elogdiff2 = get_log_diff(data[:, 12])
     # elogdiff3 = get_log_diff(data[:, 13])
-    return np.array(np.column_stack((
+    return np.column_stack((
                             # data[:, 5:6], # hours and minutes
                             # data[:, 8:11], # prices (without open)
                             delta,
@@ -131,7 +131,6 @@ def prepare_data(data):
                             data[:, 8:10], data[:, 10]-50, # atr, cci, rsi
                             # data[:, 20:22], # usd and eur indexes
                           ))
-                    )
 
 
 if run_type == 0:

@@ -5,6 +5,7 @@ dist/
 mas_tools.egg-info/
 *.autosave
 *.hdf5
+*.h5f
 *.model
 *.csv
 *.txt
@@ -13,4 +14,3 @@ mas_tools.egg-info/
 *.user
 *.pyc
 *.rar
-*.h5f
