@@ -2,40 +2,42 @@
 """
 Implementation exchange connectors and api wrapper.
 """
-
-import time
 from math import floor
 
 import numpy as np
 import pandas as pd
 
-import quandl
+# import quandl
 from mas_tools.api import BaseApi
+from mas_tools.tools import calculate_stop_loss, calculate_lot
 
 
+#=============================================================================#
+#                                                                             #
+#=============================================================================#
 class AbstractMarket():
     """Implement Base class exchange wrapper."""
     
-    # __df = pd.DataFrame([])
-    # __data = np.array([])
     symbols = np.array([])
-    periods = np.array([])
+    period = ''
 
+    __done = False
     __balance = 0.0
     __balance_fd = 0.0
     __balance_ut = 0
-    __deposit = 0.0
+    __profit = 0.0 # simple reward
 
-    def __init__(self, api: BaseApi, symbols=['ETHUSDT'], periods=['1h'],
+    def __init__(self, api: BaseApi, symbols=['ETHUSDT'], period='1d',
                     balance=1000.0, order_risk=0.02, month_risk=0.06,
-                    lot_size=1, **kwargs):
+                    window=1, lot_size=0.1, **kwargs):
         """Constructor.
         
         Arguments:
-            api (BaseApi): 
+            api: Exchange connector.
             symbols (str or list):
-            periods (str or list):
-            balance (float):
+            period (str):
+            window (int):
+            balance (float): Start balance.
             order_risk (float[0.0-1.0]):
             month_risk:
             lot_size:
@@ -43,136 +45,146 @@ class AbstractMarket():
         self.__api = api
 
         if symbols is str: symbols = np.array([symbols])
-        if periods is str: periods = np.array([periods])
         self.symbols = symbols
-        self.periods = periods
-        
+        self.period = period
+        self.__position = 0
+        self.__window = window
+        self.__done = False
         self.__balance = balance
         self.__start_balance = self.balance
+        self.__deposit = dict(zip(symbols, [0.0 for i in symbols]))
 
         assert (0.0 <= order_risk <= 1.0) or (0.0 <= month_risk <= 1.0), 'The risk must have a value from zero to one.'
-
-        self.__ex_info = self.__api.exchange_info()
-
         self.__order_risk = order_risk
         self.__month_risk = month_risk
-        for item in self.__ex_info['symbols']:
+        self.__lot_size = lot_size
+
+        __ex_info = self.__api.exchange_info()
+        for item in __ex_info['symbols']:
             if item['symbol'] == self.symbols[0]:
                 self.__step_price = float(item['filters'][0]['tickSize'])
                 self.__min_lot = float(item['filters'][1]['minQty'])
                 self.__step_lot = float(item['filters'][1]['minQty'])
                 self.__min_amount = float(item['filters'][2]['minNotional'])
                 break
-        
-        self.__lot_size = lot_size
 
         self.load_data()
 
-    def load_data(self):
+    def load_data(self, limit=500):
         """Loads data of all symbols from servers or API."""
         
-        self.__df = pd.DataFrame(self.__api.candlesticks(symbol=self.symbols[0],
-                                                           interval=self.periods[0]),
-                                    dtype=np.float)
-        self.__data = self.__df.values
         # self.__data = quandl.get('GDAX/ETH_USD')
+        self.__df = pd.DataFrame(self.__api.candlesticks(symbol=self.symbols[0],
+                                                         interval=self.period),
+                                 dtype=np.float)
+        data = self.__df.values
+        self.__data = np.column_stack((data[:, 1:6], data[:, 7:11]))
 
-    def observation(self, row, size):
-        """"""
+    def observation(self, row=-1):
+        """Returns observation on position."""
 
-        return self.__data[row-size: row, :]
-
-    def calculate_amount(self, price):
-        """"""
-
-        amount = price * self.__lot_size
-
-        # one_lot_risk = abs(price - self.calculate_stop_loss(data[?], ))
-        # self.calculate_lot(one_lot_risk)
-
-        return amount
-
-    def buy_order(self, price, lot=1.0):
-        """"""
-
-        amount = self.calculate_amount(price)
-
-        if amount > 0 and self.__balance - amount >= 0:
-                self.__deposit += lot
-                self.__balance -= amount
-
-    def sell_order(self, price, lot=1.0):
-        """"""
-
-        amount = self.calculate_amount(price)
+        self.__profit = 0.0
+        if row < 0:
+            row = self.__position
+            self.__position += 1
         
-        if amount > 0 and self.__deposit - lot >= 0:
-            self.__deposit -= lot
-            self.__balance += amount
+        if row + self.__window - 1 > len(self.__data):
+            raise ValueError('Out of range')
+
+        if row + self.__window - 1 >= len(self.__data) - 1:
+            self.__done = True
+
+        return self.__data[row: row + self.__window, :]
 
     def reset(self):
         """Reset market state."""
         
+        self.__done = False
+        self.__position = 0
         self.__balance = self.__start_balance
-        self.__deposit = 0.0
+        for depo in self.__deposit.keys:
+            self.__deposit[depo] = 0.0
 
-    @staticmethod
-    def calculate_lot(self, one_lot_risk, min_lot=0.0):
-        """Calculate lot size with risk value.
+    def buy_order(self, symbol):
+        """"""
+    
+        # [:, 0:3] = ohlc
+        price = self.__data[self.__position + self.__window - 1, 0]
+
+        amount = price * self.__lot_size
         
-        Arguments:
-            one_lot_risk:
-            min_lot:
-        """
-
-        if min_lot == 0.0:
-            min_lot = self.__min_amount
-        if one_lot_risk * min_lot >= self.__order_risk or one_lot_risk <= 0:
-            return min_lot
-        elif min_lot == 1:
-            return floor(self.__order_risk / one_lot_risk) # Часть от риска лотом
+        if amount > 0 and self.__balance - amount > 0:
+            self.__deposit += self.__lot_size
+            self.__balance -= amount
+            # self.__profit = -amount # TODO check with him
+        elif self.__balance - amount <= 0:
+            self.__done = True
         else:
-            return round(self.__order_risk / one_lot_risk - min_lot, 2)
-        return -1.0
+            raise Exception('wtf')
 
-    def calculate_stop_loss(self, data, side):
-        """Calculates the stop level of the input array of prices.
+    def sell_order(self, symbol):
+        """"""
 
-        The minimum number of prices is 10 last candles in front of the bar
-        being calculated. The method is described by Alexander Elder.
+        # [:, 0:3] = ohlc
+        price = self.__data[self.__position + self.__window - 1, 0]
 
-        # Arguments
-            data (arraylike): an array of prices, the size of (n, 1) or (n, 4),
-                    where n is greater than or equal to 10.
-            side (str): direction, 'buy' / 'sale', 'up' / 'down'.
-        # Returns
-            stop_price (float): The price of the breakdown in the opposite direction,
-            at which it is necessary to close the position.
-        """
+        amount = price * self.__lot_size
+        
+        if amount > 0 and self.__deposit - self.__lot_size >= 0:
+            self.__deposit -= self.__lot_size
+            self.__balance += amount
+            self.__profit = amount
+        else:
+            raise Exception('wtf')
 
-        lst1 = ['buy', 'up']
-        lst2 = ['sell', 'down']
-        if side not in lst1 or side not in lst2:
-            raise ValueError("Illegal argument side")
-        if len(data) < 10:
-            raise ValueError()
-        # TODO
-        stop_price = 0.0
+    def max(self, column=0):
+        """Returns maximum data."""
 
-        return stop_price
+        return self.__data.max(0)[column]
+
+    def min(self, column=0):
+        """Returns minimum data."""
+
+        return self.__data.min(0)[column]
+
+    @property
+    def shape(self):
+        """Returns the data shape."""
+        
+        return (self.window, self.__data.shape[1])
+
+    def __len__(self):
+        return len(self.__data)
 
     @property
     def balance(self):
         """Returns the balance value."""
+
         return self.__balance
 
     @property
     def balance_fd(self):
         """Returns the balance value of the first day of the month."""
+
         return self.__balance_fd
 
-    def __len__(self):
-        return len(self.__data)
+    @property
+    def profit(self):
+        """Returns tha profit after close opened order."""
+
+        return self.__profit
+
+    @property
+    def done(self):
+        """Returns the done work flag."""
+
+        return self.__done
+
+    @property
+    def window(self):
+        """Returns the window size."""
+
+        return self.__window
         
     @staticmethod
     def adjust_to_step(self, value, step, increase=False):
@@ -183,23 +195,247 @@ class AbstractMarket():
         Arguments:
             increase (bool): if True - rounding will occur to a larger step value.
         """
+
         return ((int(value * 100000000) - int(value * 100000000) % int(
                 float(step) * 100000000)) / 100000000)+(float(step) if increase else 0)
 
 
+#=============================================================================#
+#                                                                             #
+#=============================================================================#
 class VirtualMarket(AbstractMarket):
     """
     Implement wrapper real exchange with api.
     All datas is real exchange. All operations is virtual.
     """
-    
-    def __init__(self, commission=0.001, *args, **kwargs):
-        """"""
-        super(VirtualMarket, self, args, kwargs)
+
+    __candles = True
+    __tickers = True
+    __trades = False
+
+    def __init__(self, api: BaseApi, symbols=['ETHUSDT'], period='5m',
+                    balance=1000.0, commission=0.001,
+                    order_risk=0.02, month_risk=0.06,
+                    lot_size=0.0, limit=50, **kwargs):
+        """Constructor.
+        
+        Arguments:
+            api (BaseApi): Exchange connector.
+            symbols (str or list):
+            period (str):
+            balance (float): Start balance.
+            commission (float):
+            order_risk (float[0.0-1.0]):
+            month_risk (float[0.0-1.0]):
+            lot_size (float): The size of the new order. If zero, it will be
+                                calculated on the size of risk.
+        """
+
+        self.__api = api
+
+        if symbols is str: symbols = np.array([symbols])
+        self.symbols = symbols
+        self.period = period
+        self.limit = limit
+
+        self.__done = False
+        self.__balance = balance
+        self.__start_balance = self.balance
+        self.__deposit = dict(zip(symbols, [0.0, ]))
         self.__commission = commission
 
-class RealExchange(AbstractMarket):
+        assert (0.0 <= order_risk <= 1.0) or (0.0 <= month_risk <= 1.0), 'The risk must have a value from zero to one.'
+        self.__order_risk = order_risk
+        self.__month_risk = month_risk
+        self.__lot_size = lot_size
+
+        self.__data = dict(zip(self.symbols, [dict() for i in self.symbols]))
+
+        __ex_info = self.__api.exchange_info()
+        for item in __ex_info['symbols']:
+            if item['symbol'] in self.symbols:
+                self.__data[item['symbol']]['tradeOn'] = True if item['status'] == 'TRADING' else False
+                self.__data[item['symbol']]['basePrecition'] = int(item['baseAssetPrecision'])
+                self.__data[item['symbol']]['quotePrecition'] = int(item['quotePrecision'])
+                tmp = {'priceStep': float(item['filters'][0]['tickSize']),
+                       'minQty': float(item['filters'][1]['minQty']),
+                       'qtyStep': float(item['filters'][1]['stepSize']),
+                       'minOrderPrice': float(item['filters'][2]['minNotional'])}
+                self.__data[item['symbol']]['limits'] = tmp
+
+    def load_data(self, limit=100):
+        """Loads data of all symbols from servers or API."""
+
+        candles = pd.DataFrame([])
+        tickers = pd.DataFrame([])
+        trades = pd.DataFrame([])
+        # TODO implement multythreading
+        for symbol in self.symbols:
+            try:
+                if self.__candles:
+                    candles = pd.DataFrame(self.__api.candlesticks(symbol=symbol,
+                                                                   interval=self.period,
+                                                                   limit=limit),
+                                           dtype=np.float)
+                if self.__tickers:
+                    tickers = pd.DataFrame(self.__api.tickers(symbol=symbol, limit=limit))
+                if self.__trades:
+                    trades = pd.DataFrame(self.__api.aggr_trades(symbol=symbol, limit=limit),
+                                          dtype=np.float)
+            except Exception as e:
+                # TODO implement response error handler
+                print('error:', e)
+
+            if self.__candles:
+                self.__data[symbol]['candles'] = np.column_stack((candles.values[:, 1:6], # o,h,l,c,v
+                                                                  candles.values[:, 7:11])) # qv, nt, bv, qv
+            if self.__tickers:
+                self.__data[symbol]['tickers'] = np.column_stack(([np.array([x[0:2] for x in tickers['bids'].values], dtype=np.float),
+                                                                   np.array([x[0:2] for x in tickers['asks'].values], dtype=np.float)]))
+            if self.__trades:
+                self.__data[symbol]['trades'] = trades[['p', 'q']].values
+
+        # TODO save data for training
+
+    def observation(self):
+        """Returns current exchange states."""
+
+        self.__profit = 0.0
+        if self.__balance <= 0.0:
+            self.__done = True
+
+        # TODO load train data if agent.training
+        self.load_data(self.limit)
+
+        result = np.array([])
+
+        for symbol in self.symbols:
+            sym_data = []
+            if self.__candles:
+                sym_data.append(self.__data[symbol]['candles'])
+            if self.__tickers:
+                sym_data.append(self.__data[symbol]['tickers'])
+            if self.__trades:
+                sym_data.append(self.__data[symbol]['trades'])
+            result = np.append(result, np.column_stack(sym_data))
+        
+        return result.reshape(self.shape)
+
+    def reset(self):
+        """Reset market state."""
+        
+        self.__done = False
+        self.__balance = self.__start_balance
+        for depo in self.__deposit.keys():
+            self.__deposit[depo] = 0.0
+
+    def buy_order(self, symbol):
+        """Open buying order.
+
+        Arguments:
+            symbol (str): Name of the trading instrument.
+        """
+
+        price = float(self.__api.ticker_book_price(symbol=symbol)['askPrice'])
+        stop_loss = calculate_stop_loss(self.__data[symbol]['candles'][-12:, 2], 'buy')
+        
+        if self.__lot_size == 0.0:
+            lot_size = calculate_lot(one_lot_risk=abs(price - stop_loss),
+                                     balance_risk=self.balance * self.__order_risk,
+                                     min_lot=self.__data[symbol]['limits']['minQty'])
+            if lot_size <= 0.0:
+                raise Exception('The lot size can not be less than or equal to zero. Lot='+str(lot_size))
+        else:
+            if self.__lot_size >= self.__data[symbol]['limits']['minQty']:
+                lot_size = self.__lot_size
+            else:
+                lot_size = self.__data[symbol]['limits']['minQty']
+
+        amount = price * lot_size
+
+        if amount > 0 and self.__balance - amount > 0:
+            self.__deposit[symbol] += lot_size
+            self.__balance -= amount
+            # self.__profit = -amount # TODO check with him
+        elif self.__balance - amount <= 0:
+            self.__done = True
+        else:
+            raise Exception('wtf')
+
+    def sell_order(self, symbol):
+        """
+        Arguments:
+            symbol (str): Name of the trading instrument.
+        """
+
+        price = float(self.__api.ticker_book_price(symbol=symbol)['bidPrice'])
+        stop_loss = calculate_stop_loss(self.__data[symbol]['candles'][-12:, 1], 'sell')
+        
+        if self.__lot_size == 0.0:
+            lot_size = calculate_lot(one_lot_risk=abs(price - stop_loss),
+                                     balance_risk=self.balance * self.__order_risk,
+                                     min_lot=self.__data[symbol]['limits']['minQty'])
+            if lot_size <= 0.0:
+                raise Exception('The lot size can not be less than or equal to zero. Lot='+str(lot_size))
+        else:
+            if self.__lot_size >= self.__data[symbol]['limits']['minQty']:
+                lot_size = self.__lot_size
+            else:
+                lot_size = self.__data[symbol]['limits']['minQty']
+        
+        amount = price * lot_size
+        
+        if amount > 0 and self.__deposit - lot_size >= 0:
+            self.__deposit -= lot_size
+            self.__balance += amount
+            self.__profit = amount # reward
+        else:
+            raise Exception('wtf')
+
+    @property
+    def shape(self):
+        """Returns the data shape."""
+
+        columns = (9 if self.__candles else 0) + \
+                  (4 if self.__tickers else 0) + \
+                  (2 if self.__trades else 0)
+
+        return (len(self.symbols),  # Symbols count.
+                self.limit,         # Length arrays.
+                columns             # Sum columns (candles(5+4), tickers(2+2), trades(2))
+               )
+    
+    @property
+    def shapes_of_datasets(self):
+        """Returns the datasets shapes."""
+
+        result = list()
+
+        if self.__candles:
+            result.append(9)
+            # result.append(5)
+        if self.__tickers:
+            result.append(4)
+        if self.trades:
+            result.append(2)
+        
+        return tuple(result)
+
+    def __len__(self):
+        return self.limit
+
+
+#=============================================================================#
+#                                                                             #
+#=============================================================================#
+class RealMarket(VirtualMarket):
     """
     Implement wrapper real exchange with api.
     """
     pass
+
+    @property
+    def balance(self):
+        """Returns the balance value."""
+        # TODO
+        return self.__api.account()

@@ -23,13 +23,14 @@ class Binance(BaseApi):
             'server_time':      {'url': 'api/v1/time', 'method': 'GET', 'private': False},
             'exchange_info':    {'url': 'api/v1/exchangeInfo', 'method': 'GET', 'private': False},
             'candlesticks':     {'url': 'api/v1/klines', 'method': 'GET', 'private': False},
-            'tickers':          {'url': 'api/v1/depth', 'method': 'GET', 'private': False},
+            'orders':           {'url': 'api/v1/depth', 'method': 'GET', 'private': False, 'args': ['symbol', 'limit']},
+            'tickers':          {'url': 'api/v1/depth', 'method': 'GET', 'private': False, 'args': ['symbol', 'limit']},
             'ticker_24':        {'url': 'api/v1/ticker/24hr', 'method': 'GET', 'private': False},
             'ticker_price':     {'url': 'api/v3/ticker/price', 'method': 'GET', 'private': False},
             'ticker_book_price':{'url': 'api/v3/ticker/bookTicker', 'method': 'GET', 'private': False},
-            'trades':           {'url': 'api/v1/trades', 'method': 'GET', 'private': False},
+            'trades':           {'url': 'api/v1/trades', 'method': 'GET', 'private': False, 'args': ['symbol', 'limit']},
             'h_trades':         {'url': 'api/v1/historicalTrades', 'method': 'GET', 'private': False},
-            'agr_trades':       {'url': 'api/v1/aggTrades', 'method': 'GET', 'private': False},
+            'aggr_trades':      {'url': 'api/v1/aggTrades', 'method': 'GET', 'private': False},
             # private methods   ## {'url': '', 'method': 'GET', 'private': True}
             'account':          {'url': 'api/v3/account', 'method': 'GET', 'private': True},
             'new_order':        {'url': 'api/v3/order', 'method': 'POST', 'private': True},
@@ -186,7 +187,7 @@ class Binance(BaseApi):
         headers = {}
 
         if self.methods[command]['private']:
-            payload.update({'timestamp': int(time.time()+self.shift_seconds-1) * 1000})
+            payload.update({'timestamp': int(time.time() + self.shift_seconds - 1) * 1000})
 
             sign = hmac.new(
                 key=self.API_SECRET,
@@ -194,11 +195,11 @@ class Binance(BaseApi):
                 digestmod=hashlib.sha256
             ).hexdigest()
 
-            payload.update({'signature':sign})
+            payload.update({'signature': sign})
             headers = {"X-MBX-APIKEY": self.API_KEY}
 
         if self.methods[command]['method'] == 'GET':
-            api_url += '?'+urllib.parse.urlencode(payload)
+            api_url += '?' + urllib.parse.urlencode(payload)
 
         response = requests.request(method=self.methods[command]['method'],
                                     url=api_url,

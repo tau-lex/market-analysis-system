@@ -1,11 +1,11 @@
 import time
 import logging
 import sqlite3
+import os
 
 from datetime import datetime
 
-from cbot.api.binance import Binance
-from cbot.tools import get_script_dir
+from mas_tools.api import Binance
 
 
 #=============================================================================#
@@ -22,15 +22,22 @@ EX_NAME = 'Binance'
 #   base - это базовая пара (BTC, ETH,  BNB, USDT) - то, что на бинансе пишется в табличке сверху
 #   quote - это квотируемая валюта. Например, для торгов по паре NEO/USDT базовая валюта USDT, NEO - квотируемая
 PAIRS = [{
-        'base': 'BNB',
-        'quote': 'LTC',
+        'base': 'ETH',
+        'quote': 'BNB',
+        'offers_amount': 5, # Сколько предложений из стакана берем для расчета средней цены
+                            # Максимум 1000. Допускаются следующие значения:[5, 10, 20, 50, 100, 500, 1000]
+        'spend_sum': 0.95,  # Сколько тратить base каждый раз при покупке quote
+        'profit_markup': 0.005, # Какой навар нужен с каждой сделки? (0.001 = 0.1%)
+    }, {
+        'base': 'ETH',
+        'quote': 'EOS',
         'offers_amount': 5, # Сколько предложений из стакана берем для расчета средней цены
                             # Максимум 1000. Допускаются следующие значения:[5, 10, 20, 50, 100, 500, 1000]
         'spend_sum': 0.02,  # Сколько тратить base каждый раз при покупке quote
         'profit_markup': 0.005, # Какой навар нужен с каждой сделки? (0.001 = 0.1%)
     }, {
-        'base': 'BNB',
-        'quote': 'XEM',
+        'base': 'ETH',
+        'quote': 'BCC',
         'offers_amount': 5, # Сколько предложений из стакана берем для расчета средней цены
                             # Максимум 1000. Допускаются следующие значения:[5, 10, 20, 50, 100, 500, 1000]
         'spend_sum': 0.02,  # Сколько тратить base каждый раз при покупке quote
@@ -43,6 +50,7 @@ STOCK_FEE = 0.001       # Комиссия, которую берет биржа
 USE_BNB_FEES = True     # Комиссия в BNB
 
 SLEEP = 0.1
+tick_count = 0
 
 DB_NEW_TABLE = """
     create table if not exists
@@ -62,8 +70,7 @@ DB_NEW_TABLE = """
         sell_price REAL NULL,
         sell_created DATETIME NULL,
         sell_finished DATETIME NULL
-        );
-"""
+        );"""
 
 DB_SELECT_ORDER = """
     SELECT
@@ -77,24 +84,21 @@ DB_SELECT_ORDER = """
         , buy_price
     FROM orders
     WHERE
-        buy_cancelled IS NULL AND CASE WHEN order_type='buy' THEN buy_finished IS NULL ELSE sell_finished IS NULL END
-"""
+        buy_cancelled IS NULL AND CASE WHEN order_type='buy' THEN buy_finished IS NULL ELSE sell_finished IS NULL END"""
 
 DB_SELECT_ORDERS = """
     SELECT
         distinct(order_pair) pair
     FROM orders
     WHERE
-        buy_cancelled IS NULL AND CASE WHEN order_type='buy' THEN buy_finished IS NULL ELSE sell_finished IS NULL END
-"""
+        buy_cancelled IS NULL AND CASE WHEN order_type='buy' THEN buy_finished IS NULL ELSE sell_finished IS NULL END"""
 
 DB_UPDATE_SELLED_ORDER = """
     UPDATE orders
     SET
         sell_finished = datetime()
     WHERE
-        sell_order_id = :sell_order_id
-"""
+        sell_order_id = :sell_order_id"""
 
 DB_UPDATE_OPENED_ORDER = """
     UPDATE orders
@@ -106,16 +110,31 @@ DB_UPDATE_OPENED_ORDER = """
         sell_amount = :sell_amount,
         sell_price = :sell_initial_price
     WHERE
-        buy_order_id = :buy_order_id
-"""
+        buy_order_id = :buy_order_id"""
 
 DB_UPDATE_CANCELLED_ORDER = """
     UPDATE orders
     SET
         buy_cancelled = datetime()
     WHERE
-        buy_order_id = :buy_order_id
-"""
+        buy_order_id = :buy_order_id"""
+
+DB_INSERT_ORDER = """
+    INSERT INTO orders(
+        order_type,
+        order_pair,
+        buy_order_id,
+        buy_amount,
+        buy_price,
+        buy_created
+    ) Values (
+        'buy',
+        :order_pair,
+        :order_id,
+        :buy_order_amount,
+        :buy_initial_price,
+        datetime()
+    )"""
 
 #=============================================================================#
 #   F U N C T I O N S                                                         #
@@ -145,14 +164,14 @@ if __name__ == "__main__":
         format="%(asctime)s [%(levelname)-5.5s] %(message)s",
         level=logging.DEBUG,
         handlers=[
-            logging.FileHandler("{path}/logs/{fname}.log".format(path=get_script_dir(), fname=EX_NAME)),
+            logging.FileHandler("{path}/logs/{fname}.log".format(path=os.path.dirname(os.path.abspath(__file__)), fname=EX_NAME)),
             logging.StreamHandler()
         ])
     log = logging.getLogger('')
 
     # Получаем ограничения торгов по всем парам с биржи
     local_time = int(time.time())
-    limits = bot.exchangeInfo()
+    limits = bot.exchange_info()
     server_time = int(limits['serverTime'])//1000
 
     # Init time shift, print time info
@@ -160,17 +179,17 @@ if __name__ == "__main__":
     bot.set_shift_seconds(shift_seconds)
     
     log.debug("""
-        Текущее время: {local_time_d} {local_time_u}
-        Время сервера: {server_time_d} {server_time_u}
-        Разница: {diff:0.8f} {warn}
-        Бот будет работать, как будто сейчас: {fake_time_d} {fake_time_u}
-    """.format(
-        local_time_d = datetime.fromtimestamp(local_time), local_time_u=local_time,
-        server_time_d=datetime.fromtimestamp(server_time), server_time_u=server_time,
-        diff=abs(local_time-server_time),
-        warn="ТЕКУЩЕЕ ВРЕМЯ ВЫШЕ" if local_time > server_time else '',
-        fake_time_d=datetime.fromtimestamp(local_time+shift_seconds), fake_time_u=local_time+shift_seconds
-    ))
+            Текущее время: {local_time_d} {local_time_u}
+            Время сервера: {server_time_d} {server_time_u}
+            Разница: {diff:0.8f} {warn}
+            Бот будет работать, как будто сейчас: {fake_time_d} {fake_time_u}
+        """.format(
+            local_time_d = datetime.fromtimestamp(local_time), local_time_u=local_time,
+            server_time_d=datetime.fromtimestamp(server_time), server_time_u=server_time,
+            diff=abs(local_time-server_time),
+            warn="ТЕКУЩЕЕ ВРЕМЯ ВЫШЕ" if local_time > server_time else '',
+            fake_time_d=datetime.fromtimestamp(local_time+shift_seconds), fake_time_u=local_time+shift_seconds
+        ))
 
 
     #=========================================================================#
@@ -178,6 +197,12 @@ if __name__ == "__main__":
     #=========================================================================#
     while True:
         try:
+            if tick_count % 1200 == 0:
+                # Получаем ограничения торгов по всем парам с биржи
+                # Init time shift, print time info
+                bot.set_shift_seconds(int(bot.exchange_info()['serverTime'])//1000 - int(time.time()))
+
+            time.sleep(SLEEP)
 
             # Устанавливаем соединение с локальной базой данных
             conn = sqlite3.connect(EX_NAME+'.db')
@@ -202,8 +227,9 @@ if __name__ == "__main__":
 
                 # Проверяем каждый неисполненный по базе ордер
                 for order in orders_info:
+                    symbol = orders_info[order]['order_pair']
                     # Получаем по ордеру последнюю информацию по бирже
-                    stock_order_data = bot.orderInfo(symbol=orders_info[order]['order_pair'], orderId=order)
+                    stock_order_data = bot.order_info(symbol=symbol, orderId=order)
 
                     order_status = stock_order_data['status']
                     if order_status == 'NEW':
@@ -218,15 +244,15 @@ if __name__ == "__main__":
                                     Создаем ордер на продажу
                                 """.format(
                                     order=order, exec_qty=float(stock_order_data['executedQty'])
-                            ))
+                                ))
 
                             # смотрим, какие ограничения есть для создания ордера на продажу
                             for elem in limits['symbols']:
-                                if elem['symbol'] == orders_info[order]['order_pair']:
+                                if elem['symbol'] == symbol:
                                     CURR_LIMITS = elem
                                     break
                             else:
-                                raise Exception("Не удалось найти настройки выбранной пары " + pair_name)
+                                raise Exception("Не удалось найти настройки выбранной пары " + symbol)
 
                             # Рассчитываем данные для ордера на продажу
 
@@ -244,39 +270,38 @@ if __name__ == "__main__":
                                 adjust_to_step(min_price, CURR_LIMITS['filters'][0]['tickSize'])
                             )
                             # Получаем текущие курсы с биржи
-                            curr_rate = float(bot.tickerPrice(symbol=orders_info[order]['order_pair'])['price'])
+                            curr_rate = float(bot.ticker_price(symbol=symbol)['price'])
                             # Если текущая цена выше нужной, продаем по текущей
                             need_price = max(cut_price, curr_rate)
 
                             log.info("""
-                                Изначально было куплено {buy_initial:0.8f}, за вычетом комиссии {has_amount:0.8f},
-                                Получится продать только {sell_amount:0.8f}
-                                Нужно получить как минимум {need_to_earn:0.8f} {curr}
-                                Мин. цена (с комиссией) составит {min_price}, после приведения {cut_price:0.8f}
-                                Текущая цена рынка {curr_rate:0.8f}
-                                Итоговая цена продажи: {need_price:0.8f}
-                            """.format(
-                                buy_initial=orders_info[order]['buy_amount'], has_amount=has_amount,sell_amount=sell_amount,
-                                need_to_earn=need_to_earn, curr=all_pairs[orders_info[order]['order_pair']]['base'],
-                                min_price=min_price, cut_price=cut_price, need_price=need_price,
-                                curr_rate=curr_rate
-                            ))
+                                    Изначально было куплено {buy_initial:0.8f}, за вычетом комиссии {has_amount:0.8f},
+                                    Получится продать только {sell_amount:0.8f}
+                                    Нужно получить как минимум {need_to_earn:0.8f} {curr}
+                                    Мин. цена (с комиссией) составит {min_price}, после приведения {cut_price:0.8f}
+                                    Текущая цена рынка {curr_rate:0.8f}
+                                    Итоговая цена продажи: {need_price:0.8f}
+                                """.format(
+                                    buy_initial=orders_info[order]['buy_amount'], has_amount=has_amount,sell_amount=sell_amount,
+                                    need_to_earn=need_to_earn, curr=all_pairs[symbol]['base'],
+                                    min_price=min_price, cut_price=cut_price, need_price=need_price,
+                                    curr_rate=curr_rate
+                                ))
 
                             # Если итоговая сумма продажи меньше минимума, ругаемся и не продаем
-                            if (need_price*has_amount) < float(CURR_LIMITS['filters'][2]['minNotional']):
-                                raise Exception("""
-                                    Итоговый размер сделки {trade_am:0.8f} меньше допустимого по паре {min_am:0.8f}. """.format(
+                            if (need_price*has_amount) <float(CURR_LIMITS['filters'][2]['minNotional']):
+                                raise Exception("""Итоговый размер сделки {trade_am:0.8f} меньше допустимого по паре {min_am:0.8f}. """.format(
                                     trade_am=(need_price*has_amount), min_am=float(CURR_LIMITS['filters'][2]['minNotional'])
                                 ))
 
                             log.debug(
-                                'Рассчитан ордер на продажу: кол-во {amount:0.8f}, курс: {rate:0.8f}'.format(
-                                    amount=sell_amount, rate=need_price)
-                            )
+                                    'Рассчитан ордер на продажу: кол-во {amount:0.8f}, курс: {rate:0.8f}'.format(
+                                        amount=sell_amount, rate=need_price)
+                                )
 
                             # Отправляем команду на создание ордера с рассчитанными параметрами
-                            new_order = bot.createOrder(
-                                symbol=orders_info[order]['order_pair'],
+                            new_order = bot.new_order(
+                                symbol=symbol,
                                 recvWindow=5000,
                                 side='SELL',
                                 type='LIMIT',
@@ -310,11 +335,11 @@ if __name__ == "__main__":
                             # Прошло больше времени, чем разрешено держать ордер
                             if time_passed > BUY_LIFE_TIME_SEC:
                                 log.info("""Ордер {order} пора отменять, прошло {passed:0.1f} сек.""".format(
-                                    order=order, passed=time_passed
-                                ))
+                                        order=order, passed=time_passed
+                                    ))
                                 # Отменяем ордер на бирже
-                                cancel = bot.cancelOrder(
-                                    symbol=orders_info[order]['order_pair'],
+                                cancel = bot.cancel_order(
+                                    symbol=symbol,
                                     orderId=order
                                 )
                                 # Если удалось отменить ордер, скидываем информацию в БД
@@ -330,8 +355,8 @@ if __name__ == "__main__":
                     # Если это ордер на продажу, и он исполнен
                     if order_status == 'FILLED' and orders_info[order]['order_type'] == 'sell':
                         log.debug("Ордер {order} на продажу исполнен".format(
-                            order=order
-                        ))
+                                order=order
+                            ))
                         # Обновляем информацию в БД
                         cursor.execute(DB_UPDATE_SELLED_ORDER, {'sell_order_id': order})
                         conn.commit()
@@ -368,7 +393,7 @@ if __name__ == "__main__":
                     # Если баланс позволяет торговать - выше лимитов биржи и выше указанной суммы в настройках
                     if balances[pair_obj['base']] >= pair_obj['spend_sum']:
                         # Получаем информацию по предложениям из стакана, в кол-ве указанном в настройках
-                        offers = bot.depth(
+                        offers = bot.tickers(
                             symbol=pair_name,
                             limit=pair_obj['offers_amount']
                         )
@@ -386,17 +411,17 @@ if __name__ == "__main__":
                             # Если в итоге получается объем торгов меньше минимально разрешенного, то ругаемся и не создаем ордер
                             if my_amount < float(CURR_LIMITS['filters'][1]['stepSize']) or my_amount < float(CURR_LIMITS['filters'][1]['minQty']):
                                 log.warning("""
-                                    Минимальная сумма лота: {min_lot:0.8f}
-                                    Минимальный шаг лота: {min_lot_step:0.8f}
-                                    На свои деньги мы могли бы купить {wanted_amount:0.8f}
-                                    После приведения к минимальному шагу мы можем купить {my_amount:0.8f}
-                                    Покупка невозможна, выход. Увеличьте размер ставки
-                                """.format(
-                                    wanted_amount=pair_obj['spend_sum']/ my_need_price,
-                                    my_amount=my_amount,
-                                    min_lot=float(CURR_LIMITS['filters'][1]['minQty']),
-                                    min_lot_step=float(CURR_LIMITS['filters'][1]['stepSize'])
-                                ))
+                                        Минимальная сумма лота: {min_lot:0.8f}
+                                        Минимальный шаг лота: {min_lot_step:0.8f}
+                                        На свои деньги мы могли бы купить {wanted_amount:0.8f}
+                                        После приведения к минимальному шагу мы можем купить {my_amount:0.8f}
+                                        Покупка невозможна, выход. Увеличьте размер ставки
+                                    """.format(
+                                        wanted_amount=pair_obj['spend_sum']/ my_need_price,
+                                        my_amount=my_amount,
+                                        min_lot=float(CURR_LIMITS['filters'][1]['minQty']),
+                                        min_lot_step=float(CURR_LIMITS['filters'][1]['stepSize'])
+                                    ))
                                 continue
 
                             # Итоговый размер лота
@@ -412,16 +437,16 @@ if __name__ == "__main__":
                             # Если итоговый размер лота меньше минимального разрешенного, то ругаемся и не создаем ордер
                             if trade_am < float(CURR_LIMITS['filters'][2]['minNotional']):
                                 raise Exception("""
-                                    Итоговый размер сделки {trade_am:0.8f} меньше допустимого по паре {min_am:0.8f}. 
-                                    Увеличьте сумму торгов (в {incr} раз(а))""".format(
-                                    trade_am=trade_am, min_am=float(CURR_LIMITS['filters'][2]['minNotional']),
-                                    incr=float(CURR_LIMITS['filters'][2]['minNotional'])/trade_am
-                                ))
+                                        Итоговый размер сделки {trade_am:0.8f} меньше допустимого по паре {min_am:0.8f}. 
+                                        Увеличьте сумму торгов (в {incr} раз(а))""".format(
+                                        trade_am=trade_am, min_am=float(CURR_LIMITS['filters'][2]['minNotional']),
+                                        incr=float(CURR_LIMITS['filters'][2]['minNotional'])/trade_am
+                                    ))
                             log.debug(
-                                'Рассчитан ордер на покупку: кол-во {amount:0.8f}, курс: {rate:0.8f}'.format(amount=my_amount, rate=my_need_price)
-                            )
+                                    'Рассчитан ордер на покупку: кол-во {amount:0.8f}, курс: {rate:0.8f}'.format(amount=my_amount, rate=my_need_price)
+                                )
                             # Отправляем команду на бирже о создании ордера на покупку с рассчитанными параметрами
-                            new_order = bot.createOrder(
+                            new_order = bot.new_order(
                                 symbol=pair_name,
                                 recvWindow=5000,
                                 side='BUY',
@@ -438,31 +463,12 @@ if __name__ == "__main__":
                             # Если удалось создать ордер на покупку, записываем информацию в БД
                             if 'orderId' in new_order:
                                 log.info("Создан ордер на покупку {new_order}".format(new_order=new_order))
-                                cursor.execute(
-                                    """
-                                    INSERT INTO orders(
-                                        order_type,
-                                        order_pair,
-                                        buy_order_id,
-                                        buy_amount,
-                                        buy_price,
-                                        buy_created
-
-                                    ) Values (
-                                        'buy',
-                                        :order_pair,
-                                        :order_id,
-                                        :buy_order_amount,
-                                        :buy_initial_price,
-                                        datetime()
-                                    )
-                                    """, {
-                                        'order_pair': pair_name,
-                                        'order_id': new_order['orderId'],
-                                        'buy_order_amount': my_amount,
-                                        'buy_initial_price': my_need_price
-                                    }
-                                )
+                                cursor.execute(DB_INSERT_ORDER, {'order_pair': pair_name,
+                                                                    'order_id': new_order['orderId'],
+                                                                    'buy_order_amount': my_amount,
+                                                                    'buy_initial_price': my_need_price
+                                                                }
+                                                )
                                 conn.commit()
                             else:
                                 log.warning("Не удалось создать ордер на покупку! {new_order}".format(new_order=str(new_order)))
@@ -476,8 +482,6 @@ if __name__ == "__main__":
             else:
                 log.debug('По всем парам есть неисполненные ордера')
 ##############################################################
-
-            time.sleep(SLEEP)
 
         except Exception as e:
             log.exception(e)

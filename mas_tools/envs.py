@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-from gym import Env
-from gym.spaces import Discrete, Box
+from gym import Env, Space
+from gym.spaces import Discrete
 from gym.utils import seeding
 
 from mas_tools.markets import AbstractMarket
@@ -14,14 +14,14 @@ class MarketEnv(Env):
     to communicate with real market data.
     """
 
-    reward_range = (0, np.inf)
+    reward_range = (-np.inf, np.inf)
     action_space = None
     observation_space = None
     metadata = {'render.modes': ['human', 'rgb_array'],
                 'video.frames_per_second' : 15}
     viewer = None
 
-    def __init__(self, market: AbstractMarket, window=1, **kwargs):
+    def __init__(self, market: AbstractMarket, **kwargs):
         """MarketEnv constructor.
         
         Arguments:
@@ -30,14 +30,10 @@ class MarketEnv(Env):
         """
 
         self.market = market
-        self.window = window
-        self.position = self.window
 
+        # TODO action space for multy symbols agent
         self.action_space = Discrete(3)
-        # TODO
-        self.observation_space = Box(low=0.0, high=self.market.data.max(0)[2],
-                                        shape=(self.window, self.market.data.shape[1]),
-                                        dtype=np.float)
+        self.observation_space = Space(shape=self.market.shape, dtype=np.float)
 
     def step(self, action):
         """Run one timestep of the environment's dynamics. When end of
@@ -60,34 +56,37 @@ class MarketEnv(Env):
 
         done = False
 
-        observation = self.market.observation(self.position, self.window)
+        observation = self.market.observation()
 
-        if action == 0:
-            self.market.buy_order(observation[self.window-1, 1])
-        elif action == 1:
-            pass
-        elif action == 2:
-            self.market.sell_order(observation[self.window-1, 1])
+        # action is the max index from the model output (from three neurons)
+        idx = 0
+        for symbol in self.market.symbols:
+            if action[idx] == 0:
+                self.market.buy_order(symbol)
+            elif action[idx] == 1:
+                pass
+            elif action[idx] == 2:
+                self.market.sell_order(symbol)
+            idx += 1
 
-        self.position += 1
-        reward = self.market.balance
-        if self.position >= len(self.market) or reward <= 0:
+        reward = self.market.profit
+        if self.market.done or reward <= 0:
             done = True
 
-        info = {}
+        info = {'balance': self.market.balance}
 
         return (observation, reward, done, info)
 
     def reset(self):
         """Resets the state of the environment and returns an initial observation.
 
-        Returns: observation (object): the initial observation of the space.
+        Returns:
+            observation (object): the initial observation of the space.
         """
-        self.position = self.window
-        self.market.reset()
-        observation = self.market.observation(self.position, self.window)
 
-        return observation
+        self.market.reset()
+        
+        return self.market.observation()
 
     def render(self, mode='human', close=False):
         """Renders the environment.
@@ -114,20 +113,26 @@ class MarketEnv(Env):
         """
 
         if mode == 'rgb_array':
-            return np.array(...) # return RGB frame suitable for video
+            # data = self.market.get_window(len=20)
+            return np.array([]) # return RGB frame suitable for video
         elif mode is 'human':
             pass # pop up a window and render
         else:
             super(MarketEnv, self).render(mode=mode) # just raise an exception
 
-    def configure(self, *args, **kwargs):
+    def configure(self, **kwargs):
         """Provides runtime configuration to the environment.
         This configuration should consist of data that tells your
         environment how to run (such as an address of a remote server,
         or path to your ImageNet data). It should not affect the
         semantics of the environment.
         """
-        raise NotImplementedError()
+        
+        if kwargs['market']:
+            del self.market
+            self.market = kwargs['market']
+
+        self.reset()
 
     def close(self):
         """Override _close in your subclass to perform any necessary cleanup.
