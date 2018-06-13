@@ -17,12 +17,8 @@ from mas_tools.tools import calculate_stop_loss, calculate_lot
 #=============================================================================#
 class AbstractMarket():
     """Implement Base class exchange wrapper."""
-    
-    symbols = np.array([])
-    period = ''
 
     __done = False
-    __balance = 0.0
     __balance_fd = 0.0
     __balance_ut = 0
     __profit = 0.0 # simple reward
@@ -51,7 +47,7 @@ class AbstractMarket():
         self.__window = window
         self.__done = False
         self.__balance = balance
-        self.__start_balance = self.balance
+        self.__start_balance = self.__balance
         self.__deposit = dict(zip(symbols, [0.0 for i in symbols]))
 
         assert (0.0 <= order_risk <= 1.0) or (0.0 <= month_risk <= 1.0), 'The risk must have a value from zero to one.'
@@ -67,8 +63,6 @@ class AbstractMarket():
                 self.__step_lot = float(item['filters'][1]['minQty'])
                 self.__min_amount = float(item['filters'][2]['minNotional'])
                 break
-
-        self.load_data()
 
     def load_data(self, limit=500):
         """Loads data of all symbols from servers or API."""
@@ -98,6 +92,8 @@ class AbstractMarket():
 
     def reset(self):
         """Reset market state."""
+
+        self.load_data()
         
         self.__done = False
         self.__position = 0
@@ -137,16 +133,6 @@ class AbstractMarket():
         else:
             raise Exception('wtf')
 
-    def max(self, column=0):
-        """Returns maximum data."""
-
-        return self.__data.max(0)[column]
-
-    def min(self, column=0):
-        """Returns minimum data."""
-
-        return self.__data.min(0)[column]
-
     @property
     def shape(self):
         """Returns the data shape."""
@@ -170,7 +156,7 @@ class AbstractMarket():
 
     @property
     def profit(self):
-        """Returns tha profit after close opened order."""
+        """Returns the profit after close opened order."""
 
         return self.__profit
 
@@ -230,6 +216,7 @@ class VirtualMarket(AbstractMarket):
             lot_size (float): The size of the new order. If zero, it will be
                                 calculated on the size of risk.
         """
+        super(VirtualMarket, self).__init__(api, **kwargs)
 
         self.__api = api
 
@@ -240,7 +227,7 @@ class VirtualMarket(AbstractMarket):
 
         self.__done = False
         self.__balance = balance
-        self.__start_balance = self.balance
+        self.__start_balance = self.__balance
         self.__deposit = dict(zip(symbols, [0.0, ]))
         self.__commission = commission
 
@@ -251,8 +238,8 @@ class VirtualMarket(AbstractMarket):
 
         self.__data = dict(zip(self.symbols, [dict() for i in self.symbols]))
 
-        __ex_info = self.__api.exchange_info()
-        for item in __ex_info['symbols']:
+        ex_info = self.__api.exchange_info()
+        for item in ex_info['symbols']:
             if item['symbol'] in self.symbols:
                 self.__data[item['symbol']]['tradeOn'] = True if item['status'] == 'TRADING' else False
                 self.__data[item['symbol']]['basePrecition'] = int(item['baseAssetPrecision'])
@@ -335,11 +322,12 @@ class VirtualMarket(AbstractMarket):
         Arguments:
             symbol (str): Name of the trading instrument.
         """
-
+        
         price = float(self.__api.ticker_book_price(symbol=symbol)['askPrice'])
         stop_loss = calculate_stop_loss(self.__data[symbol]['candles'][-12:, 2], 'buy')
         
         if self.__lot_size == 0.0:
+            # TODO Check calculations (stop=ok, )
             lot_size = calculate_lot(one_lot_risk=abs(price - stop_loss),
                                      balance_risk=self.balance * self.__order_risk,
                                      min_lot=self.__data[symbol]['limits']['minQty'])
@@ -354,11 +342,14 @@ class VirtualMarket(AbstractMarket):
         amount = price * lot_size
 
         if amount > 0 and self.__balance - amount > 0:
+            print('check')
             self.__deposit[symbol] += lot_size
-            self.__balance -= amount
+            self.__balance -= amount * (1.0 + self.__commission)
             # self.__profit = -amount # TODO check with him
         elif self.__balance - amount <= 0:
-            self.__done = True
+            raise RuntimeError('wtf_buy :: b=%.1f a=%.1f p=%.2f l=%f sl=%.2f' \
+                                % (self.__balance, amount, price, lot_size, stop_loss))
+            # self.__done = True
         else:
             raise Exception('wtf')
 
@@ -387,7 +378,7 @@ class VirtualMarket(AbstractMarket):
         
         if amount > 0 and self.__deposit - lot_size >= 0:
             self.__deposit -= lot_size
-            self.__balance += amount
+            self.__balance += amount * (1.0 - self.__commission)
             self.__profit = amount # reward
         else:
             raise Exception('wtf')
@@ -416,7 +407,7 @@ class VirtualMarket(AbstractMarket):
             # result.append(5)
         if self.__tickers:
             result.append(4)
-        if self.trades:
+        if self.__trades:
             result.append(2)
         
         return tuple(result)

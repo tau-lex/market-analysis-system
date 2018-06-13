@@ -7,6 +7,7 @@ from keras.models import Model, Sequential
 from keras.models import model_from_json
 from keras.layers import Dense, Activation
 from keras.layers import Flatten, BatchNormalization, Reshape
+from keras.layers import Dropout
 from keras.layers import LSTM
 
 
@@ -39,15 +40,19 @@ def simple_model(input_shape, nb_output, act='linear'):
     """Simple model for RL."""
 
     model = Sequential()
-    model.add(Reshape((input_shape[0], input_shape[1]), batch_input_shape=(None, 1, input_shape[0], input_shape[1])))
+    model.add(Reshape((input_shape[1], input_shape[2]),
+                        batch_input_shape=(None, 1, input_shape[0], input_shape[1], input_shape[2])))
     model.add(BatchNormalization())
     # model.add(BatchNormalization(batch_input_shape=(None, input_shape[0], input_shape[1])))
-    model.add(LSTM(16))
+    model.add(LSTM(input_shape[1] * input_shape[2]))
     model.add(Activation('relu'))
-    model.add(Dense(16))
+    model.add(Dropout(0.4))
+    model.add(Dense(64))
     model.add(Activation('relu'))
-    model.add(Dense(16))
+    model.add(Dropout(0.4))
+    model.add(Dense(32))
     model.add(Activation('relu'))
+    model.add(Dropout(0.4))
     model.add(Dense(nb_output, activation=act))
 
     return model
@@ -55,11 +60,11 @@ def simple_model(input_shape, nb_output, act='linear'):
 
 def simple_model2(input_shape, nb_output, act='linear'):
     """Simple model for RL."""
-
+    shape = (None, input_shape[0], input_shape[1], input_shape[2])
     model = Sequential()
-    model.add(BatchNormalization(batch_input_shape=(None, input_shape)))
-    model.add(LSTM(16))
-    model.add(Activation('relu'))
+    model.add(BatchNormalization(batch_input_shape=shape))
+    # model.add(LSTM(16))
+    # model.add(Activation('relu'))
     model.add(Dense(16))
     model.add(Activation('relu'))
     model.add(Dense(16))

@@ -51,8 +51,8 @@ class MarketEnv(Env):
             done (boolean): whether the episode has ended, in which case further step() calls will return undefined results
             info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
         """
-
-        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+        # TODO multy action
+        assert self.action_space.contains(action[0]), "%r (%s) invalid"%(action, type(action))
 
         done = False
 
@@ -70,10 +70,13 @@ class MarketEnv(Env):
             idx += 1
 
         reward = self.market.profit
-        if self.market.done or reward <= 0:
+        if self.market.done or self.market.balance <= 0:
             done = True
 
-        info = {'balance': self.market.balance}
+        info = {'last_action': action[0],
+                'last_reward': reward,
+                'balance': self.market.balance, 
+               }
 
         return (observation, reward, done, info)
 
