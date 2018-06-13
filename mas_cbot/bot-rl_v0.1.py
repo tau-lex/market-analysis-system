@@ -2,6 +2,7 @@ import time
 import logging
 
 from datetime import datetime
+import numpy as np
 
 from keras.optimizers import Adam
 
@@ -12,27 +13,27 @@ from rl.memory import SequentialMemory
 from mas_tools.envs import MarketEnv
 from mas_tools.markets import VirtualMarket, AbstractMarket
 from mas_tools.api import Binance
-from mas_tools.models import simple_model2
+from mas_tools.models import simple_model
 from mas_tools.tools import get_script_dir
 
 
 #=============================================================================#
 #   G L O B A L   V A R I A B L E S                                           #
 #=============================================================================#
-MY_API_KEY = '6zi9c6rsgJOekOoRCYyL5a8pgMcrmnfp8bnhi5eZ5hjkshwN2AQX3U2yIrKuzz20'
-MY_API_SECRET = 'VGDdAIqSfPfkFtTuNFmyzCDeCg0aQocy4rLO3gtjcI194b3VypMkREdgdNCxgSyI'
+MY_API_KEY = '---'
+MY_API_SECRET = '---'
 
 ENV_NAME = 'Binance_2'
 
-SLEEP = 0.3
+SLEEP = 1
 TRAIN = True
 
 
 if __name__ == "__main__":
     api = Binance(API_KEY=MY_API_KEY, API_SECRET=MY_API_SECRET)
 
-    connector = VirtualMarket(api, symbols=['ETHUSDT'], periods='5m', balance=1000.0)
-    print('connector shape', connector.shape)
+    connector = VirtualMarket(api, symbols=['ETHUSDT'], periods='5m',
+                              balance=1000.0, lot_size=0.01)
 
     market = MarketEnv(connector)
 
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     nb_actions = market.action_space.n
     print('state =', observation_shape, '| actions =', nb_actions)
 
-    model = simple_model2(observation_shape, nb_actions)
+    model = simple_model(observation_shape, nb_actions, 'relu')
 
     memory = SequentialMemory(limit=10000, window_length=1)
     policy = BoltzmannQPolicy()
@@ -58,7 +59,7 @@ if __name__ == "__main__":
     # agent.test(market, nb_episodes=5, visualize=False)
 
     observation = market.reset()
-    print('first state=', observation.shape)
+    tickcount = 0
 
     if TRAIN:
         agent.training = True
@@ -73,6 +74,9 @@ if __name__ == "__main__":
 
             observation, reward, done, info = market.step([action])
 
+            if tickcount % 10 == 0:
+                reward = -1
+                
             agent.backward(reward, terminal=done)
 
             if done:
@@ -80,18 +84,31 @@ if __name__ == "__main__":
                 done = False
                 print('reset')
             
-            print('reward= {%.2f}, balance= {%.2f}', reward, info['balance'])
+            print('action: %d | reward: %.2f | balance: %.2f' % \
+                    (info['last_action'], reward, info['balance']))
 
+            if tickcount % 100 == 0:
+                agent.save_weights('E:/Projects/market-analysis-system/dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+            
             time.sleep(SLEEP)
+            tickcount += 1
 
         except KeyboardInterrupt:
             # We catch keyboard interrupts here so that training can be be safely aborted.
             # This is so common that we've built this right into this function, which ensures that
             # the `on_train_end` method is properly called.
-            agent.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+            agent.save_weights('E:/Projects/market-analysis-system/dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
             break
 
-        except Exception as e:
-            print(e)
+        except ConnectionError as e:
             # log.exception(e)
+            pass
+
+        except RuntimeError as e:
+            print(e)
+
+        # except Exception as e:
+        #     print(e)
+        #     # log.exception(e)
+        #     break
 

@@ -206,7 +206,7 @@ class Binance(BaseApi):
                                     data="" if self.methods[command]['method'] == 'GET' else payload,
                                     headers=headers)
         if 'code' in response.text:
-            raise Exception(response.text)
+            raise ConnectionError(response.text)
         return response.json()
 
 
