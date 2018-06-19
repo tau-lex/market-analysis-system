@@ -22,7 +22,7 @@ def signal_to_class(data, n=2, normalize=True):
     data = np.array(data)
 
     if len(data.shape) > 1:
-        raise ValueError("Array shape should be .. ebaniy anglish=)")
+        raise ValueError("The array must be one-dimensional.")
 
     if n == 2:
         if normalize:
@@ -117,6 +117,51 @@ def class_to_signal(data, n=2, normalized=True):
                 result = np.append(result, -1.0)
 
     return result
+
+
+def prepare_target(data, close_index=3, classes=6):
+    """
+    Hello (=
+    uniform classes
+    """
+    # TODO
+    # while const
+    classes = 6
+    
+    data = np.array(data)
+    new_target = data[1:, close_index] / data[:-1, close_index]
+    new_target = np.insert(new_target, obj=0, values=[1.0])
+    
+    n, bins = np.histogram(new_target, bins=200, range=(0.99, 1.01))
+    
+    sixth = sum(n) / classes
+    
+    points = [0., 0., 1., 0., 0.]
+    _sum = n[100]/2
+    p_idx = 1
+    for idx in range(99, -1):
+        _sum += n[idx]
+        if _sum >= sixth:
+            points[p_idx] = (idx - 100) / 10**4 + 1
+            p_idx -= 1
+        if p_idx < 0:
+            break
+    _sum = n[100]/2
+    p_idx = 3
+    for idx in range(101, 201):
+        _sum += n[idx]
+        if _sum >= sixth:
+            points[p_idx] = (idx - 100) / 10**4 + 1
+            p_idx += 1
+        if p_idx > 4:
+            break
+    # TODO
+    def select(a):
+        a > points[2]
+        return 1
+    new_target = [select(x) for x in new_target]
+
+    return new_target
 
 
 def print_classification_scores(true_y, test_y, n=3):

@@ -1,21 +1,15 @@
-# Market analysis system (MAS)
+## The Market analysis system
+MAS - a set of tools and examples of their use, the purpose of which is to analyze time series, build models based on machine learning, forecast signals for entering the market, automate trade.
+* /connectors - Connectors to various platforms for accessing data and trading operations.
+* /data - Data sets for learning models, scripts for processing and data collection.
+* /mas_cbot - Directory for experiments on crypto exchanges.
+* /mas_mt - Directory for experiments with the MetaTrader platform.
+* /mas_tools - A library in Python 3.6 that provides tools for experiments.
 
-### Eng
-
-MAS - This is a software package that helps to collect and analyze market data.
-
-- Market-Analysis (Keras) - A set of scripts in Python, for forecasting time series, saved in CSV format.
-
-- MQL4 - A set of scripts for saving timeseries and easy data exchange between MetaTrader and data analysis packages.
-
-
-### Rus
-
-MAS - Представляет собой программный комплекс, помогающий собирать и анализировать рыночные данные.
-
-- Market-Analysis (Keras) - Набор скриптов на Python, для прогнозирования временных рядов, сохраненых в формате CSV.
-
-- MQL4 - Набор скриптов для сохранения таймсерий и удобного обмена данными между MetaTrader и пакетами анализа данных.
- 
-
-Copyright © 2016-2018 Terentev Aleksey 
+## Система анализа рынков
+MAS - набор инструментов и примеров их использования, предназначением которых является анализ временных рядов, построение моделей на основе машинного обучения, прогнозирование сигналов для входа в рынок, автоматизация торговли.
+* /connectors - Коннекторы к различным платформам доступа к данным и торговым операциям.
+* /data - Наборы данных для обучения моделей, скрипты по обработке и сбору данных.
+* /mas_cbot - Директория для экспериментов на криптовалютных биржах.
+* /mas_mt - Директория для экспериментов с платформой MetaTrader.
+* /mas_tools - Библиотека на Python 3.6, предоставляющая инструменты для экспериментов.

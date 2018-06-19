@@ -17,7 +17,7 @@ def create_timeseries_matrix(data_x, data_y=[], look_back=3):
 
     if look_back >= data_x.shape[0]:
         print('create_timeseries_matrix() error = look back size is large')
-        return None
+        return np.array(data_x), np.array(data_y)
 
     result = np.array([])
     data_x = np.array(data_x)
@@ -67,8 +67,8 @@ def shuffle_xy(data_a = [], data_b = []):
 
     data_a = np.array(data_a)
     data_b = np.array(data_b)
-    width_a = data_a.shape[1]
     try:
+        width_a = data_a.shape[1]
         temp = np.hstack((data_a, data_b))
         shuffle(temp)
     except:
@@ -76,49 +76,6 @@ def shuffle_xy(data_a = [], data_b = []):
         return data_a, data_b
         
     return np.hsplit(temp, np.array([width_a]))
-
-
-def prepare_target(data, close_index=3, classes=6):
-    """
-    Hello (=
-    """
-    # while const
-    classes = 6
-    
-    data = np.array(data)
-    new_target = data[1:, close_index] / data[:-1, close_index]
-    new_target = np.insert(new_target, obj=0, values=[1.0])
-    
-    n, bins = np.histogram(new_target, bins=200, range=(0.99, 1.01))
-    
-    sixth = sum(n) / classes
-    
-    points = [0., 0., 1., 0., 0.]
-    _sum = n[100]/2
-    p_idx = 1
-    for idx in range(99, -1):
-        _sum += n[idx]
-        if _sum >= sixth:
-            points[p_idx] = (idx - 100) / 10**4 + 1
-            p_idx -= 1
-        if p_idx < 0:
-            break
-    _sum = n[100]/2
-    p_idx = 3
-    for idx in range(101, 201):
-        _sum += n[idx]
-        if _sum >= sixth:
-            points[p_idx] = (idx - 100) / 10**4 + 1
-            p_idx += 1
-        if p_idx > 4:
-            break
-    # TODO
-    def select(a):
-        a > points[2]
-        return 1
-    new_target = [select(x) for x in new_target]
-
-    return new_target
 
 
 def get_delta(data, index1=0, index2=1):
