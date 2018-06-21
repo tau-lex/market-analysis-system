@@ -16,12 +16,89 @@ from mas_tools.tools import calculate_stop_loss, calculate_lot
 #                                                                             #
 #=============================================================================#
 class AbstractMarket():
-    """Implement Base class exchange wrapper."""
+    """Implements the interface of the exchange wrapper."""
 
-    __done = False
-    __balance_fd = 0.0
-    __balance_ut = 0
-    __profit = 0.0 # simple reward
+    __balance = 0.0
+    __profit = 0.0      # current reward
+    __balance_fd = 0.0  # the first day of the month
+    __balance_ut = 0    # date of the last update of the balance_fd
+    __done = False      # flag end of the dataset
+
+    def observation(self, row=-1):
+        """Returns the state of the market at the current position.
+        
+        # Arguments
+            row (int): Row in dataset."""
+
+        raise NotImplementedError()
+
+    def reset(self):
+        """Reset market state."""
+        
+        self.__done = False
+        self.__balance = 0.0
+        self.__profit = 0.0 
+        self.__balance_fd = 0.0
+        self.__balance_ut = 0
+
+    def buy_order(self, symbol=None):
+        """Implements execution of an order to purchase an asset.
+        
+        # Arguments
+            symbol (str): Symbol from the list of traded symbols."""
+
+        raise NotImplementedError()
+
+    def sell_order(self, symbol):
+        """Implements execution of a warrant for the sale of an asset.
+        
+        # Arguments
+            symbol (str): Symbol from the list of traded symbols."""
+
+        raise NotImplementedError()
+
+    @property
+    def shape(self):
+        """Returns the shape of one market observation."""
+
+        raise NotImplementedError()
+
+    @property
+    def symbols_count(self):
+        """Returns the number of traded symbols."""
+
+        raise NotImplementedError()
+
+    @property
+    def balance(self):
+        """Returns the balance value."""
+
+        return self.__balance
+
+    @property
+    def balance_fd(self):
+        """Returns the balance value of the first day of the month."""
+
+        return self.__balance_fd
+
+    @property
+    def profit(self):
+        """Returns the profit after close opened order."""
+
+        return self.__profit
+
+    @property
+    def done(self):
+        """Returns the done work flag."""
+
+        return self.__done
+
+
+#=============================================================================#
+#                                                                             #
+#=============================================================================#
+class VirtualMarket(AbstractMarket):
+    """Implements access to the abstract market."""
 
     def __init__(self, api: BaseApi, symbols=['ETHUSDT'], period='1d',
                     balance=1000.0, order_risk=0.02, month_risk=0.06,
@@ -75,7 +152,10 @@ class AbstractMarket():
         self.__data = np.column_stack((data[:, 1:6], data[:, 7:11]))
 
     def observation(self, row=-1):
-        """Returns observation on position."""
+        """Returns the state of the market at the current position.
+        
+        # Arguments
+            row (int): Row in dataset."""
 
         self.__profit = 0.0
         if row < 0:
@@ -102,7 +182,10 @@ class AbstractMarket():
             self.__deposit[depo] = 0.0
 
     def buy_order(self, symbol):
-        """"""
+        """Implements execution of an order to purchase an asset.
+        
+        # Arguments
+            symbol (str): Symbol from the list of traded symbols."""
     
         # [:, 0:3] = ohlc
         price = self.__data[self.__position + self.__window - 1, 0]
@@ -119,7 +202,10 @@ class AbstractMarket():
             raise Exception('wtf')
 
     def sell_order(self, symbol):
-        """"""
+        """Implements execution of a warrant for the sale of an asset.
+        
+        # Arguments
+            symbol (str): Symbol from the list of traded symbols."""
 
         # [:, 0:3] = ohlc
         price = self.__data[self.__position + self.__window - 1, 0]
@@ -135,61 +221,21 @@ class AbstractMarket():
 
     @property
     def shape(self):
-        """Returns the data shape."""
+        """Returns the shape of one market observation."""
         
-        return (self.window, self.__data.shape[1])
-
-    def __len__(self):
-        return len(self.__data)
+        return (self.__window, self.__data.shape[1])
 
     @property
-    def balance(self):
-        """Returns the balance value."""
+    def symbols_count(self):
+        """Returns the number of traded symbols."""
 
-        return self.__balance
-
-    @property
-    def balance_fd(self):
-        """Returns the balance value of the first day of the month."""
-
-        return self.__balance_fd
-
-    @property
-    def profit(self):
-        """Returns the profit after close opened order."""
-
-        return self.__profit
-
-    @property
-    def done(self):
-        """Returns the done work flag."""
-
-        return self.__done
-
-    @property
-    def window(self):
-        """Returns the window size."""
-
-        return self.__window
-        
-    @staticmethod
-    def adjust_to_step(self, value, step, increase=False):
-        """Rounds any number to a multiple of the specified step.
-
-        from: https://bablofil.ru
-
-        Arguments:
-            increase (bool): if True - rounding will occur to a larger step value.
-        """
-
-        return ((int(value * 100000000) - int(value * 100000000) % int(
-                float(step) * 100000000)) / 100000000)+(float(step) if increase else 0)
+        return len(self.symbols)
 
 
 #=============================================================================#
 #                                                                             #
 #=============================================================================#
-class VirtualMarket(AbstractMarket):
+class VirtualExchange(AbstractMarket):
     """
     Implement wrapper real exchange with api.
     All datas is real exchange. All operations is virtual.
@@ -419,7 +465,7 @@ class VirtualMarket(AbstractMarket):
 #=============================================================================#
 #                                                                             #
 #=============================================================================#
-class RealMarket(VirtualMarket):
+class RealExchange(VirtualExchange):
     """
     Implement wrapper real exchange with api.
     """

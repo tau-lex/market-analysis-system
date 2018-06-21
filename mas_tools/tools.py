@@ -179,8 +179,20 @@ def calculate_lot(one_lot_risk, balance_risk, min_lot, precision=2):
     if one_lot_risk * min_lot >= balance_risk or one_lot_risk <= 0:
         return min_lot
     elif min_lot == 1:
-        return floor(balance_risk / one_lot_risk) # Часть от риска лотом
+        return floor(balance_risk / one_lot_risk)
     else:
         return round(balance_risk / one_lot_risk - min_lot, precision)
     return -1.0
 
+
+def adjust_to_step(self, value, step, increase=False):
+    """Rounds any number to a multiple of the specified step.
+
+    from: https://bablofil.ru
+
+    Arguments:
+        increase (bool): if True - rounding will occur to a larger step value.
+    """
+
+    return ((int(value * 100000000) - int(value * 100000000) % int(
+            float(step) * 100000000)) / 100000000)+(float(step) if increase else 0)

@@ -17,6 +17,7 @@ class MarketEnv(Env):
     reward_range = (-np.inf, np.inf)
     action_space = None
     observation_space = None
+    actions = {'hold': 0, 'buy': 1, 'sell': 2}
     metadata = {'render.modes': ['human', 'rgb_array'],
                 'video.frames_per_second' : 15}
     viewer = None
@@ -32,7 +33,7 @@ class MarketEnv(Env):
         self.market = market
 
         # TODO action space for multy symbols agent
-        self.action_space = Discrete(3)
+        self.action_space = Discrete(3 * self.market.symbols_count)
         self.observation_space = Space(shape=self.market.shape, dtype=np.float)
 
     def step(self, action):
@@ -61,11 +62,11 @@ class MarketEnv(Env):
         # action is the max index from the model output (from three neurons)
         idx = 0
         for symbol in self.market.symbols:
-            if action[idx] == 0:
+            if action[idx] == self.actions['buy']:
                 self.market.buy_order(symbol)
-            elif action[idx] == 1:
+            elif action[idx] == self.actions['hold']:
                 pass
-            elif action[idx] == 2:
+            elif action[idx] == self.actions['sell']:
                 self.market.sell_order(symbol)
             idx += 1
 
