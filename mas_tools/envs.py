@@ -25,7 +25,7 @@ class MarketEnv(Env):
     def __init__(self, market: AbstractMarket, **kwargs):
         """MarketEnv constructor.
         
-        Arguments:
+        Arguments
             market (AbstractMarket): Wrapper for access to the market through API, or other solutions.
             window (int): This is the size of the state of the environment (The number of time intervals).
         """
@@ -43,10 +43,10 @@ class MarketEnv(Env):
 
         Accepts an action and returns a tuple (observation, reward, done, info).
 
-        Arguments:
+        Arguments
             action (object): an action provided by the environment
 
-        Returns:
+        Returns
             observation (object): agent's observation of the current environment
             reward (float) : amount of reward returned after previous action
             done (boolean): whether the episode has ended, in which case further step() calls will return undefined results
@@ -84,7 +84,7 @@ class MarketEnv(Env):
     def reset(self):
         """Resets the state of the environment and returns an initial observation.
 
-        Returns:
+        Returns
             observation (object): the initial observation of the space.
         """
 
@@ -106,12 +106,12 @@ class MarketEnv(Env):
           terminal-style text representation. The text can include newlines
           and ANSI escape sequences (e.g. for colors).
 
-        Note:
+        Note
             Make sure that your class's metadata 'render.modes' key includes
               the list of supported modes. It's recommended to call super()
               in implementations to use the functionality of this method.
 
-        Arguments:
+        Arguments
             mode (str): The mode to render with.
             close (bool): Close all open renderings.
         """
@@ -149,7 +149,7 @@ class MarketEnv(Env):
     def seed(self, seed=None):
         """Sets the seed for this env's random number generator(s).
         
-        Returns:
+        Returns
             list<bigint>: Returns the list of seeds used in this env's random
               number generators. The first value in the list should be the
               "main" seed, or the value which a reproducer should pass to

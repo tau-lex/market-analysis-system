@@ -1,22 +1,20 @@
-# -*- coding: utf-8 -*-
 """
 Implementation exchange connectors and api wrapper.
 """
-from math import floor
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
 import pandas as pd
 
 # import quandl
 from mas_tools.api import BaseApi
-from mas_tools.tools import calculate_stop_loss, calculate_lot
+from mas_tools.utils.trade import calculate_stop_loss, calculate_lot
 
 
-#=============================================================================#
-#                                                                             #
-#=============================================================================#
 class AbstractMarket():
     """Implements the interface of the exchange wrapper."""
+
+    __metaclass__ = ABCMeta
 
     __balance = 0.0
     __profit = 0.0      # current reward
@@ -24,10 +22,11 @@ class AbstractMarket():
     __balance_ut = 0    # date of the last update of the balance_fd
     __done = False      # flag end of the dataset
 
+    @abstractmethod
     def observation(self, row=-1):
         """Returns the state of the market at the current position.
         
-        # Arguments
+        Arguments
             row (int): Row in dataset."""
 
         raise NotImplementedError()
@@ -41,29 +40,31 @@ class AbstractMarket():
         self.__balance_fd = 0.0
         self.__balance_ut = 0
 
+    @abstractmethod
     def buy_order(self, symbol=None):
         """Implements execution of an order to purchase an asset.
         
-        # Arguments
+        Arguments
             symbol (str): Symbol from the list of traded symbols."""
 
         raise NotImplementedError()
 
+    @abstractmethod
     def sell_order(self, symbol):
         """Implements execution of a warrant for the sale of an asset.
         
-        # Arguments
+        Arguments
             symbol (str): Symbol from the list of traded symbols."""
 
         raise NotImplementedError()
 
-    @property
+    @abstractproperty
     def shape(self):
         """Returns the shape of one market observation."""
 
         raise NotImplementedError()
 
-    @property
+    @abstractproperty
     def symbols_count(self):
         """Returns the number of traded symbols."""
 
@@ -94,9 +95,6 @@ class AbstractMarket():
         return self.__done
 
 
-#=============================================================================#
-#                                                                             #
-#=============================================================================#
 class VirtualMarket(AbstractMarket):
     """Implements access to the abstract market."""
 
@@ -232,9 +230,6 @@ class VirtualMarket(AbstractMarket):
         return len(self.symbols)
 
 
-#=============================================================================#
-#                                                                             #
-#=============================================================================#
 class VirtualExchange(AbstractMarket):
     """
     Implement wrapper real exchange with api.
@@ -262,7 +257,7 @@ class VirtualExchange(AbstractMarket):
             lot_size (float): The size of the new order. If zero, it will be
                                 calculated on the size of risk.
         """
-        super(VirtualMarket, self).__init__(api, **kwargs)
+        super(VirtualExchange, self).__init__(api, **kwargs)
 
         self.__api = api
 
@@ -462,9 +457,6 @@ class VirtualExchange(AbstractMarket):
         return self.limit
 
 
-#=============================================================================#
-#                                                                             #
-#=============================================================================#
 class RealExchange(VirtualExchange):
     """
     Implement wrapper real exchange with api.
