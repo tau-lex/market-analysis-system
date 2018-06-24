@@ -14,7 +14,7 @@ from mas_tools.envs import MarketEnv
 from mas_tools.markets import VirtualMarket, AbstractMarket
 from mas_tools.api import Binance
 from mas_tools.models import simple_model
-from mas_tools.tools import get_script_dir
+from mas_tools.utils.os import get_script_dir
 
 
 #=============================================================================#
