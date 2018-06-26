@@ -47,6 +47,9 @@ while True:
         # print('tick. {} s.'.format(time.time()-start_time))
         # time.sleep(0.1)
 
+    except ConnectionError as e:
+        print('ConnectionError:', e)
+        
     except Exception as e:
         print('Error:', e)
         break
@@ -57,6 +60,7 @@ while True:
                 fname = path + symbol + '/' + str(round(time.time())) + '.csv'
                 np.savetxt(fname, data[symbol]['data'], delimiter=';', fmt='%.8f')
                 data[symbol]['data'] = np.array([])
+                print('{} saved.'.format(fname))
         break
 
 
