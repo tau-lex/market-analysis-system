@@ -5,6 +5,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.metrics import matthews_corrcoef
 
+from keras.utils import plot_model
+
 
 def plot_history(history, acc='accuracy'):
     """Plot functions graph."""

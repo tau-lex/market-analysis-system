@@ -209,4 +209,3 @@ class Binance(BaseApi):
             raise ConnectionError(response.text)
         return response.json()
 
-

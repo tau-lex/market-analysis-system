@@ -299,20 +299,16 @@ class VirtualExchange(AbstractMarket):
         trades = pd.DataFrame([])
         # TODO implement multythreading
         for symbol in self.symbols:
-            try:
-                if self.__candles:
-                    candles = pd.DataFrame(self.__api.candlesticks(symbol=symbol,
-                                                                   interval=self.period,
-                                                                   limit=limit),
-                                           dtype=np.float)
-                if self.__tickers:
-                    tickers = pd.DataFrame(self.__api.tickers(symbol=symbol, limit=limit))
-                if self.__trades:
-                    trades = pd.DataFrame(self.__api.aggr_trades(symbol=symbol, limit=limit),
-                                          dtype=np.float)
-            except Exception as e:
-                # TODO implement response error handler
-                print('error:', e)
+            if self.__candles:
+                candles = pd.DataFrame(self.__api.candlesticks(symbol=symbol,
+                                                                interval=self.period,
+                                                                limit=limit),
+                                        dtype=np.float)
+            if self.__tickers:
+                tickers = pd.DataFrame(self.__api.tickers(symbol=symbol, limit=limit))
+            if self.__trades:
+                trades = pd.DataFrame(self.__api.aggr_trades(symbol=symbol, limit=limit),
+                                        dtype=np.float)
 
             if self.__candles:
                 self.__data[symbol]['candles'] = np.column_stack((candles.values[:, 1:6], # o,h,l,c,v
