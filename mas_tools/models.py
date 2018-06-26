@@ -2,15 +2,13 @@
 """
 The module contains functions for working with the Keras models of the MAS project.
 """
-from mas_tools.utils.os import get_script_dir
 from mas_tools.utils.ml import save_model_arch
 
-from keras.utils import plot_model
 from keras.models import model_from_json
 
 from keras.models import Model, Sequential
 
-from keras.layers import Input, Concatenate
+from keras.layers import Input, concatenate
 from keras.layers import Dense, Activation
 from keras.layers import LSTM, GRU
 from keras.layers import BatchNormalization, Dropout
@@ -119,7 +117,8 @@ def two_inputs_cnn_model(candles_shape, tickers_shape, nb_output, activation='li
     b = LSTM(16, activation='relu')(b)
     # b = relu(b, max_value=1.0)(b)
 
-    x = Concatenate([a, b])
+    x = concatenate([a, b])
+    # x = Merge([a, b], , mode='concat')
 
     x = Dense(32, activation='relu')(x)
     # x = relu(x, max_value=1.0)(x)
@@ -127,17 +126,17 @@ def two_inputs_cnn_model(candles_shape, tickers_shape, nb_output, activation='li
     # x = relu(x, max_value=1.0)(x)
     output = Dense(nb_output, activation=activation)(x)
 
-    model = Model(inputs=[], outputs=output)
+    model = Model(inputs=[candles_in, tickers_in], outputs=output)
 
     return model
 
 
 if __name__ == "__main__":
-    path = get_script_dir()
+    path = 'E:/Projects/market-analysis-system/'
 
     model = simple_model((100, 4, 10), 3)
-    save_model_arch(model, path+'/simple')
+    save_model_arch(model, path+'simple')
 
     model = two_inputs_cnn_model((9, 50), (4, 50), 3)
-    save_model_arch(model, path+'/cnn2in')
+    save_model_arch(model, path+'cnn2in')
 
