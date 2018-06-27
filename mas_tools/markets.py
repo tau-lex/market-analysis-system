@@ -243,7 +243,7 @@ class VirtualExchange(AbstractMarket):
     def __init__(self, api: BaseApi, symbols=['ETHUSDT'], period='5m',
                     balance=1000.0, commission=0.001,
                     order_risk=0.02, month_risk=0.06,
-                    lot_size=0.0, limit=50, **kwargs):
+                    lot_size=0.0, limit=20, **kwargs):
         """Constructor.
         
         Arguments:
@@ -257,7 +257,7 @@ class VirtualExchange(AbstractMarket):
             lot_size (float): The size of the new order. If zero, it will be
                                 calculated on the size of risk.
         """
-        super(VirtualExchange, self).__init__(api, **kwargs)
+        super(VirtualExchange, self).__init__()
 
         self.__api = api
 
@@ -449,6 +449,12 @@ class VirtualExchange(AbstractMarket):
         
         return tuple(result)
 
+    @property
+    def symbols_count(self):
+        """Returns the number of traded symbols."""
+
+        return len(self.symbols)
+    
     def __len__(self):
         return self.limit
 

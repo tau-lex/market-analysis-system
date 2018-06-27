@@ -81,7 +81,7 @@ def simple_model(input_shape, nb_output, act='linear'):
     return model
 
 
-def two_inputs_cnn_model(candles_shape, tickers_shape, nb_output, activation='linear'):
+def cnn_model_2in(candles_shape, tickers_shape, nb_output, activation='linear'):
     """CNN for exchange bot.
     
     # Arguments
@@ -93,11 +93,11 @@ def two_inputs_cnn_model(candles_shape, tickers_shape, nb_output, activation='li
     Returns:
         model (keras.Model): Model of neural network."""
     
-    # candles shape = (9, limit(50, 100, ))
+    # candles shape = (9, limit)
     candles_in = Input(shape=(candles_shape[0], candles_shape[1]),
                        name='candles_input')
     a = BatchNormalization()(candles_in)
-    a = Conv1D(filters=16,
+    a = Conv1D(filters=96,
                kernel_size=2,
                padding='same',                  # 'same' or 'causal'
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
@@ -105,11 +105,11 @@ def two_inputs_cnn_model(candles_shape, tickers_shape, nb_output, activation='li
     a = LSTM(16, activation='relu')(a)
     # a = relu(a, max_value=1.0)(a)
 
-    # tickers shape = (4, limit(50, 100, ))
+    # tickers shape = (4, limit)
     tickers_in = Input(shape=(tickers_shape[0], tickers_shape[1]),
                        name='tickers_input')
     b = BatchNormalization()(tickers_in)
-    b = Conv1D(filters=16,
+    b = Conv1D(filters=96,
                kernel_size=2,
                padding='same',                  # 'same' or 'causal'
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
@@ -137,6 +137,6 @@ if __name__ == "__main__":
     model = simple_model((100, 4, 10), 3)
     save_model_arch(model, path+'simple')
 
-    model = two_inputs_cnn_model((9, 50), (4, 50), 3)
+    model = cnn_model_2in((9, 50), (4, 50), 3)
     save_model_arch(model, path+'cnn2in')
 
