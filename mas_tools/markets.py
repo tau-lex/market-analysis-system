@@ -1,6 +1,7 @@
 """
 Implementation exchange connectors and api wrapper.
 """
+import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
@@ -9,6 +10,9 @@ import pandas as pd
 # import quandl
 from mas_tools.api import BaseApi
 from mas_tools.utils.trade import calculate_stop_loss, calculate_lot
+
+
+log = logging.getLogger(__name__)
 
 
 class AbstractMarket():
@@ -237,6 +241,7 @@ class VirtualExchange(AbstractMarket):
     """
 
     __candles = True
+    __volumes = False
     __tickers = True
     __trades = False
 
@@ -268,7 +273,7 @@ class VirtualExchange(AbstractMarket):
 
         self.__done = False
         self.__balance = balance
-        self.__start_balance = self.__balance
+        self.__start_balance = balance
         self.__deposit = dict(zip(symbols, [0.0, ]))
         self.__commission = commission
 
@@ -294,30 +299,48 @@ class VirtualExchange(AbstractMarket):
     def load_data(self, limit=100):
         """Loads data of all symbols from servers or API."""
 
-        candles = pd.DataFrame([])
-        tickers = pd.DataFrame([])
-        trades = pd.DataFrame([])
         # TODO implement multythreading
         for symbol in self.symbols:
-            if self.__candles:
-                candles = pd.DataFrame(self.__api.candlesticks(symbol=symbol,
-                                                                interval=self.period,
-                                                                limit=limit),
-                                        dtype=np.float)
+            # TODO WARNING this data transformation is only for binance api
+            if self.__candles or self.__volumes:
+                candles = pd.DataFrame(
+                        self.__api.candlesticks(symbol=symbol,
+                                interval=self.period, limit=limit),
+                        dtype=np.float)
+                if self.__candles:
+                    self.__data[symbol]['candles'] = candles.values[:, 1:5] # o,h,l,c
+
+                    log.debug('{} candles shape = {}'.format(symbol, self.__data[symbol]['candles'].shape))
+                    # log.debug('{} candles = \n{}'.format(symbol, self.__data[symbol]['candles']))
+                if self.__volumes:
+                    self.__data[symbol]['volumes'] = np.column_stack((
+                            candles.values[:, 5],     # vol
+                            candles.values[:, 7:10]   # 7:11 = qv, nt, bv, qv
+                            )).T
+
+                    log.debug('{} volumes shape = {}'.format(symbol, self.__data[symbol]['volumes'].shape))
+                    # log.debug('{} volumes = \n{}'.format(symbol, self.__data[symbol]['volumes']))
+
             if self.__tickers:
                 tickers = pd.DataFrame(self.__api.tickers(symbol=symbol, limit=limit))
-            if self.__trades:
-                trades = pd.DataFrame(self.__api.aggr_trades(symbol=symbol, limit=limit),
-                                        dtype=np.float)
 
-            if self.__candles:
-                self.__data[symbol]['candles'] = np.column_stack((candles.values[:, 1:6], # o,h,l,c,v
-                                                                  candles.values[:, 7:11])) # qv, nt, bv, qv
-            if self.__tickers:
-                self.__data[symbol]['tickers'] = np.column_stack(([np.array([x[0:2] for x in tickers['bids'].values], dtype=np.float),
-                                                                   np.array([x[0:2] for x in tickers['asks'].values], dtype=np.float)]))
+                self.__data[symbol]['tickers'] = np.column_stack(([
+                        np.array([x[0:2] for x in tickers['bids'].values], dtype=np.float),
+                        np.array([x[0:2] for x in tickers['asks'].values], dtype=np.float)]))
+
+                log.debug('{} tickers shape = {}'.format(symbol, self.__data[symbol]['tickers'].shape))
+                # log.debug('{} tickers = \n{}'.format(symbol, self.__data[symbol]['tickers']))
+
             if self.__trades:
+                trades = pd.DataFrame(
+                        self.__api.aggr_trades(symbol=symbol, limit=limit),
+                        dtype=np.float)
+                        
                 self.__data[symbol]['trades'] = trades[['p', 'q']].values
+                # TODO add zeros for (limit, 4) shapes
+                
+                log.debug('{} trades shape = {}'.format(symbol, self.__data[symbol]['trades'].shape))
+                log.debug('{} trades = \n{}'.format(symbol, self.__data[symbol]['trades']))
 
         # TODO save data for training
 
@@ -334,15 +357,15 @@ class VirtualExchange(AbstractMarket):
         result = np.array([])
 
         for symbol in self.symbols:
-            sym_data = []
             if self.__candles:
-                sym_data.append(self.__data[symbol]['candles'])
+                result = np.append(result, self.__data[symbol]['candles'])
             if self.__tickers:
-                sym_data.append(self.__data[symbol]['tickers'])
+                result = np.append(result, self.__data[symbol]['tickers'])
             if self.__trades:
-                sym_data.append(self.__data[symbol]['trades'])
-            result = np.append(result, np.column_stack(sym_data))
+                result = np.append(result, self.__data[symbol]['trades'])
         
+        # log.debug('Observation length = {}'.format(result.shape))
+
         return result.reshape(self.shape)
 
     def reset(self):
@@ -424,7 +447,7 @@ class VirtualExchange(AbstractMarket):
     def shape(self):
         """Returns the data shape."""
 
-        columns = (9 if self.__candles else 0) + \
+        columns = (4 if self.__candles else 0) + \
                   (4 if self.__tickers else 0) + \
                   (2 if self.__trades else 0)
 

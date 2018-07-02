@@ -93,35 +93,38 @@ def cnn_model_2in(candles_shape, tickers_shape, nb_output, activation='linear'):
     Returns:
         model (keras.Model): Model of neural network."""
     
-    # candles shape = (9, limit)
-    candles_in = Input(shape=(candles_shape[0], candles_shape[1]),
+    # candles shape = (limit, 4)
+    candles_in = Input(shape=(1, candles_shape[0], candles_shape[1]),
                        name='candles_input')
-    a = BatchNormalization()(candles_in)
+    a = Reshape((candles_shape[0], candles_shape[1]))(candles_in)
+    a = BatchNormalization()(a)
     a = Conv1D(filters=96,
                kernel_size=2,
                padding='same',                  # 'same' or 'causal'
+               activation='relu',
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
               )(a)
     a = LSTM(16, activation='relu')(a)
     # a = relu(a, max_value=1.0)(a)
 
-    # tickers shape = (4, limit)
-    tickers_in = Input(shape=(tickers_shape[0], tickers_shape[1]),
+    # tickers shape = (limit, 4)
+    tickers_in = Input(shape=(1, tickers_shape[0], tickers_shape[1]),
                        name='tickers_input')
-    b = BatchNormalization()(tickers_in)
+    b = Reshape((tickers_shape[0], tickers_shape[1]))(tickers_in)
+    b = BatchNormalization()(b)
     b = Conv1D(filters=96,
                kernel_size=2,
                padding='same',                  # 'same' or 'causal'
+               activation='relu',
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
               )(b)
     b = LSTM(16, activation='relu')(b)
     # b = relu(b, max_value=1.0)(b)
 
     x = concatenate([a, b])
-    # x = Merge([a, b], , mode='concat')
 
     x = Dense(32, activation='relu')(x)
-    # x = relu(x, max_value=1.0)(x)
+    # x = Activation('relu', max_value=1.0)(x)
     x = Dense(16, activation='relu')(x)
     # x = relu(x, max_value=1.0)(x)
     output = Dense(nb_output, activation=activation)(x)
@@ -137,6 +140,6 @@ if __name__ == "__main__":
     model = simple_model((100, 4, 10), 3)
     save_model_arch(model, path+'simple')
 
-    model = cnn_model_2in((9, 50), (4, 50), 3)
+    model = cnn_model_2in((50, 9), (50, 4), 3)
     save_model_arch(model, path+'cnn2in')
 

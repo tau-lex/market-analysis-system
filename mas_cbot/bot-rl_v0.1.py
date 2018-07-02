@@ -10,6 +10,7 @@ from keras.optimizers import Adam
 from rl.agents.dqn import DQNAgent
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
+from rl.processors import MultiInputProcessor
 
 from mas_tools.api import Binance
 from mas_tools.markets import VirtualExchange
@@ -46,18 +47,21 @@ if __name__ == "__main__":
 
     observation_shape = market.observation_space.shape
     nb_actions = market.action_space.n
-    print('State shape =', observation_shape, '| actions =', nb_actions)
+    log.info('State shape = {a} | actions = {b}'.format(a=observation_shape, b=nb_actions))
 
     # (candles=9, tickers=4, trades=2)
     limit = observation_shape[1]
-    model = cnn_model_2in((9, limit), (4, limit), nb_actions, 'relu')
+    model = cnn_model_2in((limit, 4), (limit, 4), nb_actions, 'relu')
+    # model = cnn_model_2in((4, limit), (4, limit), nb_actions, 'relu')
 
     memory = SequentialMemory(limit=10000, window_length=1)
+    # TODO implement policies for multiply symbols
     policy = BoltzmannQPolicy()
 
     agent = DQNAgent(model=model, nb_actions=nb_actions,
                      memory=memory, nb_steps_warmup=1000,
                      target_model_update=1e-2, policy=policy,
+                     processor=MultiInputProcessor(2),
                      # enable_dueling_network=True, dueling_type='avg'
                     )
     agent.compile(Adam(lr=1e-3), metrics=['mae'])
@@ -67,18 +71,19 @@ if __name__ == "__main__":
     # agent.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
     # agent.test(market, nb_episodes=5, visualize=False)
 
-    observation = market.reset()
     tickcount = 0
 
     if TRAIN:
         agent.training = True
 
+    observation = market.reset()
+
     while True:
         try:
             # TODO add callbacks?
 
-            # (candles=9, tickers=4, trades=2)
-            action = agent.forward(np.hsplit(observation, 9))
+            # (candles=9(mb=>(2,4)?), tickers=4, trades=2)
+            action = agent.forward(np.hsplit(observation[0], 2))
             # TODO actions for multy symbols market
             action = np.argmax(action)
 
@@ -94,7 +99,7 @@ if __name__ == "__main__":
                 done = False
                 log.debug('Is done. Reset..')
             
-            log.debug('action: {a:%d} | reward: {r:%.2f} | balance: {b:%.2f}'.format(a=info['last_action'],
+            log.info('action: {a:%d} | reward: {r:%.2f} | balance: {b:%.2f}'.format(a=info['last_action'],
                                                                                      r=reward,
                                                                                      b=info['balance']))
 
