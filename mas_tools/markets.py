@@ -20,12 +20,6 @@ class AbstractMarket():
 
     __metaclass__ = ABCMeta
 
-    __balance = 0.0
-    __profit = 0.0      # current reward
-    __balance_fd = 0.0  # the first day of the month
-    __balance_ut = 0    # date of the last update of the balance_fd
-    __done = False      # flag end of the dataset
-
     @abstractmethod
     def observation(self, row=-1):
         """Returns the state of the market at the current position.
@@ -38,11 +32,7 @@ class AbstractMarket():
     def reset(self):
         """Reset market state."""
         
-        self.__done = False
-        self.__balance = 0.0
-        self.__profit = 0.0 
-        self.__balance_fd = 0.0
-        self.__balance_ut = 0
+        raise NotImplementedError()
 
     @abstractmethod
     def buy_order(self, symbol=None):
@@ -74,29 +64,23 @@ class AbstractMarket():
 
         raise NotImplementedError()
 
-    @property
+    @abstractproperty
     def balance(self):
         """Returns the balance value."""
 
-        return self.__balance
+        raise NotImplementedError()
 
-    @property
-    def balance_fd(self):
-        """Returns the balance value of the first day of the month."""
-
-        return self.__balance_fd
-
-    @property
+    @abstractproperty
     def profit(self):
         """Returns the profit after close opened order."""
 
-        return self.__profit
+        raise NotImplementedError()
 
-    @property
+    @abstractproperty
     def done(self):
         """Returns the done work flag."""
 
-        return self.__done
+        raise NotImplementedError()
 
 
 class VirtualMarket(AbstractMarket):
@@ -272,8 +256,8 @@ class VirtualExchange(AbstractMarket):
         self.limit = limit
 
         self.__done = False
-        self.__balance = balance
-        self.__start_balance = balance
+        self.__balance = balance + 0.0 # fix
+        self.__start_balance = balance + 0.0
         self.__deposit = dict(zip(symbols, [0.0, ]))
         self.__commission = commission
 
@@ -309,26 +293,25 @@ class VirtualExchange(AbstractMarket):
                         dtype=np.float)
                 if self.__candles:
                     self.__data[symbol]['candles'] = candles.values[:, 1:5] # o,h,l,c
-
-                    log.debug('{} candles shape = {}'.format(symbol, self.__data[symbol]['candles'].shape))
+                    # log.debug('{} candles shape = {}'.format(symbol, self.__data[symbol]['candles'].shape))
                     # log.debug('{} candles = \n{}'.format(symbol, self.__data[symbol]['candles']))
                 if self.__volumes:
                     self.__data[symbol]['volumes'] = np.column_stack((
                             candles.values[:, 5],     # vol
-                            candles.values[:, 7:10]   # 7:11 = qv, nt, bv, qv
-                            )).T
-
-                    log.debug('{} volumes shape = {}'.format(symbol, self.__data[symbol]['volumes'].shape))
+                            candles.values[:, 7],     # 7:11 = qv, nt, bv, qv
+                            candles.values[:, 9:11]
+                    ))
+                    # log.debug('{} volumes shape = {}'.format(symbol, self.__data[symbol]['volumes'].shape))
                     # log.debug('{} volumes = \n{}'.format(symbol, self.__data[symbol]['volumes']))
 
             if self.__tickers:
                 tickers = pd.DataFrame(self.__api.tickers(symbol=symbol, limit=limit))
 
-                self.__data[symbol]['tickers'] = np.column_stack(([
+                self.__data[symbol]['tickers'] = np.column_stack((
                         np.array([x[0:2] for x in tickers['bids'].values], dtype=np.float),
-                        np.array([x[0:2] for x in tickers['asks'].values], dtype=np.float)]))
-
-                log.debug('{} tickers shape = {}'.format(symbol, self.__data[symbol]['tickers'].shape))
+                        np.array([x[0:2] for x in tickers['asks'].values], dtype=np.float)
+                ))
+                # log.debug('{} tickers shape = {}'.format(symbol, self.__data[symbol]['tickers'].shape))
                 # log.debug('{} tickers = \n{}'.format(symbol, self.__data[symbol]['tickers']))
 
             if self.__trades:
@@ -336,19 +319,23 @@ class VirtualExchange(AbstractMarket):
                         self.__api.aggr_trades(symbol=symbol, limit=limit),
                         dtype=np.float)
                         
-                self.__data[symbol]['trades'] = trades[['p', 'q']].values
-                # TODO add zeros for (limit, 4) shapes
-                
-                log.debug('{} trades shape = {}'.format(symbol, self.__data[symbol]['trades'].shape))
-                log.debug('{} trades = \n{}'.format(symbol, self.__data[symbol]['trades']))
+                self.__data[symbol]['trades'] = np.column_stack((
+                        trades[['p', 'q']].values,
+                        np.zeros((limit, 2))
+                ))
+                # log.debug('{} trades shape = {}'.format(symbol, self.__data[symbol]['trades'].shape))
+                # log.debug('{} trades = \n{}'.format(symbol, self.__data[symbol]['trades']))
 
         # TODO save data for training
 
     def observation(self):
         """Returns current exchange states."""
 
+        log.debug('Balance: {} / start: {}'.format(self.balance, self.__start_balance))
+
         self.__profit = 0.0
-        if self.__balance <= 0.0:
+        if self.balance <= 0.0:
+            log.debug('== DONE FLAG ==')
             self.__done = True
 
         # TODO load train data if agent.training
@@ -359,6 +346,8 @@ class VirtualExchange(AbstractMarket):
         for symbol in self.symbols:
             if self.__candles:
                 result = np.append(result, self.__data[symbol]['candles'])
+            if self.__volumes:
+                result = np.append(result, self.__data[symbol]['volumes'])
             if self.__tickers:
                 result = np.append(result, self.__data[symbol]['tickers'])
             if self.__trades:
@@ -372,7 +361,8 @@ class VirtualExchange(AbstractMarket):
         """Reset market state."""
         
         self.__done = False
-        self.__balance = self.__start_balance
+        self.__profit = 0.0
+        self.__balance = self.__start_balance + 0.0
         for depo in self.__deposit.keys():
             self.__deposit[depo] = 0.0
 
@@ -401,14 +391,14 @@ class VirtualExchange(AbstractMarket):
 
         amount = price * lot_size
 
-        if amount > 0 and self.__balance - amount > 0:
+        if amount > 0 and self.balance - amount > 0:
             print('check')
             self.__deposit[symbol] += lot_size
             self.__balance -= amount * (1.0 + self.__commission)
             # self.__profit = -amount # TODO check with him
-        elif self.__balance - amount <= 0:
+        elif self.balance - amount <= 0:
             raise RuntimeError('wtf_buy :: b=%.1f a=%.1f p=%.2f l=%f sl=%.2f' \
-                                % (self.__balance, amount, price, lot_size, stop_loss))
+                                % (self.balance, amount, price, lot_size, stop_loss))
             # self.__done = True
         else:
             raise Exception('wtf')
@@ -444,34 +434,37 @@ class VirtualExchange(AbstractMarket):
             raise Exception('wtf')
 
     @property
+    def balance(self):
+        """Returns the balance value."""
+
+        return self.__balance
+
+    @property
+    def profit(self):
+        """Returns the profit after close opened order."""
+
+        return self.__profit
+
+    @property
+    def done(self):
+        """Returns the done work flag."""
+
+        return self.__done
+
+    @property
     def shape(self):
         """Returns the data shape."""
 
         columns = (4 if self.__candles else 0) + \
+                  (4 if self.__volumes else 0) + \
                   (4 if self.__tickers else 0) + \
-                  (2 if self.__trades else 0)
+                  (4 if self.__trades else 0)
 
         return (len(self.symbols),  # Symbols count.
                 self.limit,         # Length arrays.
                 columns             # Sum columns (candles(5+4), tickers(2+2), trades(2))
                )
     
-    @property
-    def shapes_of_datasets(self):
-        """Returns the datasets shapes."""
-
-        result = list()
-
-        if self.__candles:
-            result.append(9)
-            # result.append(5)
-        if self.__tickers:
-            result.append(4)
-        if self.__trades:
-            result.append(2)
-        
-        return tuple(result)
-
     @property
     def symbols_count(self):
         """Returns the number of traded symbols."""

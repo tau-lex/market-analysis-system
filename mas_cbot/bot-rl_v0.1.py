@@ -97,11 +97,12 @@ if __name__ == "__main__":
             if done:
                 observation = market.reset()
                 done = False
-                log.debug('Is done. Reset..')
+                log.debug('Is terminal state. Reset..')
             
-            log.info('action: {a:%d} | reward: {r:%.2f} | balance: {b:%.2f}'.format(a=info['last_action'],
-                                                                                     r=reward,
-                                                                                     b=info['balance']))
+            log.info('Tick: {t} / Action={a} / Reward={r} / Balance={b}'.format(
+                    t=tickcount, a=info['last_action'],
+                    r=reward, b=info['balance']
+            ))
 
             if tickcount % 100 == 0:
                 agent.save_weights('{p}/dqn_{fn}_weights.h5f'.format(p=PATH, fn=ENV_NAME), overwrite=True)
