@@ -62,8 +62,5 @@ class BaseApi():
 
         # payload = kwargs
         # headers = {}
-        pass
+        raise NotImplementedError()
 
-    # @property
-    # def periods(self):
-    #     return self.periods

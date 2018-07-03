@@ -81,7 +81,7 @@ def simple_model(input_shape, nb_output, act='linear'):
     return model
 
 
-def two_inputs_cnn_model(candles_shape, tickers_shape, nb_output, activation='linear'):
+def cnn_model_2in(candles_shape, tickers_shape, nb_output, activation='linear'):
     """CNN for exchange bot.
     
     # Arguments
@@ -93,37 +93,36 @@ def two_inputs_cnn_model(candles_shape, tickers_shape, nb_output, activation='li
     Returns:
         model (keras.Model): Model of neural network."""
     
-    # candles shape = (9, limit(50, 100, ))
-    candles_in = Input(shape=(candles_shape[0], candles_shape[1]),
+    # candles shape = (limit, 4)
+    candles_in = Input(shape=(1, candles_shape[0], candles_shape[1]),
                        name='candles_input')
-    a = BatchNormalization()(candles_in)
-    a = Conv1D(filters=16,
+    a = Reshape((candles_shape[0], candles_shape[1]))(candles_in)
+    a = BatchNormalization()(a)
+    a = Conv1D(filters=96,
                kernel_size=2,
-               padding='same',                  # 'same' or 'causal'
+               padding='same',  # 'same' or 'causal'
+               activation='relu',
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
               )(a)
-    a = LSTM(16, activation='relu')(a)
-    # a = relu(a, max_value=1.0)(a)
+    a = LSTM(64, activation='relu')(a)
 
-    # tickers shape = (4, limit(50, 100, ))
-    tickers_in = Input(shape=(tickers_shape[0], tickers_shape[1]),
+    # tickers shape = (limit, 4)
+    tickers_in = Input(shape=(1, tickers_shape[0], tickers_shape[1]),
                        name='tickers_input')
-    b = BatchNormalization()(tickers_in)
-    b = Conv1D(filters=16,
+    b = Reshape((tickers_shape[0], tickers_shape[1]))(tickers_in)
+    b = BatchNormalization()(b)
+    b = Conv1D(filters=96,
                kernel_size=2,
-               padding='same',                  # 'same' or 'causal'
+               padding='same',  # 'same' or 'causal'
+               activation='relu',
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
               )(b)
-    b = LSTM(16, activation='relu')(b)
-    # b = relu(b, max_value=1.0)(b)
+    b = LSTM(64, activation='relu')(b)
 
     x = concatenate([a, b])
-    # x = Merge([a, b], , mode='concat')
 
-    x = Dense(32, activation='relu')(x)
-    # x = relu(x, max_value=1.0)(x)
-    x = Dense(16, activation='relu')(x)
-    # x = relu(x, max_value=1.0)(x)
+    x = Dense(128, activation='relu')(x)
+    # x = Dense(64, activation='relu')(x)
     output = Dense(nb_output, activation=activation)(x)
 
     model = Model(inputs=[candles_in, tickers_in], outputs=output)
@@ -137,6 +136,6 @@ if __name__ == "__main__":
     model = simple_model((100, 4, 10), 3)
     save_model_arch(model, path+'simple')
 
-    model = two_inputs_cnn_model((9, 50), (4, 50), 3)
+    model = cnn_model_2in((50, 9), (50, 4), 3)
     save_model_arch(model, path+'cnn2in')
 

@@ -1,5 +1,6 @@
 import time
 from threading import Thread
+import ssl
 
 import numpy as np
 import pandas as pd
@@ -50,9 +51,15 @@ while True:
     except ConnectionError as e:
         print('ConnectionError:', e)
         
-    except Exception as e:
-        print('Error:', e)
-        break
+    except TimeoutError as e:
+        print('TimeoutError:', e)
+
+    except ssl.SSLError as e:
+        print('SSLError:', e)
+        
+    # except Exception as e:
+    #     print('Error:', e)
+    #     break
 
     except KeyboardInterrupt:
         print('Exit...')

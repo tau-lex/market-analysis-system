@@ -75,7 +75,7 @@ class MarketEnv(Env):
             done = True
 
         info = {'last_action': action[0],
-                'last_reward': reward,
+                # 'last_reward': reward,
                 'balance': self.market.balance, 
                }
 
