@@ -30,7 +30,7 @@ ENV_NAME = 'cb_Binance_2'
 SLEEP = 1
 TRAIN = True
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     handlers=[logging.FileHandler("{p}/logs/{fn}.log".format(p=PATH, fn=ENV_NAME)),
                                 logging.StreamHandler()]
                     )
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # (candles=9, tickers=4, trades=2)
     limit = observation_shape[1]
-    model = cnn_model_2in((limit, 4), (limit, 4), nb_actions, 'relu')
+    model = cnn_model_2in((limit, 4), (limit, 4), nb_actions, 'softmax')
     # model = cnn_model_2in((4, limit), (4, limit), nb_actions, 'relu')
 
     memory = SequentialMemory(limit=10000, window_length=1)
@@ -66,7 +66,8 @@ if __name__ == "__main__":
                     )
     agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
-    # agent.load_weights('dqn_{}_weights.h5f'.format(ENV_NAME))
+    agent.load_weights('{p}/dqn_{fn}_weights.h5f'.format(p=PATH, fn=ENV_NAME))
+
     # agent.fit(market, nb_steps=100000, visualize=False, verbose=2)
     # agent.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
     # agent.test(market, nb_episodes=5, visualize=False)
@@ -83,25 +84,24 @@ if __name__ == "__main__":
             # TODO add callbacks?
 
             # (candles=9(mb=>(2,4)?), tickers=4, trades=2)
-            action = agent.forward(np.hsplit(observation[0], 2))
             # TODO actions for multy symbols market
-            action = np.argmax(action)
+            action = agent.forward(np.hsplit(observation[0], 2))
 
             observation, reward, done, info = market.step([action])
 
-            if tickcount % 10 == 0:
-                reward = -1
+            # if tickcount % 10 == 0:
+            #     reward = -1
                 
             agent.backward(reward, terminal=done)
 
             if done:
                 observation = market.reset()
                 done = False
-                log.debug('Is terminal state. Reset..')
+                log.info('Is terminal state. Reset..')
+                log.info('='*40)
             
-            log.info('Tick: {t} / Action={a} / Reward={r} / Balance={b}'.format(
-                    t=tickcount, a=info['last_action'],
-                    r=reward, b=info['balance']
+            log.info('Tick: {t} | {info}'.format(
+                    t=tickcount, info=info
             ))
 
             if tickcount % 100 == 0:

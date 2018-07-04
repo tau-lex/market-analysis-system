@@ -99,29 +99,39 @@ def cnn_model_2in(candles_shape, tickers_shape, nb_output, activation='linear'):
     a = Reshape((candles_shape[0], candles_shape[1]))(candles_in)
     a = BatchNormalization()(a)
     a = Conv1D(filters=96,
-               kernel_size=2,
-               padding='same',  # 'same' or 'causal'
-               activation='relu',
+            kernel_size=2,
+            padding='same',  # 'same' or 'causal'
+            activation='relu',
+            kernel_initializer='glorot_uniform',
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
-              )(a)
-    a = LSTM(64, activation='relu')(a)
+            )(a)
+    a = LSTM(64,
+            activation='relu',
+            kernel_initializer='glorot_uniform'
+            )(a)
 
     # tickers shape = (limit, 4)
     tickers_in = Input(shape=(1, tickers_shape[0], tickers_shape[1]),
-                       name='tickers_input')
+                        name='tickers_input')
     b = Reshape((tickers_shape[0], tickers_shape[1]))(tickers_in)
     b = BatchNormalization()(b)
     b = Conv1D(filters=96,
-               kernel_size=2,
-               padding='same',  # 'same' or 'causal'
-               activation='relu',
+            kernel_size=2,
+            padding='same',  # 'same' or 'causal'
+            activation='relu',
+            kernel_initializer='glorot_uniform',
             #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
-              )(b)
-    b = LSTM(64, activation='relu')(b)
+            )(b)
+    b = LSTM(64,
+            activation='relu',
+            kernel_initializer='glorot_uniform'
+            )(b)
 
     x = concatenate([a, b])
 
-    x = Dense(128, activation='relu')(x)
+    x = Dense(128,
+            activation='relu',
+            kernel_initializer='glorot_uniform')(x)
     # x = Dense(64, activation='relu')(x)
     output = Dense(nb_output, activation=activation)(x)
 

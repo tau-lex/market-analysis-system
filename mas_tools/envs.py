@@ -56,6 +56,8 @@ class MarketEnv(Env):
         assert self.action_space.contains(action[0]), "%r (%s) invalid"%(action, type(action))
 
         done = False
+        reward = 0.0
+        info = dict()
 
         observation = self.market.observation()
 
@@ -68,17 +70,22 @@ class MarketEnv(Env):
                 pass
             elif action[idx] == self.actions['sell']:
                 self.market.sell_order(symbol)
+
+            info[symbol] = {
+                'action': action[idx],
+                'reward': self.market.profit,
+                'deposit': self.market.deposit[symbol]
+            }
+
+            reward += self.market.profit
             idx += 1
 
-        reward = self.market.profit
         if self.market.done or self.market.balance <= 0:
             done = True
 
-        info = {'last_action': action[0],
-                # 'last_reward': reward,
-                'balance': self.market.balance, 
-               }
-
+        info['sum_reward'] = reward
+        info['balance'] = self.market.balance
+        
         return (observation, reward, done, info)
 
     def reset(self):

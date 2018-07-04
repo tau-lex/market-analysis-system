@@ -71,6 +71,12 @@ class AbstractMarket():
         raise NotImplementedError()
 
     @abstractproperty
+    def deposit(self):
+        """Returns the deposit value."""
+
+        raise NotImplementedError()
+
+    @abstractproperty
     def profit(self):
         """Returns the profit after close opened order."""
 
@@ -376,6 +382,7 @@ class VirtualExchange(AbstractMarket):
         price = float(self.__api.ticker_book_price(symbol=symbol)['askPrice'])
         stop_loss = calculate_stop_loss(self.__data[symbol]['candles'][-12:, 2], 'buy')
         
+        # TODO function for money managment
         if self.__lot_size == 0.0:
             # TODO Check calculations (stop=ok, )
             lot_size = calculate_lot(one_lot_risk=abs(price - stop_loss),
@@ -392,7 +399,6 @@ class VirtualExchange(AbstractMarket):
         amount = price * lot_size
 
         if amount > 0 and self.balance - amount > 0:
-            print('check')
             self.__deposit[symbol] += lot_size
             self.__balance -= amount * (1.0 + self.__commission)
             # self.__profit = -amount # TODO check with him
@@ -424,20 +430,28 @@ class VirtualExchange(AbstractMarket):
             else:
                 lot_size = self.__data[symbol]['limits']['minQty']
         
-        amount = price * lot_size
+        amount = price * self.__deposit[symbol]
         
-        if amount > 0 and self.__deposit - lot_size >= 0:
-            self.__deposit -= lot_size
+        if amount > 0 and self.__deposit[symbol] - lot_size >= 0:
+            self.__deposit[symbol] -= self.__deposit[symbol]
             self.__balance += amount * (1.0 - self.__commission)
-            self.__profit = amount # reward
+            self.__profit = amount  # TODO can be better reward
         else:
-            raise Exception('wtf')
+            log.debug('Sell Error | Amount: {a}; Deposit: {d}; LotSize: {l}'.format(
+                    a=amount, d=self.__deposit[symbol], l=lot_size
+            ))
 
     @property
     def balance(self):
         """Returns the balance value."""
 
         return self.__balance
+
+    @property
+    def deposit(self):
+        """Returns the deposit value."""
+
+        return self.__deposit
 
     @property
     def profit(self):
