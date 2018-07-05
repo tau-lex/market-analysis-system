@@ -113,11 +113,11 @@ if __name__ == "__main__":
         except ConnectionError as e:
             log.exception(e)
 
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as e:
             # We catch keyboard interrupts here so that training can be be safely aborted.
             # This is so common that we've built this right into this function, which ensures that
             # the `on_train_end` method is properly called.
-            log.exception('Aborted by user.\nExit...')
+            log.info('Aborted by user. {} \nExit...'.format(e))
             agent.save_weights('{p}/dqn_{fn}_weights.h5f'.format(p=PATH, fn=ENV_NAME), overwrite=True)
             break
 

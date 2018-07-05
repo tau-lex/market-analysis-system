@@ -8,7 +8,7 @@ from keras.models import model_from_json
 
 from keras.models import Model, Sequential
 
-from keras.layers import Input, concatenate
+from keras.layers import Input, concatenate, add
 from keras.layers import Dense, Activation
 from keras.layers import LSTM, GRU
 from keras.layers import BatchNormalization, Dropout
@@ -81,61 +81,68 @@ def simple_model(input_shape, nb_output, act='linear'):
     return model
 
 
-def cnn_model_2in(candles_shape, tickers_shape, nb_output, activation='linear'):
+def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
     """CNN for exchange bot.
     
     # Arguments
-        candles_shape (): 
-        tickers_shape (): 
+        shape_a (): shape = (limit(timeseries or depth), features)
+        shape_b (): shape = (limit(timeseries or depth), features)
         nb_output (int):
         activation (string): activation function for model output.
         
     Returns:
         model (keras.Model): Model of neural network."""
+
+    assert shape_a[0] == shape_b[0]
     
-    # candles shape = (limit, 4)
-    candles_in = Input(shape=(1, candles_shape[0], candles_shape[1]),
-                       name='candles_input')
-    a = Reshape((candles_shape[0], candles_shape[1]))(candles_in)
-    a = BatchNormalization()(a)
-    a = Conv1D(filters=96,
-            kernel_size=2,
+    # Input A
+    input_a = Input(shape=(1, shape_a[0], shape_a[1]),
+                       name='input_a')
+    # a = Reshape((shape_a[0], shape_a[1]))(input_a)
+    a = BatchNormalization()(input_a)
+    a = Conv2D(filters=96,
+            kernel_size=(3, 1),
             padding='same',  # 'same' or 'causal'
             activation='relu',
             kernel_initializer='glorot_uniform',
-            #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
+            data_format='channels_first',
             )(a)
+    # a = Flatten()(a)
+    a = Reshape((shape_a[0], 96*shape_a[1]))(a)
     a = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform'
             )(a)
 
-    # tickers shape = (limit, 4)
-    tickers_in = Input(shape=(1, tickers_shape[0], tickers_shape[1]),
-                        name='tickers_input')
-    b = Reshape((tickers_shape[0], tickers_shape[1]))(tickers_in)
-    b = BatchNormalization()(b)
-    b = Conv1D(filters=96,
-            kernel_size=2,
+    # Input B
+    input_b = Input(shape=(1, shape_b[0], shape_b[1]),
+                        name='input_b')
+    # b = Reshape((shape_b[0], shape_b[1]))(input_b)
+    b = BatchNormalization()(input_b)
+    b = Conv2D(filters=96,
+            kernel_size=(3, 1),
             padding='same',  # 'same' or 'causal'
             activation='relu',
             kernel_initializer='glorot_uniform',
-            #    data_format='channels_first',    # channels is o,h,l,c,etc; length is limit
+            data_format='channels_first',
             )(b)
+    # b = Flatten()(b)
+    b = Reshape((shape_b[0], 96*shape_b[1]))(b)
     b = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform'
             )(b)
 
+    # x = add([a, b])
     x = concatenate([a, b])
 
-    x = Dense(128,
+    x = Dense(96,
             activation='relu',
             kernel_initializer='glorot_uniform')(x)
     # x = Dense(64, activation='relu')(x)
     output = Dense(nb_output, activation=activation)(x)
 
-    model = Model(inputs=[candles_in, tickers_in], outputs=output)
+    model = Model(inputs=[input_a, input_b], outputs=output)
 
     return model
 
