@@ -25,7 +25,7 @@ MY_API_KEY = '---'
 MY_API_SECRET = '---'
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-ENV_NAME = 'cb_Binance_2'
+ENV_NAME = 'cb_Binance_3'
 
 SLEEP = 1
 TRAIN = True
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     api = Binance(API_KEY=MY_API_KEY, API_SECRET=MY_API_SECRET)
 
     market_conn = VirtualExchange(api, symbols=['ETHUSDT'], period='5m',
-                                    balance=1000.0, lot_size=0.01)
+                                    balance=1000.0, lot_size=0.1)
 
     market = MarketEnv(market_conn)
 
@@ -49,10 +49,8 @@ if __name__ == "__main__":
     nb_actions = market.action_space.n
     log.info('State shape = {a} | actions = {b}'.format(a=observation_shape, b=nb_actions))
 
-    # (candles=9, tickers=4, trades=2)
     limit = observation_shape[1]
     model = cnn_model_2in((limit, 4), (limit, 4), nb_actions, 'softmax')
-    # model = cnn_model_2in((4, limit), (4, limit), nb_actions, 'relu')
 
     memory = SequentialMemory(limit=10000, window_length=1)
     # TODO implement policies for multiply symbols
@@ -66,6 +64,7 @@ if __name__ == "__main__":
                     )
     agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
+    # Comment here if you want to start learning again
     agent.load_weights('{p}/dqn_{fn}_weights.h5f'.format(p=PATH, fn=ENV_NAME))
 
     # agent.fit(market, nb_steps=100000, visualize=False, verbose=2)
@@ -89,9 +88,6 @@ if __name__ == "__main__":
 
             observation, reward, done, info = market.step([action])
 
-            # if tickcount % 10 == 0:
-            #     reward = -1
-                
             agent.backward(reward, terminal=done)
 
             if done:
@@ -113,6 +109,7 @@ if __name__ == "__main__":
         except ConnectionError as e:
             log.exception(e)
 
+        # TODO not working
         except KeyboardInterrupt as e:
             # We catch keyboard interrupts here so that training can be be safely aborted.
             # This is so common that we've built this right into this function, which ensures that

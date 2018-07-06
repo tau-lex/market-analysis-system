@@ -111,7 +111,8 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
     a = Reshape((shape_a[0], 96*shape_a[1]))(a)
     a = LSTM(64,
             activation='relu',
-            kernel_initializer='glorot_uniform'
+            kernel_initializer='glorot_uniform',
+            return_sequences=True
             )(a)
 
     # Input B
@@ -130,15 +131,22 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
     b = Reshape((shape_b[0], 96*shape_b[1]))(b)
     b = LSTM(64,
             activation='relu',
-            kernel_initializer='glorot_uniform'
+            kernel_initializer='glorot_uniform',
+            return_sequences=True
             )(b)
 
     # x = add([a, b])
     x = concatenate([a, b])
 
-    x = Dense(96,
+    x = LSTM(96,
             activation='relu',
-            kernel_initializer='glorot_uniform')(x)
+            kernel_initializer='glorot_uniform',
+            return_sequences=True
+            )(x)
+    x = LSTM(32,
+            activation='relu',
+            kernel_initializer='glorot_uniform'
+            )(x)
     # x = Dense(64, activation='relu')(x)
     output = Dense(nb_output, activation=activation)(x)
 

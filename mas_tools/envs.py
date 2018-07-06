@@ -74,7 +74,7 @@ class MarketEnv(Env):
             info[symbol] = {
                 'action': action[idx],
                 'reward': self.market.profit,
-                'deposit': self.market.deposit[symbol]
+                'deposit': self.market.deposit(symbol)
             }
 
             reward += self.market.profit

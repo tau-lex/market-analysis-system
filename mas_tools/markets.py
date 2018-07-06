@@ -264,7 +264,6 @@ class VirtualExchange(AbstractMarket):
         self.__done = False
         self.__balance = balance + 0.0 # fix
         self.__start_balance = balance + 0.0
-        self.__deposit = dict(zip(symbols, [0.0, ]))
         self.__commission = commission
 
         assert (0.0 <= order_risk <= 1.0) or (0.0 <= month_risk <= 1.0), 'The risk must have a value from zero to one.'
@@ -285,6 +284,8 @@ class VirtualExchange(AbstractMarket):
                        'qtyStep': float(item['filters'][1]['stepSize']),
                        'minOrderPrice': float(item['filters'][2]['minNotional'])}
                 self.__data[item['symbol']]['limits'] = tmp
+                self.__data[item['symbol']]['deposit'] = 0.0
+                self.__data[item['symbol']]['buy_price'] = 0.0
 
     def load_data(self, limit=100):
         """Loads data of all symbols from servers or API."""
@@ -344,7 +345,7 @@ class VirtualExchange(AbstractMarket):
             log.debug('== DONE FLAG ==')
             self.__done = True
 
-        # TODO load train data if agent.training
+        # TODO ?? load train data if agent.training
         self.load_data(self.limit)
 
         result = np.array([])
@@ -369,8 +370,9 @@ class VirtualExchange(AbstractMarket):
         self.__done = False
         self.__profit = 0.0
         self.__balance = self.__start_balance + 0.0
-        for depo in self.__deposit.keys():
-            self.__deposit[depo] = 0.0
+        for symbol in self.__data.keys():
+            self.__data[symbol]['deposit'] = 0.0
+            self.__data[symbol]['buy_price'] = 0.0
 
     def buy_order(self, symbol):
         """Open buying order.
@@ -379,35 +381,26 @@ class VirtualExchange(AbstractMarket):
             symbol (str): Name of the trading instrument.
         """
         
+        # skip if you have an open order
+        if self.__data[symbol]['deposit'] > 0.0:
+            return
+
         price = float(self.__api.ticker_book_price(symbol=symbol)['askPrice'])
         stop_loss = calculate_stop_loss(self.__data[symbol]['candles'][-12:, 2], 'buy')
         
-        # TODO function for money managment
-        if self.__lot_size == 0.0:
-            # TODO Check calculations (stop=ok, )
-            lot_size = calculate_lot(one_lot_risk=abs(price - stop_loss),
-                                     balance_risk=self.balance * self.__order_risk,
-                                     min_lot=self.__data[symbol]['limits']['minQty'])
-            if lot_size <= 0.0:
-                raise Exception('The lot size can not be less than or equal to zero. Lot='+str(lot_size))
-        else:
-            if self.__lot_size >= self.__data[symbol]['limits']['minQty']:
-                lot_size = self.__lot_size
-            else:
-                lot_size = self.__data[symbol]['limits']['minQty']
-
+        lot_size = self.calc_order_size(symbol, price, stop_loss)
+        
         amount = price * lot_size
 
         if amount > 0 and self.balance - amount > 0:
-            self.__deposit[symbol] += lot_size
+            self.__data[symbol]['deposit'] += lot_size
+            self.__data[symbol]['buy_price'] = price
             self.__balance -= amount * (1.0 + self.__commission)
-            # self.__profit = -amount # TODO check with him
+            # self.__profit = -lot_size # TODO check with him
         elif self.balance - amount <= 0:
-            raise RuntimeError('wtf_buy :: b=%.1f a=%.1f p=%.2f l=%f sl=%.2f' \
-                                % (self.balance, amount, price, lot_size, stop_loss))
-            # self.__done = True
-        else:
-            raise Exception('wtf')
+            log.debug('Buy Error | B={} A={} L={} P={} SL={}'.format(
+                        self.balance, amount, lot_size, price, stop_loss))
+            self.__done = True
 
     def sell_order(self, symbol):
         """
@@ -415,31 +408,44 @@ class VirtualExchange(AbstractMarket):
             symbol (str): Name of the trading instrument.
         """
 
+        # skip if you do not have an open order
+        if self.__data[symbol]['deposit'] <= 0.0:
+            return
+        
         price = float(self.__api.ticker_book_price(symbol=symbol)['bidPrice'])
-        stop_loss = calculate_stop_loss(self.__data[symbol]['candles'][-12:, 1], 'sell')
+        # stop_loss = calculate_stop_loss(self.__data[symbol]['candles'][-12:, 1], 'sell')
         
-        if self.__lot_size == 0.0:
-            lot_size = calculate_lot(one_lot_risk=abs(price - stop_loss),
-                                     balance_risk=self.balance * self.__order_risk,
-                                     min_lot=self.__data[symbol]['limits']['minQty'])
-            if lot_size <= 0.0:
-                raise Exception('The lot size can not be less than or equal to zero. Lot='+str(lot_size))
-        else:
-            if self.__lot_size >= self.__data[symbol]['limits']['minQty']:
-                lot_size = self.__lot_size
-            else:
-                lot_size = self.__data[symbol]['limits']['minQty']
+        lot_size = self.__data[symbol]['deposit']
         
-        amount = price * self.__deposit[symbol]
+        amount = price * lot_size
         
-        if amount > 0 and self.__deposit[symbol] - lot_size >= 0:
-            self.__deposit[symbol] -= self.__deposit[symbol]
+        if amount > 0 and self.__data[symbol]['deposit'] - lot_size >= 0:
+            # reward = price*lot - old_price*lot
+            self.__profit = amount - self.__data[symbol]['buy_price'] * self.__data[symbol]['deposit']
+            # stimulus
+            if self.__profit > 0:
+                self.__profit += 10
+            self.__data[symbol]['deposit'] -= lot_size
             self.__balance += amount * (1.0 - self.__commission)
-            self.__profit = amount  # TODO can be better reward
         else:
-            log.debug('Sell Error | Amount: {a}; Deposit: {d}; LotSize: {l}'.format(
-                    a=amount, d=self.__deposit[symbol], l=lot_size
-            ))
+            log.debug('Sell Error | B={} A={} L={} P={}'.format(
+                        self.balance, amount, lot_size, price))
+
+    def calc_order_size(self, symbol, price, stop):
+        """Calculate lot size.
+        
+        Returns
+            lot_size (float): Purchase order size."""
+
+        if self.__lot_size == 0.0:
+            # TODO Check calculations (stop=ok, )
+            return calculate_lot(one_lot_risk=abs(price - stop),
+                            balance_risk=self.balance * self.__order_risk,
+                            min_lot=self.__data[symbol]['limits']['minQty'])
+        elif self.__lot_size >= self.__data[symbol]['limits']['minQty']:
+            return self.__lot_size
+        
+        return self.__data[symbol]['limits']['minQty']
 
     @property
     def balance(self):
@@ -447,11 +453,10 @@ class VirtualExchange(AbstractMarket):
 
         return self.__balance
 
-    @property
-    def deposit(self):
+    def deposit(self, symbol):
         """Returns the deposit value."""
 
-        return self.__deposit
+        return self.__data[symbol]['deposit']
 
     @property
     def profit(self):
