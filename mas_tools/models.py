@@ -87,7 +87,7 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
     # Arguments
         shape_a (): shape = (limit(timeseries or depth), features)
         shape_b (): shape = (limit(timeseries or depth), features)
-        nb_output (int):
+        nb_output (int): Number of output classes.
         activation (string): activation function for model output.
         
     Returns:
@@ -155,6 +155,89 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
     return model
 
 
+def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activation='linear'):
+    """CNN for exchange bot.
+    
+    # Arguments
+        shape_a (tuple of int): shape = (limit(timeseries or depth), features)
+        shape_b (tuple of int): shape = (limit(timeseries or depth), features)
+        shape_fb (tuple of int or int): Shape of feedback data.
+        nb_output (int): Number of output classes.
+        activation (string): activation function for model output.
+        
+    Returns:
+        model (keras.Model): Model of neural network."""
+
+    assert shape_a[0] == shape_b[0]
+    
+    # Input A
+    input_a = Input(shape=(1, shape_a[0], shape_a[1]),
+                       name='input_a')
+    # a = Reshape((shape_a[0], shape_a[1]))(input_a)
+    a = BatchNormalization()(input_a)
+    a = Conv2D(filters=96,
+            kernel_size=(3, 1),
+            padding='same',  # 'same' or 'causal'
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            data_format='channels_first',
+            )(a)
+    # a = Flatten()(a)
+    a = Reshape((shape_a[0], 96*shape_a[1]))(a)
+    a = LSTM(64,
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            return_sequences=True
+            )(a)
+
+    # Input B
+    input_b = Input(shape=(1, shape_b[0], shape_b[1]),
+                        name='input_b')
+    # b = Reshape((shape_b[0], shape_b[1]))(input_b)
+    b = BatchNormalization()(input_b)
+    b = Conv2D(filters=96,
+            kernel_size=(3, 1),
+            padding='same',  # 'same' or 'causal'
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            data_format='channels_first',
+            )(b)
+    # b = Flatten()(b)
+    b = Reshape((shape_b[0], 96*shape_b[1]))(b)
+    b = LSTM(64,
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            return_sequences=True
+            )(b)
+
+    x = concatenate([a, b])
+    # x = add([x, fb])
+
+    x = LSTM(96,
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            # return_sequences=True
+            )(x)
+    # x = LSTM(32,
+    #         activation='relu',
+    #         kernel_initializer='glorot_uniform'
+    #         )(x)
+    x = Dense(32, activation='relu')(x)
+
+    input_fb = Input(shape=(None, shape_fb), name='input_feedback')
+    fb = Dense(shape_fb,
+            activation='relu',
+            kernel_initializer='glorot_uniform')(input_fb)
+    # TODO fix merge errors
+    x = concatenate([x, fb])
+
+    output = Dense(nb_output, activation=activation)(x)
+
+    model = Model(inputs=[input_a, input_b], outputs=output)
+
+    return model
+
+
 if __name__ == "__main__":
     path = 'E:/Projects/market-analysis-system/'
 
@@ -164,3 +247,5 @@ if __name__ == "__main__":
     model = cnn_model_2in((50, 9), (50, 4), 3)
     save_model_arch(model, path+'cnn2in')
 
+    model = cnn_model_2in_with_feedback((50, 9), (50, 4), 8, 3)
+    save_model_arch(model, path+'cnn2in_feedback')

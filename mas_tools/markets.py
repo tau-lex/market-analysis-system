@@ -348,21 +348,19 @@ class VirtualExchange(AbstractMarket):
         # TODO ?? load train data if agent.training
         self.load_data(self.limit)
 
-        result = np.array([])
+        result = []
 
         for symbol in self.symbols:
             if self.__candles:
-                result = np.append(result, self.__data[symbol]['candles'])
+                result.append(self.__data[symbol]['candles'])
             if self.__volumes:
-                result = np.append(result, self.__data[symbol]['volumes'])
+                result.append(self.__data[symbol]['volumes'])
             if self.__tickers:
-                result = np.append(result, self.__data[symbol]['tickers'])
+                result.append(self.__data[symbol]['tickers'])
             if self.__trades:
-                result = np.append(result, self.__data[symbol]['trades'])
-        
-        # log.debug('Observation length = {}'.format(result.shape))
+                result.append(self.__data[symbol]['trades'])
 
-        return result.reshape(self.shape)
+        return result
 
     def reset(self):
         """Reset market state."""
@@ -424,7 +422,7 @@ class VirtualExchange(AbstractMarket):
             self.__profit = amount - self.__data[symbol]['buy_price'] * self.__data[symbol]['deposit']
             # stimulus
             if self.__profit > 0:
-                self.__profit += 10
+                self.__profit += 5
             self.__data[symbol]['deposit'] -= lot_size
             self.__balance += amount * (1.0 - self.__commission)
         else:

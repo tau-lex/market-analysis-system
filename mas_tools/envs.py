@@ -22,7 +22,9 @@ class MarketEnv(Env):
                 'video.frames_per_second' : 15}
     viewer = None
 
-    def __init__(self, market: AbstractMarket, **kwargs):
+    def __init__(self, market: AbstractMarket,
+                    use_deposit=False, use_last_action=False,
+                    **kwargs):
         """MarketEnv constructor.
         
         Arguments
@@ -31,6 +33,10 @@ class MarketEnv(Env):
         """
 
         self.market = market
+        self.use_deposit = use_deposit
+        self.use_last_action = use_last_action
+        
+        self.last_action = dict()
 
         # TODO action space for multy symbols agent
         self.action_space = Discrete(3 * self.market.symbols_count)
@@ -60,6 +66,7 @@ class MarketEnv(Env):
         info = dict()
 
         observation = self.market.observation()
+        feedback = []
 
         # action is the max index from the model output (from three neurons)
         idx = 0
@@ -71,6 +78,12 @@ class MarketEnv(Env):
             elif action[idx] == self.actions['sell']:
                 self.market.sell_order(symbol)
 
+            if self.use_deposit:
+                feedback.append(self.market.deposit(symbol))
+            if self.use_last_action:
+                feedback.append(self.last_action[symbol])
+                self.last_action[symbol] = action[idx]
+
             info[symbol] = {
                 'action': action[idx],
                 'reward': self.market.profit,
@@ -80,6 +93,8 @@ class MarketEnv(Env):
             reward += self.market.profit
             idx += 1
 
+        if self.use_deposit or self.use_last_action:
+            observation.append(feedback)
         if self.market.done or self.market.balance <= 0:
             done = True
 
@@ -96,8 +111,23 @@ class MarketEnv(Env):
         """
 
         self.market.reset()
+        observation = self.market.observation()
         
-        return self.market.observation()
+        for symbol in self.market.symbols:
+            self.last_action[symbol] = 0
+            if self.use_deposit:
+                observation.append(self.market.deposit(symbol))
+            if self.use_last_action:
+                observation.append(self.last_action[symbol])
+
+        return observation
+
+    @property
+    def feedback_shape(self):
+        """"""
+
+        return (len(self.market.symbols) if self.use_deposit else 0) +
+                (len(self.market.symbols) if self.use_last_action else 0)
 
     def render(self, mode='human', close=False):
         """Renders the environment.
