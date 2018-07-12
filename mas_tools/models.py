@@ -81,7 +81,7 @@ def simple_model(input_shape, nb_output, act='linear'):
     return model
 
 
-def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
+def cnn_model_2in(shape_a, shape_b, nb_output, activation='softmax'):
     """CNN for exchange bot.
     
     # Arguments
@@ -95,20 +95,20 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
 
     assert shape_a[0] == shape_b[0]
     
+    conv_nb = (16, )
+
     # Input A
     input_a = Input(shape=(1, shape_a[0], shape_a[1]),
-                       name='input_a')
-    # a = Reshape((shape_a[0], shape_a[1]))(input_a)
+                    name='input_a')
     a = BatchNormalization()(input_a)
-    a = Conv2D(filters=96,
+    a = Conv2D(filters=conv_nb[0],
             kernel_size=(3, 1),
             padding='same',  # 'same' or 'causal'
             activation='relu',
             kernel_initializer='glorot_uniform',
             data_format='channels_first',
             )(a)
-    # a = Flatten()(a)
-    a = Reshape((shape_a[0], 96*shape_a[1]))(a)
+    a = Reshape((conv_nb[0], shape_a[0]*shape_a[1]))(a)
     a = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform',
@@ -117,25 +117,23 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
 
     # Input B
     input_b = Input(shape=(1, shape_b[0], shape_b[1]),
-                        name='input_b')
-    # b = Reshape((shape_b[0], shape_b[1]))(input_b)
+                    name='input_b')
     b = BatchNormalization()(input_b)
-    b = Conv2D(filters=96,
+    b = Conv2D(filters=conv_nb[0],
             kernel_size=(3, 1),
             padding='same',  # 'same' or 'causal'
             activation='relu',
             kernel_initializer='glorot_uniform',
             data_format='channels_first',
             )(b)
-    # b = Flatten()(b)
-    b = Reshape((shape_b[0], 96*shape_b[1]))(b)
+    b = Reshape((conv_nb[0], shape_b[0]*shape_b[1]))(b)
     b = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform',
             return_sequences=True
             )(b)
 
-    # x = add([a, b])
+    # Concat A and B
     x = concatenate([a, b])
 
     x = LSTM(96,
@@ -147,7 +145,6 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
             activation='relu',
             kernel_initializer='glorot_uniform'
             )(x)
-    # x = Dense(64, activation='relu')(x)
     output = Dense(nb_output, activation=activation)(x)
 
     model = Model(inputs=[input_a, input_b], outputs=output)
@@ -155,7 +152,7 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='linear'):
     return model
 
 
-def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activation='linear'):
+def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activation='softmax'):
     """CNN for exchange bot.
     
     # Arguments
@@ -170,20 +167,20 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
 
     assert shape_a[0] == shape_b[0]
     
+    conv_nb = (16, )
+
     # Input A
     input_a = Input(shape=(1, shape_a[0], shape_a[1]),
-                       name='input_a')
-    # a = Reshape((shape_a[0], shape_a[1]))(input_a)
+                    name='input_a')
     a = BatchNormalization()(input_a)
-    a = Conv2D(filters=96,
+    a = Conv2D(filters=conv_nb[0],
             kernel_size=(3, 1),
             padding='same',  # 'same' or 'causal'
             activation='relu',
             kernel_initializer='glorot_uniform',
             data_format='channels_first',
             )(a)
-    # a = Flatten()(a)
-    a = Reshape((shape_a[0], 96*shape_a[1]))(a)
+    a = Reshape((conv_nb[0], shape_a[0]*shape_a[1]))(a)
     a = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform',
@@ -192,48 +189,48 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
 
     # Input B
     input_b = Input(shape=(1, shape_b[0], shape_b[1]),
-                        name='input_b')
-    # b = Reshape((shape_b[0], shape_b[1]))(input_b)
+                    name='input_b')
     b = BatchNormalization()(input_b)
-    b = Conv2D(filters=96,
+    b = Conv2D(filters=conv_nb[0],
             kernel_size=(3, 1),
             padding='same',  # 'same' or 'causal'
             activation='relu',
             kernel_initializer='glorot_uniform',
             data_format='channels_first',
             )(b)
-    # b = Flatten()(b)
-    b = Reshape((shape_b[0], 96*shape_b[1]))(b)
+    b = Reshape((conv_nb[0], shape_b[0]*shape_b[1]))(b)
     b = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform',
             return_sequences=True
             )(b)
 
+    # Concat A and B
     x = concatenate([a, b])
-    # x = add([x, fb])
 
     x = LSTM(96,
             activation='relu',
             kernel_initializer='glorot_uniform',
-            # return_sequences=True
+            return_sequences=True
             )(x)
-    # x = LSTM(32,
-    #         activation='relu',
-    #         kernel_initializer='glorot_uniform'
-    #         )(x)
-    x = Dense(32, activation='relu')(x)
+    x = LSTM(32,
+            activation='relu',
+            kernel_initializer='glorot_uniform'
+            )(x)
+    # x = Dense(32, activation='relu')(x)
 
-    input_fb = Input(shape=(None, shape_fb), name='input_feedback')
-    fb = Dense(shape_fb,
+    # Input Feedback
+    input_fb = Input(shape=(shape_fb, ), name='input_feedback')
+    fb = Dense(32,
             activation='relu',
             kernel_initializer='glorot_uniform')(input_fb)
-    # TODO fix merge errors
+
+    # Concat X and Feedback
     x = concatenate([x, fb])
 
     output = Dense(nb_output, activation=activation)(x)
 
-    model = Model(inputs=[input_a, input_b], outputs=output)
+    model = Model(inputs=[input_a, input_b, input_fb], outputs=output)
 
     return model
 
