@@ -94,7 +94,7 @@ class MarketEnv(Env):
             idx += 1
 
         if self.use_deposit or self.use_last_action:
-            observation.append(feedback)
+            observation.append(np.array(feedback))
         if self.market.done or self.market.balance <= 0:
             done = True
 
@@ -113,12 +113,16 @@ class MarketEnv(Env):
         self.market.reset()
         observation = self.market.observation()
         
+        feedback = []
         for symbol in self.market.symbols:
             self.last_action[symbol] = 0
             if self.use_deposit:
-                observation.append(self.market.deposit(symbol))
+                feedback.append(self.market.deposit(symbol))
             if self.use_last_action:
-                observation.append(self.last_action[symbol])
+                feedback.append(self.last_action[symbol])
+
+        if self.use_deposit or self.use_last_action:
+            observation.append(np.array(feedback))
 
         return observation
 
@@ -126,8 +130,8 @@ class MarketEnv(Env):
     def feedback_shape(self):
         """"""
 
-        return (len(self.market.symbols) if self.use_deposit else 0) +
-                (len(self.market.symbols) if self.use_last_action else 0)
+        return ((len(self.market.symbols) if self.use_deposit else 0) +
+                (len(self.market.symbols) if self.use_last_action else 0))
 
     def render(self, mode='human', close=False):
         """Renders the environment.

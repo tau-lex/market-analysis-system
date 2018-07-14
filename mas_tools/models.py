@@ -220,10 +220,12 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
     # x = Dense(32, activation='relu')(x)
 
     # Input Feedback
-    input_fb = Input(shape=(shape_fb, ), name='input_feedback')
+    input_fb = Input(shape=(1, shape_fb), name='input_feedback')
+    fb = BatchNormalization()(input_fb)
+    fb = Flatten()(fb)
     fb = Dense(32,
             activation='relu',
-            kernel_initializer='glorot_uniform')(input_fb)
+            kernel_initializer='glorot_uniform')(fb)
 
     # Concat X and Feedback
     x = concatenate([x, fb])

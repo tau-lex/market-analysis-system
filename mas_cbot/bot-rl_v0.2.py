@@ -15,7 +15,7 @@ from rl.processors import MultiInputProcessor
 from mas_tools.api import Binance
 from mas_tools.markets import VirtualExchange
 from mas_tools.envs import MarketEnv
-from mas_tools.models import simple_model, cnn_model_2in
+from mas_tools.models import cnn_model_2in_with_feedback
 
 
 #=============================================================================#
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     agent = DQNAgent(model=model, nb_actions=nb_actions,
                      memory=memory, nb_steps_warmup=1000,
                      target_model_update=1e-2, policy=policy,
-                     processor=MultiInputProcessor(2),
+                     processor=MultiInputProcessor(3),
                      # enable_dueling_network=True, dueling_type='avg'
                     )
     agent.compile(Adam(lr=1e-3), metrics=['mae'])
