@@ -15,7 +15,7 @@ from rl.processors import MultiInputProcessor
 from mas_tools.api import Binance
 from mas_tools.markets import VirtualExchange
 from mas_tools.envs import MarketEnv
-from mas_tools.models import simple_model, cnn_model_2in
+from mas_tools.models import cnn_model_2in_with_feedback
 
 
 #=============================================================================#
@@ -25,7 +25,7 @@ MY_API_KEY = '---'
 MY_API_SECRET = '---'
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-ENV_NAME = 'cb_Binance_3'
+ENV_NAME = 'cb_Binance_4'
 
 SLEEP = 4
 TRAIN = True
@@ -43,14 +43,16 @@ if __name__ == "__main__":
     market_conn = VirtualExchange(api, symbols=['ETHUSDT'], period='5m',
                                     balance=1000.0, lot_size=0.1)
 
-    market = MarketEnv(market_conn)
+    market = MarketEnv(market_conn, True, True)
 
     observation_shape = market.observation_space.shape
     nb_actions = market.action_space.n
     log.info('State shape = {a} | actions = {b}'.format(a=observation_shape, b=nb_actions))
 
     limit = observation_shape[1]
-    model = cnn_model_2in((limit, 4), (limit, 4), nb_actions, 'softmax')
+    model = cnn_model_2in_with_feedback(
+            (limit, 4), (limit, 4),
+            market.feedback_shape, nb_actions, 'softmax')
 
     memory = SequentialMemory(limit=10000, window_length=1)
     # TODO implement policies for multiply symbols
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     agent = DQNAgent(model=model, nb_actions=nb_actions,
                      memory=memory, nb_steps_warmup=1000,
                      target_model_update=1e-2, policy=policy,
-                     processor=MultiInputProcessor(2),
+                     processor=MultiInputProcessor(3),
                      # enable_dueling_network=True, dueling_type='avg'
                     )
     agent.compile(Adam(lr=1e-3), metrics=['mae'])
