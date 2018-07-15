@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import requests
 
 from datetime import datetime
 import numpy as np
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     try:
         # Comment here if you want to start learning again
         agent.load_weights('{p}/dqn_{fn}_weights.h5f'.format(p=PATH, fn=ENV_NAME))
+        pass
     except OSError as e:
         print(e)
     except ValueError as e:
@@ -114,7 +116,7 @@ if __name__ == "__main__":
             time.sleep(SLEEP)
             tickcount += 1
 
-        except ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:
             log.exception(e)
 
         # TODO not working

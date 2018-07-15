@@ -171,6 +171,7 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
     assert shape_a[0] == shape_b[0]
     
     conv_nb = (16, 32, 64)
+    dp = 0.2
 
     # Input A
     input_a = Input(shape=(1, shape_a[0], shape_a[1]),
@@ -204,24 +205,17 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
             data_format='channels_first',
             )(a)
     a = Reshape((conv_nb[2], int(shape_a[0]/4)*shape_a[1]))(a)
-    a = LSTM(64,
+    a = Dense(64,
             activation='relu',
             kernel_initializer='glorot_uniform',
-            return_sequences=True
+            # return_sequences=True
             )(a)
+    a = Dropout(dp)(a)
 
     # Input B
     input_b = Input(shape=(1, shape_b[0], shape_b[1]),
                     name='input_b')
     b = BatchNormalization()(input_b)
-    # b = Conv2D(filters=conv_nb[0],
-    #         kernel_size=(3, 1),
-    #         padding='same',  # 'same' or 'causal'
-    #         activation='relu',
-    #         kernel_initializer='glorot_uniform',
-    #         data_format='channels_first',
-    #         )(b)
-    # b = Reshape((conv_nb[0], shape_b[0]*shape_b[1]))(b)
     b = Reshape((1, shape_b[0] * shape_b[1]))(b)
     b = LSTM(64,
             activation='relu',
@@ -232,6 +226,7 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
             activation='relu',
             kernel_initializer='glorot_uniform',
             )(b)
+    b = Dropout(dp)(b)
 
     # Concat A and B
     x = concatenate([a, b], axis=1)
@@ -246,18 +241,22 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
             kernel_initializer='glorot_uniform'
             )(x)
     # x = Dense(32, activation='relu')(x)
+    x = Dropout(dp)(x)
 
     # Input Feedback
     input_fb = Input(shape=(1, shape_fb), name='input_feedback')
     fb = BatchNormalization()(input_fb)
-    fb = Flatten()(fb)
-    fb = Dense(32,
+    # fb = Flatten()(fb)
+    fb = LSTM(32,
             activation='relu',
-            kernel_initializer='glorot_uniform')(fb)
+            kernel_initializer='glorot_uniform',
+            )(fb)
+    fb = Dropout(dp)(fb)
 
     # Concat X and Feedback
     x = concatenate([x, fb])
 
+    x = Dense(10)(x)
     output = Dense(nb_output, activation=activation)(x)
 
     model = Model(inputs=[input_a, input_b, input_fb], outputs=output)
