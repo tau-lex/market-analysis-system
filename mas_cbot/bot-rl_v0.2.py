@@ -25,9 +25,9 @@ MY_API_KEY = '---'
 MY_API_SECRET = '---'
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-ENV_NAME = 'cb_Binance_4'
+ENV_NAME = 'cb_Binance_5'
 
-SLEEP = 4
+SLEEP = 5
 TRAIN = True
 
 logging.basicConfig(level=logging.INFO,
@@ -40,7 +40,7 @@ log = logging.getLogger()
 if __name__ == "__main__":
     api = Binance(API_KEY=MY_API_KEY, API_SECRET=MY_API_SECRET)
 
-    market_conn = VirtualExchange(api, symbols=['ETHUSDT'], period='5m',
+    market_conn = VirtualExchange(api, symbols=['ETHUSDT'], period='1m',
                                     balance=1000.0, lot_size=0.1)
 
     market = MarketEnv(market_conn, True, True)
@@ -66,8 +66,13 @@ if __name__ == "__main__":
                     )
     agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
-    # Comment here if you want to start learning again
-    agent.load_weights('{p}/dqn_{fn}_weights.h5f'.format(p=PATH, fn=ENV_NAME))
+    try:
+        # Comment here if you want to start learning again
+        agent.load_weights('{p}/dqn_{fn}_weights.h5f'.format(p=PATH, fn=ENV_NAME))
+    except OSError as e:
+        print(e)
+    except ValueError as e:
+        print(e)
 
     # agent.fit(market, nb_steps=100000, visualize=False, verbose=2)
     # agent.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
@@ -114,6 +119,7 @@ if __name__ == "__main__":
 
         # TODO not working
         except KeyboardInterrupt as e:
+            ## https://stackoverflow.com/questions/15457786/ctrl-c-crashes-python-after-importing-scipy-stats
             # We catch keyboard interrupts here so that training can be be safely aborted.
             # This is so common that we've built this right into this function, which ensures that
             # the `on_train_end` method is properly called.

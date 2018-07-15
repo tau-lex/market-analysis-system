@@ -393,7 +393,7 @@ class VirtualExchange(AbstractMarket):
         if amount > 0 and self.balance - amount > 0:
             self.__data[symbol]['deposit'] += lot_size
             self.__data[symbol]['buy_price'] = price
-            self.__balance -= amount * (1.0 + self.__commission)
+            self.__balance -= amount #* (1.0 + self.__commission)
             # self.__profit = -lot_size # TODO check with him
         elif self.balance - amount <= 0:
             log.debug('Buy Error | B={} A={} L={} P={} SL={}'.format(
@@ -424,7 +424,7 @@ class VirtualExchange(AbstractMarket):
             if self.__profit > 0:
                 self.__profit += 5
             self.__data[symbol]['deposit'] -= lot_size
-            self.__balance += amount * (1.0 - self.__commission)
+            self.__balance += amount #* (1.0 - self.__commission)
         else:
             log.debug('Sell Error | B={} A={} L={} P={}'.format(
                         self.balance, amount, lot_size, price))

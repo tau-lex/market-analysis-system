@@ -16,7 +16,10 @@ from keras.layers import Flatten, Reshape
 
 from keras.layers import Conv1D, Conv2D
 from keras.layers import AveragePooling1D, MaxPooling1D
+from keras.layers import AveragePooling2D, MaxPooling2D
 from keras.layers import GlobalAveragePooling1D, GlobalMaxPooling1D
+
+from mas_tools.layers import Attention, AttentionWithContext
 
 from keras.activations import relu
 
@@ -167,20 +170,40 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
 
     assert shape_a[0] == shape_b[0]
     
-    conv_nb = (16, )
+    conv_nb = (16, 32, 64)
 
     # Input A
     input_a = Input(shape=(1, shape_a[0], shape_a[1]),
                     name='input_a')
     a = BatchNormalization()(input_a)
     a = Conv2D(filters=conv_nb[0],
+            kernel_size=(5, 1),
+            padding='same',  # 'same' or 'causal'
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            data_format='channels_first',
+            )(a)
+    a = Conv2D(filters=conv_nb[1],
             kernel_size=(3, 1),
             padding='same',  # 'same' or 'causal'
             activation='relu',
             kernel_initializer='glorot_uniform',
             data_format='channels_first',
             )(a)
-    a = Reshape((conv_nb[0], shape_a[0]*shape_a[1]))(a)
+    a = MaxPooling2D(pool_size=(2,1),
+            data_format='channels_first',
+            )(a)
+    a = Conv2D(filters=conv_nb[2],
+            kernel_size=(3, 1),
+            padding='same',
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            data_format='channels_first',
+            )(a)
+    a = MaxPooling2D(pool_size=(2,1),
+            data_format='channels_first',
+            )(a)
+    a = Reshape((conv_nb[2], int(shape_a[0]/4)*shape_a[1]))(a)
     a = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform',
@@ -191,22 +214,27 @@ def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activatio
     input_b = Input(shape=(1, shape_b[0], shape_b[1]),
                     name='input_b')
     b = BatchNormalization()(input_b)
-    b = Conv2D(filters=conv_nb[0],
-            kernel_size=(3, 1),
-            padding='same',  # 'same' or 'causal'
-            activation='relu',
-            kernel_initializer='glorot_uniform',
-            data_format='channels_first',
-            )(b)
-    b = Reshape((conv_nb[0], shape_b[0]*shape_b[1]))(b)
+    # b = Conv2D(filters=conv_nb[0],
+    #         kernel_size=(3, 1),
+    #         padding='same',  # 'same' or 'causal'
+    #         activation='relu',
+    #         kernel_initializer='glorot_uniform',
+    #         data_format='channels_first',
+    #         )(b)
+    # b = Reshape((conv_nb[0], shape_b[0]*shape_b[1]))(b)
+    b = Reshape((1, shape_b[0] * shape_b[1]))(b)
     b = LSTM(64,
             activation='relu',
             kernel_initializer='glorot_uniform',
             return_sequences=True
             )(b)
+    b = Dense(64,
+            activation='relu',
+            kernel_initializer='glorot_uniform',
+            )(b)
 
     # Concat A and B
-    x = concatenate([a, b])
+    x = concatenate([a, b], axis=1)
 
     x = LSTM(96,
             activation='relu',
