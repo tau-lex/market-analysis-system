@@ -1,0 +1,7 @@
+## Directory with scripts of examples and experiments with the MetaTrader platform.
+Contains scripts ready to run. The scripts take data from the directory of the MetaTrader terminal, from the sub-directory where the script saves the data [ML-Assistant](https://github.com/terentjew-alexey/mql_projects/blob/master/MASi_ML-Assistant.mq4) or [ML-DataSaver](https://github.com/terentjew-alexey/mql_projects/blob/master/MASi_ML-DataSaver.mq4).
+With these scripts, the adviser's script [ML-Trader](https://github.com/terentjew-alexey/mql_projects/blob/master/MASx_ML-Trader.mq4) also works, which automatically trades under the forecasts of signals. Trade can be done both by withdrawing transactions to the broker's server, and virtually, displaying transactions on the chart.
+
+## Каталог со скриптами примеров и экспериментов с платформой MetaTrader.
+Содержит скрипты готовые для запуска. Скрипты берут данные из дериктории терминала MetaTrader, из под-дериктории куда сохраняет эти данные скрипт [ML-Assistant](https://github.com/terentjew-alexey/mql_projects/blob/master/MASi_ML-Assistant.mq4) или [ML-DataSaver](https://github.com/terentjew-alexey/mql_projects/blob/master/MASi_ML-DataSaver.mq4).
+С этими скриптами также работает скрипт советника [ML-Trader](https://github.com/terentjew-alexey/mql_projects/blob/master/MASx_ML-Trader.mq4), который автоматически торгует по прогнозам сигналов. Торговлю может совершать как выводя сделки на сервер брокера, так и виртуально, отображая сделки на графике.
