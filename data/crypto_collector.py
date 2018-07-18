@@ -1,6 +1,6 @@
 import time
+import requests
 from threading import Thread
-import ssl
 
 import numpy as np
 import pandas as pd
@@ -8,8 +8,8 @@ import pandas as pd
 from mas_tools.api import Binance
 
 api = Binance('', '')
-symbols = ['BTCUSDT', 'ETHUSDT', 'BNBETH']
-period = '5m'
+symbols = ['BTCUSDT', 'ETHUSDT', 'BNBETH', 'BNBUSDT']
+period = '1m'
 
 limit = 20
 ticks = 0
@@ -46,16 +46,13 @@ while True:
 
         ticks += 1
         # print('tick. {} s.'.format(time.time()-start_time))
-        # time.sleep(0.1)
+        time.sleep(5)
 
-    except ConnectionError as e:
-        print('ConnectionError:', e)
+    except requests.exceptions.ConnectionError as e:
+        print(e)
         
     except TimeoutError as e:
         print('TimeoutError:', e)
-
-    except ssl.SSLError as e:
-        print('SSLError:', e)
         
     # except Exception as e:
     #     print('Error:', e)
