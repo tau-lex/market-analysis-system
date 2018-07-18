@@ -63,7 +63,7 @@ if __name__ == "__main__":
                      memory=memory, nb_steps_warmup=1000,
                      target_model_update=1e-2, policy=policy,
                      processor=MultiInputProcessor(3),
-                     # enable_dueling_network=True, dueling_type='avg'
+                     enable_dueling_network=True, dueling_type='avg'
                     )
     agent.compile(Adam(lr=1e-3), metrics=['mae'])
 
