@@ -2,7 +2,8 @@ build*/
 __pycache__/
 tmp/
 dist/
-mas_tools.egg-info/
+*.egg-info/
+api.conf
 *.autosave
 *.hdf5
 *.h5f
