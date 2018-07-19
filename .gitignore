@@ -3,6 +3,7 @@ __pycache__/
 tmp/
 dist/
 *.egg-info/
+api.conf
 *.autosave
 *.hdf5
 *.h5f

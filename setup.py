@@ -16,7 +16,8 @@ setup(
 #    include_package_data=True,
     install_requires=[
             'numpy', 'pandas', 'matplotlib',
-            'scikit-learn', 'keras>=2.1', 'tensorflow>=1.6',
+            'scikit-learn', 'keras>=2.1', 'tensorflow>=1.8',
             'gym', 'keras-rl'
+            # 'cntk>=2.5', 'ccxt>=1.16'
         ]
 )
