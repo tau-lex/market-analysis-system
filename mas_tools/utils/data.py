@@ -10,7 +10,16 @@ from numpy.random import shuffle
 
 
 def create_timeseries_matrix(data_x, data_y=[], look_back=3):
-    """Converts a dataset into a time series matrix."""
+    """Converts a dataset into a time series matrix.
+    
+    Arguments
+        data_x (array like): Features data.
+        data_y (array like): Target data.
+        look_back (int): size of minibatches.
+        
+    Returns
+        data_x (array): Transformed features data.
+        data_y (array): Transformed target data."""
 
     if look_back <= 1:
         return np.array(data_x), np.array(data_y)
@@ -19,25 +28,27 @@ def create_timeseries_matrix(data_x, data_y=[], look_back=3):
         print('create_timeseries_matrix() error = look back size is large')
         return np.array(data_x), np.array(data_y)
 
-    result = np.array([])
+    back = look_back - 1
+    len_x = len(data_x)
     data_x = np.array(data_x)
     data_y = np.array(data_y)
+    result = np.array(data_x[:-back, :])
 
-    for idx in range(len(data_x) - look_back + 1):
-        row = data_x[idx:(idx + look_back), :]
-        np.reshape(row, data_x.shape[1] * look_back)
-        result = np.append(result, row)
+    for i in range(1, look_back):
+        j = len_x - back + i
+        result = np.hstack((result, data_x[i:j, :]))
 
     new_shape = (data_x.shape[0] - look_back + 1, data_x.shape[1] * look_back)
     result = np.reshape(result, new_shape)
 
-    return result, data_y[look_back-1:]
+    return result, data_y[back:]
 
 
 def dataset_to_traintest(data, train_ratio=0.6, limit=0):
     """Returns a data set divided into two matrices.
     train = train_ratio * data.
-    limit > 0 - limits the size of the dataset."""
+    limit > 0 - limits the size of the dataset.
+    ! Depricated."""
 
     data = np.array(data)
 
