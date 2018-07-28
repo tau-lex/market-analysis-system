@@ -3,12 +3,13 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-from market_analysis_system.include import get_parameters, plot_history
-from market_analysis_system.data import create_timeseries_matrix
-from market_analysis_system.data import get_delta, get_diff, get_log_diff
-from market_analysis_system.data import get_sigmoid_to_zero, get_sigmoid_ration
-from market_analysis_system.models import save_model, load_model
-from market_analysis_system.classes import signal_to_class, class_to_signal
+from mas_tools.os import get_parameters
+from mas_tools.ml import plot_history
+from mas_tools.data import create_timeseries_matrix
+from mas_tools.data import get_delta, get_diff, get_log_diff
+from mas_tools.data import get_sigmoid_to_zero, get_sigmoid_ration
+from mas_tools.models import save_model, load_model
+from mas_tools.classes import signal_to_class, class_to_signal
 from sklearn.model_selection import train_test_split
 
 from keras.models import Sequential

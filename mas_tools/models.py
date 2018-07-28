@@ -2,7 +2,7 @@
 """
 The module contains functions for working with the Keras models of the MAS project.
 """
-from mas_tools.utils.ml import save_model_arch
+from mas_tools.ml import save_model_arch
 
 from keras.models import model_from_json
 
