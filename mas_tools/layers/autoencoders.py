@@ -1,6 +1,7 @@
 from keras.models import Model
 from keras.layers import Input, Dense, Flatten, Reshape
 from keras.layers import Conv2D, MaxPooling2D, UpSampling2D
+from keras.regularizers import L1L2
 
 
 def create_dense_ae(input_shape, encoding_dim=64, output_activation='linear'):
@@ -25,11 +26,15 @@ def create_dense_ae(input_shape, encoding_dim=64, output_activation='linear'):
     # Encoder
     input_tensor = Input(shape=input_shape)
     x = Flatten()(input_tensor)
-    encoded = Dense(encoding_dim, activation='relu')(x)
+    encoded = Dense(encoding_dim,
+            activation='relu',
+            kernel_initializer='glorot_uniform')(x)
     
     # Decoder
     input_encoded = Input(shape=(encoding_dim,))
-    y = Dense(decoder_dim, activation=output_activation)(input_encoded)
+    y = Dense(decoder_dim,
+            activation=output_activation,
+            kernel_initializer='glorot_uniform')(input_encoded)
     decoded = Reshape(input_shape)(y)
 
     # Create models
@@ -40,7 +45,9 @@ def create_dense_ae(input_shape, encoding_dim=64, output_activation='linear'):
     return encoder, decoder, autoencoder
 
 
-def create_deep_ae(input_shape, encoding_dim=64, output_activation='linear'):
+def create_deep_ae(input_shape, encoding_dim=64,
+                    output_activation='linear', kernel_activation='elu',
+                    lambda_l1=0.0):
     """
     Example from https://habr.com/post/331382/
 
@@ -48,6 +55,8 @@ def create_deep_ae(input_shape, encoding_dim=64, output_activation='linear'):
         input_shape (tuple of int):
         encoding_dim (int):
         output_activation (str):
+        kernel_activation (str):
+        lambda_l1 (float): Regularisation value for sparse encoding.
 
     Returns
         encoder:
@@ -62,14 +71,17 @@ def create_deep_ae(input_shape, encoding_dim=64, output_activation='linear'):
     # Encoder
     input_tensor = Input(shape=input_shape)
     x = Flatten()(input_tensor)
-    x = Dense(encoding_dim*3, activation='relu')(x)
-    x = Dense(encoding_dim*2, activation='relu')(x)
-    encoded = Dense(encoding_dim, activation='linear')(x)
+    # x = Dense(encoding_dim*4, activation=kernel_activation)(x)
+    x = Dense(encoding_dim*3, activation=kernel_activation)(x)
+    x = Dense(encoding_dim*2, activation=kernel_activation)(x)
+    encoded = Dense(encoding_dim, activation='linear',
+                    activity_regularizer=L1L2(lambda_l1, 0))(x)
     
     # Decoder
     input_encoded = Input(shape=(encoding_dim,))
-    y = Dense(encoding_dim*2, activation='relu')(input_encoded)
-    y = Dense(encoding_dim*3, activation='relu')(y)
+    y = Dense(encoding_dim*2, activation=kernel_activation)(input_encoded)
+    y = Dense(encoding_dim*3, activation=kernel_activation)(y)
+    # y = Dense(encoding_dim*4, activation=kernel_activation)(y)
     y = Dense(decoder_dim, activation=output_activation)(y)
     decoded = Reshape(input_shape)(y)
 
