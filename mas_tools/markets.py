@@ -9,7 +9,7 @@ import pandas as pd
 
 # import quandl
 from mas_tools.api import BaseApi
-from mas_tools.utils.trade import calculate_stop_loss, calculate_lot
+from mas_tools.trade import calculate_stop_loss, calculate_lot
 
 
 log = logging.getLogger(__name__)

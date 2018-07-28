@@ -11,16 +11,6 @@ from keras.utils import plot_model
 def plot_history(history, acc='accuracy'):
     """Plot functions graph."""
 
-    # summarize history for accuracy
-    plt.plot(history.history[acc])
-    plt.plot(history.history['val_'+acc])
-    plt.title('Model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    # plt.axhline(y=0.5, color='grey', linestyle='--')
-    plt.show()
-
     # summarize history for loss
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
@@ -30,6 +20,19 @@ def plot_history(history, acc='accuracy'):
     plt.legend(['train', 'test'], loc='upper left')
     # plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.show()
+
+    try:
+        # summarize history for accuracy
+        plt.plot(history.history[acc])
+        plt.plot(history.history['val_'+acc])
+        plt.title('Model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        # plt.axhline(y=0.5, color='grey', linestyle='--')
+        plt.show()
+    except RuntimeError:
+        pass
 
 
 def classification_scores(true_y, test_y, n=3):

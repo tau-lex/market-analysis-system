@@ -2,7 +2,7 @@
 """
 The module contains functions for working with the Keras models of the MAS project.
 """
-from mas_tools.utils.ml import save_model_arch
+from mas_tools.ml import save_model_arch
 
 from keras.models import model_from_json
 
@@ -19,7 +19,7 @@ from keras.layers import AveragePooling1D, MaxPooling1D
 from keras.layers import AveragePooling2D, MaxPooling2D
 from keras.layers import GlobalAveragePooling1D, GlobalMaxPooling1D
 
-from mas_tools.layers import Attention, AttentionWithContext
+from mas_tools.layers import Attention, AttentionWithContext, AttentionWeightedAverage
 
 from keras.activations import relu
 
@@ -27,7 +27,7 @@ from keras.activations import relu
 def save_model(model: Model, filename: str):
     """Writes the model to a text file.
     
-    # Arguments
+    Arguments
         model (keras.Model): Model of the neural network to save.
         file (str): Path and filename."""
 
@@ -43,7 +43,7 @@ def load_model(filename: str):
     Arguments
         file (str): Path and filename.
         
-    Returns:
+    Returns
         model (keras.Model): Model of neural network."""
 
     json_string = ''
@@ -62,7 +62,7 @@ def load_model(filename: str):
 def simple_model(input_shape, nb_output, act='linear'):
     """Simple model for RL.
         
-    Returns:
+    Returns
         model (keras.Model): Model of neural network."""
 
     model = Sequential()
@@ -87,13 +87,13 @@ def simple_model(input_shape, nb_output, act='linear'):
 def cnn_model_2in(shape_a, shape_b, nb_output, activation='softmax'):
     """CNN for exchange bot.
     
-    # Arguments
+    Arguments
         shape_a (): shape = (limit(timeseries or depth), features)
         shape_b (): shape = (limit(timeseries or depth), features)
         nb_output (int): Number of output classes.
         activation (string): activation function for model output.
         
-    Returns:
+    Returns
         model (keras.Model): Model of neural network."""
 
     assert shape_a[0] == shape_b[0]
@@ -158,14 +158,14 @@ def cnn_model_2in(shape_a, shape_b, nb_output, activation='softmax'):
 def cnn_model_2in_with_feedback(shape_a, shape_b, shape_fb, nb_output, activation='softmax'):
     """CNN for exchange bot.
     
-    # Arguments
+    Arguments
         shape_a (tuple of int): shape = (limit(timeseries or depth), features)
         shape_b (tuple of int): shape = (limit(timeseries or depth), features)
         shape_fb (tuple of int or int): Shape of feedback data.
         nb_output (int): Number of output classes.
         activation (string): activation function for model output.
         
-    Returns:
+    Returns
         model (keras.Model): Model of neural network."""
 
     assert shape_a[0] == shape_b[0]
@@ -269,9 +269,12 @@ if __name__ == "__main__":
 
     model = simple_model((100, 4, 10), 3)
     save_model_arch(model, path+'simple')
+    model.summary()
 
     model = cnn_model_2in((50, 9), (50, 4), 3)
     save_model_arch(model, path+'cnn2in')
+    model.summary()
 
     model = cnn_model_2in_with_feedback((50, 9), (50, 4), 8, 3)
     save_model_arch(model, path+'cnn2in_feedback')
+    model.summary()
