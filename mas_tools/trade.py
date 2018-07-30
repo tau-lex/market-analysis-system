@@ -87,7 +87,7 @@ def calculate_lot(one_lot_risk, balance_risk, min_lot, precision=2):
 def adjust_to_step(value, step, increase=False):
     """Rounds any number to a multiple of the specified step.
 
-    from: https://bablofil.ru
+    Author: https://bablofil.ru
 
     Arguments
         increase (bool): if True - rounding will occur to a larger step value.
