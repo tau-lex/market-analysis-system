@@ -1,46 +1,54 @@
-from time import sleep
+from time import sleep, time
 import logging
 
+import labnotebook
 from mas_tools.api import Binance
 
 
-MY_API_KEY = '---'
-MY_API_SECRET = '---'
+# logging
 path = 'E:/Projects/market-analysis-system/mas_arbitrage/'
-
 logging.basicConfig(level=logging.INFO,
                     handlers=[logging.FileHandler("{p}/{fn}.log".format(p=path, fn='bot_0.0')),
                                 logging.StreamHandler()]
                     )
 log = logging.getLogger()
 
-api = Binance('', '')
+# labnotebook
+db_url = 'postgres://postgres:postgres@localhost/postgres'
+experiments, steps, model_params = labnotebook.initialize(db_url)
 
+# cripto exchange api
+MY_API_KEY = '---'
+MY_API_SECRET = '---'
+api = Binance(MY_API_KEY, MY_API_SECRET)
+
+# parameters
 symb1 = 'BTCUSDT'
 symb2 = 'ETHUSDT'
 period = '1m'
-arb_sum = True
-
-balance = {symb1: 0.04, # ~ $330
-           symb2: 0.7,  # ~ $330
-           'usd': 330
-}
-# 0.1 of the start balance
-lot = {symb1: 0.004,
-       symb2: 0.07,
-       'usd': 33
-}
-
+arbitrage_sum = True
 h_level = 7810
 l_level = 7625
 nb_zones = 12
-
-stop_size = 0.8 # zones
+stop_size = 0.8 # of zones
 max_orders = 4
+fees = 0.005
+
+balance = {
+    symb1: 0.04, # ~ $330
+    symb2: 0.7,  # ~ $330
+    'usd': 330,
+    'sum': 0.0
+}
+lot = {
+    symb1: balance[symb1]*0.1,
+    symb2: balance[symb2]*0.1,
+    'usd': balance['usd']*0.1
+}
+
 opened_orders = []
 out_of_stop = False
 
-fees = 0.005
 
 def calculate_zones(high, low, nb, stops=0.):
     """Calculate levels for channel statistic arbitrage.
@@ -121,20 +129,38 @@ def sell(symbol):
 
 def open_order(zone_index):
     """"""
-    if zone_index >= 0:
-        sell(symb1)
-        buy(symb2)
+    if arbitrage_sum:
+        if zone_index >= 0:
+            sell(symb1)
+            buy(symb2)
+        else:
+            buy(symb1)
+            sell(symb2)
     else:
-        buy(symb1)
-        sell(symb2)
+        if zone_index >= 0:
+            sell(symb1)
+            sell(symb2)
+        else:
+            buy(symb1)
+            buy(symb2)
 
+tick_count = 0
 zones, stops = calculate_zones(h_level, l_level, nb_zones, stop_size)
-
 past_prices = {symb1: float(api.ticker_price(symbol=symb1)['price']),
                symb2: float(api.ticker_price(symbol=symb2)['price'])}
 
-calc = past_prices[symb1]*balance[symb1] + past_prices[symb2]*balance[symb2] + balance['usd']
-log.info('Start balance: {b:0.2f} USD'.format(b=calc))
+balance['sum'] = past_prices[symb1]*balance[symb1] + past_prices[symb2]*balance[symb2] + balance['usd']
+log.info('Start balance: {b:0.2f} USD'.format(b=balance['sum']))
+
+model_desc = {'pair_1': symb1, 'pair_2': symb2,
+              'period': period,
+              symb1: balance[symb1], symb2: balance[symb2],
+              'USD': balance['usd'], 'sum_balance': balance['sum'],
+              'high_level': h_level, 'low_level': l_level,
+              'nb_zones': nb_zones, 'stop_size': stop_size}
+# we start the experiment and output it to an 'experiment' variable
+# we can then pass this experiment to step_experiment and end_experiment
+experiment = labnotebook.start_experiment(model_desc=model_desc)
 
 while True:
     try:
@@ -175,13 +201,25 @@ while True:
             # if len(opened_orders) >= max_orders:
             #     continue
 
-        past_prices = new_prices
-        calc = new_prices[symb1]*balance[symb1] + new_prices[symb2]*balance[symb2] + balance['usd']
-        log.info('Balances: {b:0.6f} BTC, {e:0.6f} ETH, {u:0.2f} USD\nCalculated balance: {c:0.2f} USD\nLevels of opened orders: {o}'.format(
-                b=balance[symb1], e=balance[symb2], u=balance['usd'], c=calc, o=opened_orders
+        balance['sum'] = new_prices[symb1]*balance[symb1] + new_prices[symb2]*balance[symb2] + balance['usd']
+        log.info('Balances: {b:0.6f} BTC, {e:0.6f} ETH, {u:0.2f} USD\nSum balance: {s:0.2f} USD\nLevels of opened orders: {o}'.format(
+                b=balance[symb1], e=balance[symb2], u=balance['usd'], s=balance['sum'], o=opened_orders
         ))
-        print(opened_orders)
+        
+        # we pass all our indicators to step_experiment
+        labnotebook.step_experiment(experiment,
+                                    timestep=tick_count,
+                                    trainacc=balance['sum'],
+                                    custom_fields={symb1: balance[symb1], symb2: balance[symb2],
+                                                    'USD': balance['usd'], 'sum_balance': balance['sum']})
+        
+        past_prices = new_prices
+        tick_count += 1
 
     except RuntimeError:
         pass
 
+    finally:
+        log.info('======== End program ========\nFinal balance: {} USD'.format(balance['sum']))
+        # we close the experiment and pass all final indicators:
+        labnotebook.end_experiment(experiment, final_trainacc=balance['sum'])
