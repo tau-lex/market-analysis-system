@@ -55,6 +55,12 @@ corr2 = np.corrcoef(x, y)
 corr3 = pearsonr2(x, y)
 print('\nscipy corr = {}\nnumpy corr = {}\ncustum corr = {}\n'.format(corr1, corr2, corr3))
 
+# MNK
+mnk = np.linalg.lstsq(x.reshape((1, len(x))), y)
+plt.plot(mnk)
+plt.show()
+
+
 # base graph
 z = x - y
 plt.plot(z)
