@@ -45,14 +45,17 @@ eth = pd.DataFrame(
                 interval=period, limit=limit),
         dtype=np.float)
 
-x = btc[4].values
+# closes
+x = btc[4].values 
 y = eth[4].values
 
+# correlation
 corr1 = pearsonr(x, y)
 corr2 = np.corrcoef(x, y)
 corr3 = pearsonr2(x, y)
 print('\nscipy corr = {}\nnumpy corr = {}\ncustum corr = {}\n'.format(corr1, corr2, corr3))
 
+# base graph
 z = x - y
 plt.plot(z)
 # for i in zones:
