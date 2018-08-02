@@ -1,15 +1,17 @@
 from time import sleep, time
 import logging
 import numpy as np
+import pandas as pd
 
 import labnotebook
 from mas_tools.api import Binance
+from mas_tools.trade import calculate_cointegration_scores
 
 
 # logging
 path = 'E:/Projects/market-analysis-system/mas_arbitrage/'
 logging.basicConfig(level=logging.INFO,
-                    handlers=[logging.FileHandler("{p}/{fn}.log".format(p=path, fn='bot_0.0')),
+                    handlers=[logging.FileHandler("{p}/{fn}.log".format(p=path, fn='bot_0.1')),
                                 logging.StreamHandler()]
                     )
 log = logging.getLogger()
@@ -25,22 +27,21 @@ api = Binance(MY_API_KEY, MY_API_SECRET)
 
 # parameters
 symb1 = 'BTCUSDT'
-symb2 = 'ETHUSDT'
+symb2 = 'BCCUSDT'
 period = '1m'
 arbitrage_sum = True
-coef = 15
-h_level = 1345
-l_level = 1180
+eps, mu, std = 0., 0., 0.
+limit = 1000
 
-nb_zones = 12
 stop_size = 0.8 # of zones
 max_orders = 4
 fees = 0.005
 
+start_usd = 300
 balance = {
-    symb1: 0.04, # ~ $330
-    symb2: 0.7,  # ~ $330
-    'usd': 330,
+    symb1: 1 / float(api.ticker_price(symbol=symb1)['price']) * start_usd,
+    symb2: 1 / float(api.ticker_price(symbol=symb2)['price']) * start_usd,
+    'usd': start_usd,
     'sum': 0.0
 }
 lot = {
@@ -49,34 +50,14 @@ lot = {
     'usd': balance['usd']*0.1
 }
 
+tick_count = 0
+zones = [-2., 0., 2.]
+stops = [zones[0] - stop_size, zones[2] + stop_size]
 opened_orders = []
 history = []
 out_of_stop = False
 
-
-def calculate_zones(high, low, nb, stops=0.):
-    """Calculate levels for channel statistic arbitrage.
-    
-    Arguments
-        high (int, float): High level of channel.
-        low (int, float): Low level of channel.
-        nb (int): Number of zones in channel.
-        
-    Returns
-        zone_levels (list): List of zones levels."""
-
-    delta = (high - low) / nb
-
-    zone_levels = []
-    for i in range(nb+1):
-        level = low + i * delta
-        zone_levels.append(level)
-
-    if stops:
-        return zone_levels, (zone_levels[0] - delta * stops,
-                             zone_levels[nb] + delta * stops)
-    return zone_levels
-
+# functions
 def check_touch_of_zone(levels, new_price, old_price):
     """Checks the touch by the price of the boundaries of the zone.
     
@@ -92,10 +73,10 @@ def check_touch_of_zone(levels, new_price, old_price):
     for idx in range(length):
         if new_price >= old_price:
             if old_price <= levels[idx] and levels[idx] <= new_price:
-                return idx # breakup
+                return levels[idx] # breakup
         else:
             if new_price <= levels[idx] and levels[idx] <= old_price:
-                return -idx # breakdown
+                return -levels[idx] # breakdown
 
     return None
 
@@ -148,45 +129,54 @@ def open_order(zone_index):
             buy(symb1)
             buy(symb2)
 
-tick_count = 0
-zones, stops = calculate_zones(h_level, l_level, nb_zones, stop_size)
+# pre start
 past_prices = {symb1: float(api.ticker_price(symbol=symb1)['price']),
                symb2: float(api.ticker_price(symbol=symb2)['price'])}
 
 balance['sum'] = past_prices[symb1]*balance[symb1] + past_prices[symb2]*balance[symb2] + balance['usd']
 log.info('Start balance: {b:0.2f} USD'.format(b=balance['sum']))
 
+# labnotebook
 model_desc = {'pair_1': symb1, 'pair_2': symb2,
               'period': period,
               symb1: balance[symb1], symb2: balance[symb2],
               'USD': balance['usd'], 'sum_balance': balance['sum'],
-              'high_level': h_level, 'low_level': l_level,
-              'nb_zones': nb_zones, 'stop_size': stop_size}
-# we start the experiment and output it to an 'experiment' variable
-# we can then pass this experiment to step_experiment and end_experiment
+              'stop_size': stop_size}
 experiment = labnotebook.start_experiment(model_desc=model_desc)
 
 while True:
     try:
         sleep(30)
+        # update coefficients
+        if tick_count % 100000 == 0:
+            x = pd.DataFrame(
+                    api.candlesticks(symbol=symb1,
+                            interval=period, limit=limit),
+                    dtype=np.float)[4].values
+            y = pd.DataFrame(
+                    api.candlesticks(symbol=symb2,
+                            interval=period, limit=limit),
+                    dtype=np.float)[4].values
+            eps, mu, std = calculate_cointegration_scores(x, y)
 
         # Update prices
         new_prices = {symb1: float(api.ticker_price(symbol=symb1)['price']),
                       symb2: float(api.ticker_price(symbol=symb2)['price'])}
 
-        past_base = past_prices[symb1] - coef * past_prices[symb2]
-        new_base = new_prices[symb1] - coef * new_prices[symb2]
+        z_score = (new_prices[symb1] - eps * new_prices[symb2] - mu) / std
+        past_z_score = (past_prices[symb1] - eps * past_prices[symb2] - mu) / std
 
         # Check stop levels
-        if out_of_stop:
-            raise ValueError('Out of base range!')
-        if new_base <= stops[0] or stops[1] <= new_base:
+        if stops[1] <= z_score or z_score <= stops[0]:
             out_of_stop = True
-            continue
+        if out_of_stop:
+            # raise ValueError('Out of z-score range!')
+            # TODO close orders
+            pass
 
         # trades
-        zone_level = check_touch_of_zone(zones, new_base, past_base)
-        if zone_level:
+        zone_level = check_touch_of_zone(zones, z_score, past_z_score)
+        if zone_level != 0:
             # middles zones level
             zlen = len(zones)
             mid = int(zlen / 2) if zlen % 2 == 0 else int(zlen / 2) + 1
@@ -201,12 +191,12 @@ while True:
                 for order in opened_orders:
                     open_order(-(order - mid))
                     opened_orders.remove(order)
-                    history.append([time(), new_base])
+                    history.append([time(), z_score])
             elif zone_level != mid:
                 # open order
                 open_order(zone_level - mid)
                 opened_orders.append(zone_level)
-                history.append([time(), new_base])
+                history.append([time(), z_score])
 
         balance['sum'] = new_prices[symb1]*balance[symb1] + new_prices[symb2]*balance[symb2] + balance['usd']
         log.info('Tick: {t}\nBalances: {b:0.6f} BTC, {e:0.6f} ETH, {u:0.2f} USD\nSum balance: {s:0.2f} USD\nLevels of opened orders: {o}'.format(
@@ -214,7 +204,7 @@ while True:
                 u=balance['usd'], s=balance['sum'], o=opened_orders
         ))
         
-        # we pass all our indicators to step_experiment
+        # labnotebook
         labnotebook.step_experiment(experiment,
                                     timestep=tick_count,
                                     trainacc=balance['sum'],
