@@ -1,5 +1,14 @@
+import logging
+
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+
+from scipy.stats.stats import pearsonr
+from statsmodels.tsa.stattools import adfuller
+
+
+log = logging.getLogger(__name__)
 
 
 def calculate_stop_loss(data, direction: str, position=0, factor=3.0):
@@ -87,7 +96,7 @@ def calculate_lot(one_lot_risk, balance_risk, min_lot, precision=2):
 def adjust_to_step(value, step, increase=False):
     """Rounds any number to a multiple of the specified step.
 
-    from: https://bablofil.ru
+    Author: https://bablofil.ru
 
     Arguments
         increase (bool): if True - rounding will occur to a larger step value.
@@ -96,3 +105,83 @@ def adjust_to_step(value, step, increase=False):
     return ((int(value * 100000000) - int(value * 100000000) % int(
             float(step) * 100000000)) / 100000000)+(float(step) if increase else 0)
 
+
+def calculate_cointegration_scores(x, y, log_info=True, plot_graph=False,
+                                    save_graph_path='', raise_error=False):
+    """Write me, please
+    
+    Arguments
+        x, y (array like):
+        log_info (bool):
+        plot_graph (bool):
+        save_graph_path (str):
+        
+    Returns
+        eps:
+        mu:
+        std:"""
+
+    # correlation
+    corr = pearsonr(x, y)
+    if log_info:
+        log.info('Pearson correlation coefficient: {}'.format(corr))
+
+    # stationary
+    result_x, result_y = adfuller(x), adfuller(y)
+    if log_info:
+        log.info('P-values coefficient: x={} y={}'.format(result_x[1], result_y[1]))
+    # stationary is <= 0.05 (p-value)
+    if result_x[1] <= 0.05 or result_y[1] <= 0.05:
+        info = 'Warning! One of the time series has stationarity.\nx p-value: {}; y p-value: {}'.format(result_x[1], result_y[1])
+        log.exception(info)
+        if raise_error:
+            raise ValueError(info)
+
+    # Cointegration
+    A = np.vstack([y, np.ones(len(y))]).T
+    eps, mu = np.linalg.lstsq(A, x, rcond=None)[0]
+    if log_info:
+        log.info('Cointegration coef.: eps={} mu={}'.format(eps, mu))
+    if plot_graph:
+        plt.plot(x, y, 'o', label='Original data', markersize=1)
+        plt.plot(eps*y + mu, y, 'r', label='Fitted line')
+        plt.legend()
+        if len(save_graph_path) > 0:
+            plt.savefig(save_graph_path + '_regression.png')
+        plt.show()
+
+    # difference graph - e
+    z = x - eps*y - mu
+    stat_z = adfuller(z)[1]
+    if log_info:
+        log.info('P-value coefficient of remainder: {}'.format(stat_z))
+    if stat_z > 0.05:
+        info = 'Warning! Remainder is not stationary. p-value: {}'.format(stat_z)
+        log.exception(info)
+        if raise_error:
+            raise ValueError(info)
+    # if plot_graph:
+    #     plt.plot(z)
+    #     plt.title('Remainder')
+    #     plt.ylabel('Remainder')
+    #     plt.xlabel('bar')
+    #     if len(save_graph_path) > 0:
+    #         plt.savefig(save_graph_path + '_remainder.png')
+    #     plt.show()
+
+    # z-score
+    std = np.std(z)
+    z_score = z / std
+    if plot_graph:
+        plt.plot(z_score)
+        plt.title('Z-score')
+        plt.ylabel('score')
+        plt.xlabel('bar')
+        plt.axhline(y=2., color='grey', linestyle='--')
+        plt.axhline(y=0., color='grey', linestyle='--')
+        plt.axhline(y=-2., color='grey', linestyle='--')
+        if len(save_graph_path) > 0:
+            plt.savefig(save_graph_path + '_z-score.png')
+        plt.show()
+
+    return eps, mu, std
