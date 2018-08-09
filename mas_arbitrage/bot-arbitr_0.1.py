@@ -17,8 +17,10 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger()
 
 # labnotebook
-db_url = 'postgres://postgres:postgres@localhost/postgres'
-experiments, steps, model_params = labnotebook.initialize(db_url)
+labnotebook_flag = False
+if labnotebook_flag:
+    db_url = 'postgres://postgres:postgres@localhost/postgres'
+    experiments, steps, model_params = labnotebook.initialize(db_url)
 
 # cripto exchange api
 MY_API_KEY = '---'
@@ -28,12 +30,13 @@ api = Binance(MY_API_KEY, MY_API_SECRET)
 # parameters
 symb1 = 'BTCUSDT'
 symb2 = 'BCCUSDT'
+calc_period = '5m'
 period = '1m'
 arbitrage_sum = True
 eps, mu, std = 0., 0., 0.
 limit = 1000
 
-stop_size = 0.8 # of zones
+stop_size = 0.8 # of levels
 max_orders = 4
 fees = 0.005
 
@@ -51,11 +54,11 @@ lot = {
 }
 
 tick_count = 0
-zones = [-2., 0., 2.]
-stops = [zones[0] - stop_size, zones[2] + stop_size]
+levels = [-2., 0., 2.]
+stops = [levels[0] - stop_size, levels[2] + stop_size]
 opened_orders = []
 history = []
-out_of_stop = False
+stop_flag = False
 
 # functions
 def check_touch_of_zone(levels, new_price, old_price):
@@ -137,12 +140,13 @@ balance['sum'] = past_prices[symb1]*balance[symb1] + past_prices[symb2]*balance[
 log.info('Start balance: {b:0.2f} USD'.format(b=balance['sum']))
 
 # labnotebook
-model_desc = {'pair_1': symb1, 'pair_2': symb2,
-              'period': period,
-              symb1: balance[symb1], symb2: balance[symb2],
-              'USD': balance['usd'], 'sum_balance': balance['sum'],
-              'stop_size': stop_size}
-experiment = labnotebook.start_experiment(model_desc=model_desc)
+if labnotebook_flag:
+    model_desc = {'pair_1': symb1, 'pair_2': symb2,
+                    'period': period,
+                    symb1: balance[symb1], symb2: balance[symb2],
+                    'USD': balance['usd'], 'sum_balance': balance['sum'],
+                    'stop_size': stop_size}
+    experiment = labnotebook.start_experiment(model_desc=model_desc)
 
 while True:
     try:
@@ -151,66 +155,64 @@ while True:
         if tick_count % 100000 == 0:
             x = pd.DataFrame(
                     api.candlesticks(symbol=symb1,
-                            interval=period, limit=limit),
+                            interval=calc_period, limit=limit),
                     dtype=np.float)[4].values
             y = pd.DataFrame(
                     api.candlesticks(symbol=symb2,
-                            interval=period, limit=limit),
+                            interval=calc_period, limit=limit),
                     dtype=np.float)[4].values
             eps, mu, std = calculate_cointegration_scores(x, y)
 
         # Update prices
         new_prices = {symb1: float(api.ticker_price(symbol=symb1)['price']),
                       symb2: float(api.ticker_price(symbol=symb2)['price'])}
-
-        z_score = (new_prices[symb1] - eps * new_prices[symb2] - mu) / std
-        past_z_score = (past_prices[symb1] - eps * past_prices[symb2] - mu) / std
+        if arbitrage_sum:
+            z_score = (new_prices[symb1] - eps * new_prices[symb2] - mu) / std
+            past_z_score = (past_prices[symb1] - eps * past_prices[symb2] - mu) / std
+        else:
+            # or?
+            z_score = (new_prices[symb1] - eps * new_prices[symb2] - mu) / std
+            past_z_score = (past_prices[symb1] - eps * past_prices[symb2] - mu) / std
 
         # Check stop levels
-        if stops[1] <= z_score or z_score <= stops[0]:
-            out_of_stop = True
-        if out_of_stop:
-            # raise ValueError('Out of z-score range!')
-            # TODO close orders
-            pass
+        if z_score <= min(stops) or max(stops) <= z_score:
+            if not stop_flag:
+                log.info('Stop loss.')
+
+            stop_flag = True
+        else:
+            stop_flag = False
 
         # trades
-        zone_level = check_touch_of_zone(zones, z_score, past_z_score)
-        if zone_level != 0:
-            # middles zones level
-            zlen = len(zones)
-            mid = int(zlen / 2) if zlen % 2 == 0 else int(zlen / 2) + 1
-
-            # skip
-            if len(opened_orders) >= max_orders:
-                continue
-
+        touched_level = check_touch_of_zone(levels, z_score, past_z_score)
+        if touched_level and touched_level != 0:
             # check opened orders
-            if zone_level == mid:
-                # close opened
-                for order in opened_orders:
-                    open_order(-(order - mid))
-                    opened_orders.remove(order)
-                    history.append([time(), z_score])
-            elif zone_level != mid:
-                # open order
-                open_order(zone_level - mid)
-                opened_orders.append(zone_level)
-                history.append([time(), z_score])
+            if len(opened_orders) == 0:
+                open_order(touched_level)
+                opened_orders.append(touched_level)
+                # history.append([time(), z_score])
+        elif touched_level == 0:
+            for order in opened_orders:
+                open_order(-order)
+                opened_orders.remove(order)
+                # history.append([time(), z_score])
 
+        # end tick
         balance['sum'] = new_prices[symb1]*balance[symb1] + new_prices[symb2]*balance[symb2] + balance['usd']
-        log.info('Tick: {t}\nBalances: {b:0.6f} BTC, {e:0.6f} ETH, {u:0.2f} USD\nSum balance: {s:0.2f} USD\nLevels of opened orders: {o}'.format(
-                t=tick_count, b=balance[symb1], e=balance[symb2],
+        log.info('Tick: {t}\nBalances: {bs1:0.6f} {s1}, {bs2:0.6f} {s2}, {u:0.2f} USD\nSum balance: {s:0.2f} USD\nLevels of opened orders: {o}'.format(
+                t=tick_count, bs1=balance[symb1], bs2=balance[symb2],
+                s1=symb1[:3], s2=symb2[:3],
                 u=balance['usd'], s=balance['sum'], o=opened_orders
         ))
         
         # labnotebook
-        labnotebook.step_experiment(experiment,
-                                    timestep=tick_count,
-                                    trainacc=balance['sum'],
-                                    custom_fields={symb1: balance[symb1], symb2: balance[symb2],
-                                                    'USD': balance['usd'], 'sum_balance': balance['sum']})
-        
+        if labnotebook_flag:
+            labnotebook.step_experiment(experiment,
+                                        timestep=tick_count,
+                                        trainacc=balance['sum'],
+                                        custom_fields={symb1: balance[symb1], symb2: balance[symb2],
+                                                        'USD': balance['usd'], 'sum_balance': balance['sum']})
+            
         past_prices = new_prices
         tick_count += 1
 
@@ -221,4 +223,5 @@ while True:
 log.info('======== End program ========\nFinal balance: {} USD'.format(balance['sum']))
 np.savetxt(path+'history.csv', np.array(history), fmt='%.2f', delimiter=';')
 # we close the experiment and pass all final indicators:
-labnotebook.end_experiment(experiment, final_trainacc=balance['sum'])
+if labnotebook_flag:
+    labnotebook.end_experiment(experiment, final_trainacc=balance['sum'])
