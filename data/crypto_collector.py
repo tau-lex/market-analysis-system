@@ -8,7 +8,7 @@ import pandas as pd
 from mas_tools.api import Binance
 
 api = Binance('', '')
-symbols = ['BTCUSDT', 'ETHUSDT', 'BNBETH', 'BNBUSDT']
+symbols = ['BTCUSDT', 'ETHUSDT', 'BNBETH', 'BNBUSDT', 'BCCUSDT']
 period = '1m'
 
 limit = 20
