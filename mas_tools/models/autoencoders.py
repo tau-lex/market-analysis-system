@@ -1,6 +1,7 @@
 from keras.models import Model
-from keras.layers import Input, Dense, Flatten, Reshape
-from keras.layers import Conv2D, MaxPooling2D, UpSampling2D
+from keras.layers import Input, Dense, concatenate
+from keras.layers import Flatten, Reshape, BatchNormalization
+from keras.layers import Conv2D, Conv2DTranspose, MaxPooling2D, UpSampling2D
 from keras.regularizers import L1L2
 
 
@@ -93,29 +94,58 @@ def create_deep_ae(input_shape, encoding_dim=64,
     return encoder, decoder, autoencoder
 
 
-def create_deep_conv_ae():
-    # TODO
-    input_img = Input(shape=(28, 28, 1))
+def create_deep_conv_ae(input_shape):
 
-    x = Conv2D(128, (7, 7), activation='relu', padding='same')(input_img)
-    x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(32, (2, 2), activation='relu', padding='same')(x)
-    x = MaxPooling2D((2, 2), padding='same')(x)
-    encoded = Conv2D(1, (7, 7), activation='relu', padding='same')(x)
+    latent_dim = 32
+    kernel_size = (1, 5)
+    kernel_pooling = (1, 2)
+    strides = (1, 1)
+    
+    # Encoder
+    input_tensor = Input(shape=input_shape, name='encoder_input')
+    x = Conv2D(filters=32,
+                kernel_size=kernel_size,
+                padding='same',
+                activation='relu',
+                strides=strides,
+                input_shape=input_shape)(input_tensor)
+    x = Conv2D(filters=64,
+                kernel_size=kernel_size,
+                padding='same',
+                activation='relu',
+                strides=strides)(x)
+    # shape info needed to build decoder model
+    shape = K.int_shape(x)
+    # shape = enc.output_shape
+    # generate latent vector Q(z|X)
+    x = Flatten()(x)
+    x = Dense(latent_dim, activation='relu', name='encoder_output')(x)
 
-    # На этом моменте представление  (7, 7, 1) т.е. 49-размерное
-
-    input_encoded = Input(shape=(7, 7, 1))
-    x = Conv2D(32, (7, 7), activation='relu', padding='same')(input_encoded)
-    x = UpSampling2D((2, 2))(x)
-    x = Conv2D(128, (2, 2), activation='relu', padding='same')(x)
-    x = UpSampling2D((2, 2))(x)
-    decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
+    # Decoder
+    latent_inputs = Input(shape=(latent_dim,), name='latent_input')
+    y = Dense(shape[1] * shape[2] * shape[3], activation='relu')(latent_inputs)
+    y = Reshape((shape[1], shape[2], shape[3]))(y)
+    y = Conv2DTranspose(filters=64,
+                    kernel_size=kernel_size,
+                    padding='same',
+                    activation='relu',
+                    strides=strides)(y)
+    y = Conv2DTranspose(filters=32,
+                    kernel_size=kernel_size,
+                    padding='same',
+                    activation='relu',
+                    strides=strides)(y)
+    y = Conv2DTranspose(filters=1,
+                    kernel_size=kernel_size,
+                    padding='same',
+                    activation='relu',
+                    strides=strides,
+                    name='decoder_output')(y)
 
     # Create models
-    encoder = Model(input_img, encoded, name="encoder")
-    decoder = Model(input_encoded, decoded, name="decoder")
-    autoencoder = Model(input_img, decoder(encoder(input_img)), name="autoencoder")
+    encoder = Model(input_tensor, x, name='encoder')
+    decoder = Model(latent_inputs, y, name='decoder')
+    autoencoder = Model(input_tensor, decoder(encoder(input_tensor)), name='ae')
 
     return encoder, decoder, autoencoder
 
