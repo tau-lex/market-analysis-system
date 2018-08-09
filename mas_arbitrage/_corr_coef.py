@@ -19,10 +19,11 @@ api = Binance('', '')
 # 1m, 3m, 5m, 15m, 30m
 # 1h, 2h, 4h, 6h, 8h
 # 12h, 1d, 3d, 1w, 1M
-period = '5m'
+period = '1h'
 limit = 1000
 base = 'BTCUSDT'
-pairs = ['ETHUSDT', 'BNBUSDT', 'BCCUSDT', 'EOSUSDT', 'ADAUSDT', 'LTCUSDT', 'NEOUSDT', 'XLMUSDT', 'XRPUSDT']
+# pairs = ['ETHUSDT', 'BNBUSDT', 'BCCUSDT', 'EOSUSDT', 'ADAUSDT', 'LTCUSDT', 'NEOUSDT', 'XLMUSDT', 'XRPUSDT']
+pairs = ['BCCUSDT']
 
 symb1 = pd.DataFrame(
         api.candlesticks(symbol=base,
@@ -32,7 +33,7 @@ x = symb1[4].values
 
 for pair in pairs:
     try:
-        print('{}\n{} vs {}:'.format(40*'=', base, pair))
+        print('{}\n{} vs {} ({}):'.format(40*'=', base, pair, period))
         symb2 = pd.DataFrame(
                 api.candlesticks(symbol=pair,
                         interval=period, limit=limit),
