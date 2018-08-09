@@ -32,13 +32,25 @@ def create_timeseries_matrix(data_x, data_y=[], look_back=3):
     len_x = len(data_x)
     data_x = np.array(data_x)
     data_y = np.array(data_y)
-    result = np.array(data_x[:-back, :])
+
+    lshape = len(data_x.shape)
+    if lshape > 1:
+        result = np.array(data_x[:-back, :])
+    else:
+        result = np.array(data_x[:-back])
 
     for i in range(1, look_back):
         j = len_x - back + i
-        result = np.hstack((result, data_x[i:j, :]))
+        if lshape > 1:
+            result = np.hstack((result, data_x[i:j, :]))
+        else:
+            result = np.vstack((result, data_x[i:j]))
 
-    new_shape = (data_x.shape[0] - look_back + 1, data_x.shape[1] * look_back)
+    if lshape > 1:
+        new_shape = (data_x.shape[0] - look_back + 1, data_x.shape[1] * look_back)
+    else:
+        new_shape = (data_x.shape[0] - look_back + 1, look_back)
+        result = result.T
     result = np.reshape(result, new_shape)
 
     return result, data_y[back:]

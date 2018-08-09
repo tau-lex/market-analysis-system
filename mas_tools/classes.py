@@ -29,7 +29,7 @@ def signal_to_class(data, n=2, normalize=True):
             for item in data:
                 if item > 0:        # buy
                     result = np.append(result, [1.0, 0.0])
-                if item < 0:        # sell
+                if item <= 0:        # sell
                     result = np.append(result, [0.0, 1.0])
         else:
             for item in data:
