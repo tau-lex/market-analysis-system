@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-The module contains the data processing functions of the MAS project.
-"""
-
 from math import exp
 
 import numpy as np
 from numpy.random import shuffle
+from PIL import Image, ImageDraw
 
 
 def create_timeseries_matrix(data_x, data_y=[], look_back=3):
@@ -99,6 +96,46 @@ def shuffle_xy(data_a = [], data_b = []):
         return data_a, data_b
         
     return np.hsplit(temp, np.array([width_a]))
+
+
+def timeseries_to_img(data):
+    """Creates an image of a time series window of the 'ohlc' type.
+    
+    Arguments
+        data (array like): Input array size (window size, 4).
+        
+    Returns
+        img (Image object): PIL module image object."""
+
+    width = len(data) * 4 + 1
+    height = width
+
+    mn = min(min(data[:, 0]), min(data[:, 1]), min(data[:, 2]), min(data[:, 3]))
+    mx = max(max(data[:, 0]), max(data[:, 1]), max(data[:, 2]), max(data[:, 3]))
+
+    img = Image.new("RGB", (width, height))
+    draw = ImageDraw.Draw(img)
+
+    def norm_height(value):
+        val = (value - mn) / (mx - mn) * (height - 2) # scale
+        return height - val - 1                       # invert
+
+    pix = img.load()
+    for idx in range(len(data)):
+        bar = data[idx]
+        x = (idx + 1) * 4 - 2
+        o = norm_height(bar[0])
+        h = norm_height(bar[1])
+        l = norm_height(bar[2])
+        c = norm_height(bar[3])
+        clr_bar = 'red' if o < c else 'green'
+        clr_line = (255, 0, 127) if o < c else (0, 255, 127)
+        draw.rectangle((x-1, o, x+1, c), fill=clr_bar)
+        draw.line((x, h, x, l), fill=clr_line, width=1)
+
+    del draw
+
+    return img
 
 
 def get_delta(data, index1=0, index2=1):
