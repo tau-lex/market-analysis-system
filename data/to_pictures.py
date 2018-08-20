@@ -9,7 +9,7 @@ from files import FILES, PERIODS, CSV
 lpath = 'E:/Projects/market-analysis-system/data/transformed/'
 spath = 'E:/Projects/market-analysis-system/data/pictured/'
 window = 20
-img_size = (window*4+1) * (window*4+1) * 3
+img_size = window*4 * window*4 * 3
 count = 1000 # count images of last bars
 
 if not os.path.exists(spath):

@@ -102,12 +102,12 @@ def timeseries_to_img(data):
     """Creates an image of a time series window of the 'ohlc' type.
     
     Arguments
-        data (array like): Input array size (window size, 4).
+        data (array like): Input array size (window_size, 4).
         
     Returns
         img (Image object): PIL module image object."""
 
-    width = len(data) * 4 + 1
+    width = len(data) * 4
     height = width
 
     mn = min(min(data[:, 0]), min(data[:, 1]), min(data[:, 2]), min(data[:, 3]))
@@ -117,8 +117,8 @@ def timeseries_to_img(data):
     draw = ImageDraw.Draw(img)
 
     def norm_height(value):
-        val = (value - mn) / (mx - mn) * (height - 2) # scale
-        return height - val - 1                       # invert
+        val = (value - mn) / (mx - mn) * height # scale
+        return height - val                     # invert
 
     pix = img.load()
     for idx in range(len(data)):
