@@ -15,8 +15,10 @@ count = 1000 # count images of last bars
 if not os.path.exists(spath):
     os.makedirs(spath)
 
-for symbol in FILES[19:]:
-    for tf in PERIODS:
+symbols = ['GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDJPY']
+
+for symbol in symbols: # FILES[:]:
+    for tf in PERIODS[2:]:
     # tf = '1440'
     # symbol = 'AUDUSD'
     # tfdir = spath + symbol + tf + '_' + str(window) + '/'
