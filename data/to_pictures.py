@@ -8,17 +8,17 @@ from files import FILES, PERIODS, CSV
 
 lpath = 'E:/Projects/market-analysis-system/data/transformed/'
 spath = 'E:/Projects/market-analysis-system/data/pictured/'
-window = 20
+window = 50
 img_size = window*4 * window*4 * 3
 count = 1000 # count images of last bars
 
 if not os.path.exists(spath):
     os.makedirs(spath)
 
-symbols = ['GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDJPY']
+# symbols = ['GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDJPY']
 
-for symbol in symbols: # FILES[:]:
-    for tf in PERIODS[2:]:
+for symbol in FILES[:]:
+    for tf in PERIODS[3:]:
     # tf = '1440'
     # symbol = 'AUDUSD'
     # tfdir = spath + symbol + tf + '_' + str(window) + '/'

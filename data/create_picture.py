@@ -28,7 +28,7 @@ imgs = np.array([])
 
 for idx in range(800, 900):
     image = timeseries_to_img(new_data[idx:idx+window, 1:5])
-    image.save(spath + 'test/' + fn + '_pil_' + str(idx) + '.png', 'PNG')
+    # image.save(spath + 'test/' + fn + '_pil_' + str(idx) + '.png', 'PNG')
     imgs = np.append(imgs, image)
 
 imgs = imgs.reshape((100, window*4, window*4, 3))
