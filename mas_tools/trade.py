@@ -170,10 +170,13 @@ def calculate_cointegration_scores(x, y, log_info=True, plot_graph=False,
     #     plt.show()
 
     # z-score
+    mean = np.mean(z)
     std = np.std(z)
-    z_score = z / std
+    z_score1 = z / std
+    # z_score2 = (z - mean) / std
     if plot_graph:
-        plt.plot(z_score)
+        plt.plot(z_score1)
+        # plt.plot(z_score2)
         plt.title('Z-score')
         plt.ylabel('score')
         plt.xlabel('bar')

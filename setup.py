@@ -17,6 +17,7 @@ setup(
     install_requires=[
             'numpy', 'pandas', 'matplotlib',
             'scikit-learn', 'keras>=2.1', 'tensorflow>=1.8',
+            'plaidml-keras', 'plaidbench',
             'gym', 'keras-rl'
             # 'cntk>=2.5', 'ccxt>=1.16'
         ]

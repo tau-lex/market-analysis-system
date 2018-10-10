@@ -1,0 +1,1 @@
+## Directory with windows of time series converted into images.

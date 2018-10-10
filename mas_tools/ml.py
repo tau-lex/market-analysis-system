@@ -51,11 +51,11 @@ def classification_scores(true_y, test_y, n=3):
 
     result = '-' * 20
     result += '\n\nMATTHEWS CORRELATION:\n'
-    result += matthews_corrcoef(true_y, test_y)
+    result += str(matthews_corrcoef(true_y, test_y))
 
     result += '\n\nCONFUSION MATRIX:\n'
     cm = confusion_matrix(true_y, test_y, labels=labels)
-    result += cm / cm.astype(np.float).sum(axis=1)
+    result += str(cm / cm.astype(np.float).sum(axis=1))
 
     result += '\n\nCLASSIFICATION REPORT:\n'
     result += classification_report(true_y, test_y,
@@ -108,13 +108,14 @@ def save_model_arch(model, name):
     """Save model architecture."""
     plot_model(model, to_file=name+'.png',
                 show_shapes=True,
-                show_layer_names=False)
+                show_layer_names=True)
 
     text = ''
     for item in model.layers:
         text = text + str(item.name) + '\n'
         text = text + str(item.input_shape) + '\n'
         text = text + str(item.output_shape) + '\n'
+        # text = text + str(item.param_count) + '\n'
         # text = text + str(item.get_weights()) + '\n'
         text = text + '\n=====================================\n'
 
