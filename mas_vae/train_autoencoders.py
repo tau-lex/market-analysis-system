@@ -20,7 +20,7 @@ tf = 240        # timeframe (period)
 window = 20     # size history window (bar count)
 
 # model
-action = 'train2' # train[1-2], predict
+action = 'predict' # train1, train2, predict
 wgt_path = 'E:/Projects/market-analysis-system/mas_vae/'
 code = 60       # latent tensor size
 filters = (3, 12) # convolution filters count
@@ -198,79 +198,95 @@ if action in ['train1', 'train2']:
 n = 10
 test_z_mean, test_z_log_var, test_z = encoder.predict(x_test, batch_size=batch)
 
-# # display a histogram of the digit classes in the latent space
-# filename = wgt_path + model_name + '_latent-distr.png'
-# for idx in range(n*n):
-#     plt.hist(test_z_mean[idx], bins=50)
-# plt.xlabel('z size')
-# plt.savefig(filename)
-# plt.close()
+if action == 'predict':
+    # display a histogram of the digit classes in the latent space
+    filename = wgt_path + model_name + '_latent-distr.png'
+    for idx in range(n*n):
+        plt.hist(test_z[idx], bins=50)
+    plt.xlabel('z size')
+    plt.savefig(filename)
+    plt.close()
 
-## Origin test data
-figure = np.zeros((img_width * n, img_width * n, 3))
-_test = x_test[:100]
-for idx in range(10):
-    for jdx in range(10):
-        digit = _test[idx*10+jdx].reshape(img_width, img_width, 3)
-        figure[idx * img_width: (idx + 1) * img_width,
-                jdx * img_width: (jdx + 1) * img_width] = digit
+    filename = wgt_path + model_name + '_latent-distr-mean.png'
+    for idx in range(n*n):
+        plt.hist(test_z_mean[idx], bins=50)
+    plt.xlabel('z size')
+    plt.savefig(filename)
+    plt.close()
 
-filename = wgt_path + model_name + '_origin_pics.png'
-fig = plt.figure()
-img = plt.imshow(figure) 
-plt.colorbar(img)
-plt.title('origin 100 examples')
-plt.savefig(filename)
-plt.close()
+    filename = wgt_path + model_name + '_latent-distr--log.png'
+    for idx in range(n*n):
+        plt.hist(test_z_log_var[idx], bins=50)
+    plt.xlabel('z size')
+    plt.savefig(filename)
+    plt.close()
 
-## Decoded test data
-figure = np.zeros((img_width * n, img_width * n, 3))
-z_sample = test_z_mean[:100, :]
-x_decoded = decoder.predict(z_sample)
-for idx in range(10):
-    for jdx in range(10):
-        digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
-        figure[idx * img_width: (idx + 1) * img_width,
-                jdx * img_width: (jdx + 1) * img_width] = digit * 100
+if action == 'train1' or action == 'train2':
+    ## Origin test data
+    figure = np.zeros((img_width * n, img_width * n, 3))
+    _test = x_test[:100]
+    for idx in range(10):
+        for jdx in range(10):
+            digit = _test[idx*10+jdx].reshape(img_width, img_width, 3)
+            figure[idx * img_width: (idx + 1) * img_width,
+                    jdx * img_width: (jdx + 1) * img_width] = digit
 
-filename = wgt_path + model_name + '_restored_from_z__mean.png'
-fig = plt.figure()
-img = plt.imshow(figure) 
-plt.colorbar(img)
-plt.title('z mean 100 examples')
-plt.savefig(filename)
-plt.close()
+    filename = wgt_path + model_name + '_origin_pics.png'
+    fig = plt.figure()
+    img = plt.imshow(figure) 
+    plt.colorbar(img)
+    plt.title('origin 100 examples')
+    plt.savefig(filename)
+    plt.close()
 
-figure = np.zeros((img_width * n, img_width * n, 3))
-z_sample = test_z_log_var[:100, :]
-x_decoded = decoder.predict(z_sample)
-for idx in range(10):
-    for jdx in range(10):
-        digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
-        figure[idx * img_width: (idx + 1) * img_width,
-                jdx * img_width: (jdx + 1) * img_width] = digit * 100
+    ## Decoded test data
+    figure = np.zeros((img_width * n, img_width * n, 3))
+    z_sample = test_z_mean[:100, :]
+    x_decoded = decoder.predict(z_sample)
+    for idx in range(10):
+        for jdx in range(10):
+            digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
+            figure[idx * img_width: (idx + 1) * img_width,
+                    jdx * img_width: (jdx + 1) * img_width] = digit * 100
 
-filename = wgt_path + model_name + '_restored_from_z_log.png'
-fig = plt.figure()
-img = plt.imshow(figure) 
-plt.colorbar(img)
-plt.title('z log 100 examples')
-plt.savefig(filename)
-plt.close()
+    filename = wgt_path + model_name + '_restored_from_z__mean.png'
+    fig = plt.figure()
+    img = plt.imshow(figure) 
+    plt.colorbar(img)
+    plt.title('z mean 100 examples')
+    plt.savefig(filename)
+    plt.close()
 
-figure = np.zeros((img_width * n, img_width * n, 3))
-z_sample = test_z[:100, :]
-x_decoded = decoder.predict(z_sample)
-for idx in range(10):
-    for jdx in range(10):
-        digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
-        figure[idx * img_width: (idx + 1) * img_width,
-                jdx * img_width: (jdx + 1) * img_width] = digit * 100
+    figure = np.zeros((img_width * n, img_width * n, 3))
+    z_sample = test_z_log_var[:100, :]
+    x_decoded = decoder.predict(z_sample)
+    for idx in range(10):
+        for jdx in range(10):
+            digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
+            figure[idx * img_width: (idx + 1) * img_width,
+                    jdx * img_width: (jdx + 1) * img_width] = digit * 100
 
-filename = wgt_path + model_name + '_restored_from_z.png'
-fig = plt.figure()
-img = plt.imshow(figure) 
-plt.colorbar(img)
-plt.title('z 100 examples')
-plt.savefig(filename)
-plt.close()
+    filename = wgt_path + model_name + '_restored_from_z_log.png'
+    fig = plt.figure()
+    img = plt.imshow(figure) 
+    plt.colorbar(img)
+    plt.title('z log 100 examples')
+    plt.savefig(filename)
+    plt.close()
+
+    figure = np.zeros((img_width * n, img_width * n, 3))
+    z_sample = test_z[:100, :]
+    x_decoded = decoder.predict(z_sample)
+    for idx in range(10):
+        for jdx in range(10):
+            digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
+            figure[idx * img_width: (idx + 1) * img_width,
+                    jdx * img_width: (jdx + 1) * img_width] = digit * 100
+
+    filename = wgt_path + model_name + '_restored_from_z.png'
+    fig = plt.figure()
+    img = plt.imshow(figure) 
+    plt.colorbar(img)
+    plt.title('z 100 examples')
+    plt.savefig(filename)
+    plt.close()
