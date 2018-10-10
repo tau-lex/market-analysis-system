@@ -1,12 +1,10 @@
-from keras import backend as K
-
 from keras.models import Model
 from keras.layers import Input, Dense, concatenate, Lambda
 from keras.layers import Flatten, Reshape, BatchNormalization, Dropout
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D
-
 from keras.losses import mse, mae, mape, binary_crossentropy
 from keras.regularizers import L1L2
+from keras import backend as K
 
 
 def dense_ae(input_shape, encoding_dim=64, output_activation='linear'):

@@ -13,7 +13,6 @@ from sklearn.model_selection import train_test_split
 from mas_tools.ml import plot_history
 import matplotlib.pyplot as plt
 
-
 # data
 dt_path = 'E:/Projects/market-analysis-system/data/pictured/'
 symbols = ['GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDJPY', 'EURUSD', 'EURAUD']
@@ -21,11 +20,13 @@ tf = 240        # timeframe (period)
 window = 20     # size history window (bar count)
 
 # model
+action = 'train2' # train[1-2], predict
 wgt_path = 'E:/Projects/market-analysis-system/mas_vae/'
-code = 50       # latent tensor size
-filters = (12, 3) # convolution filters count
+code = 60       # latent tensor size
+filters = (3, 12) # convolution filters count
 dropout = 0.4   # inside dropout
 
+epochs = 10
 batch = 128
 img_width = window * 4
 img_size = img_width * img_width * 3
@@ -60,23 +61,128 @@ x_test = x_test.astype('float32') / 255
 print('New data shape: {} \nRead+Calc time: {}'.format(x_train.shape, time.clock() - start_t))
 
 
-#====== Train AE ======
+#====== Train VAE ======
 model_name = 'vae_img{}_flt{}-{}_code{}'.format(window, filters[0], filters[1], code)
 encoder, decoder, autoencoder, _ = deep_conv2d_vae((img_width, img_width, 3),
                                     filters_count=filters,
                                     latent_dim=code,
                                     dropout=dropout)
 
+# #====== create model ======
+# from keras.models import Model
+# from keras.layers import Input, Dense, concatenate, Lambda
+# from keras.layers import Flatten, Reshape, BatchNormalization, Dropout
+# from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D
+# from keras.losses import mse, mae, mape
+# from keras import backend as K
+
+# def sampling(args):
+#     z_mean, z_log_var = args
+#     batch = K.shape(z_mean)[0]
+#     dim = K.int_shape(z_mean)[1]
+#     # by default, random_normal has mean=0 and std=1.0
+#     epsilon = K.random_normal(shape=(batch, dim))
+#     return z_mean + K.exp(0.5 * z_log_var) * epsilon
+
+# input_shape = (img_width, img_width, 3)
+# latent_dim = code
+# filters_count = filters
+# kernel_size = (3, 3)
+# kernel_pooling = (2, 2)
+# strides = (1, 1)
+# initializer = 'truncated_normal'
+    
+# # Encoder
+# input_tensor = Input(shape=input_shape, name='encoder_input')
+# if len(input_shape) == 2:
+#     x = Reshape((input_shape[0], input_shape[1], 1))(input_tensor)
+# elif len(input_shape) == 3:
+#     x = input_tensor
+# x = Conv2D(filters=filters_count[0],
+#             kernel_size=kernel_size,
+#             padding='same',
+#             activation='relu',
+#             kernel_initializer=initializer,
+#             strides=strides)(x)
+# x = Dropout(dropout)(x)
+# x = MaxPooling2D(kernel_pooling)(x)
+# x = Conv2D(filters=filters_count[1],
+#             kernel_size=kernel_size,
+#             padding='same',
+#             activation='relu',
+#             kernel_initializer=initializer,
+#             strides=strides)(x)
+# x = Dropout(dropout)(x)
+# x = MaxPooling2D(kernel_pooling)(x)
+# # shape info needed to build decoder model
+# shape = K.int_shape(x)
+# # shape = enc.output_shape
+# # generate latent vector Q(z|X)
+# x = Flatten()(x)
+# x = Dense(latent_dim*3, activation='relu', name='encoder_output')(x)
+
+# z_mean = Dense(latent_dim, name='z_mean')(x)
+# z_log_var = Dense(latent_dim, name='z_log_var')(x)
+# # use reparameterization trick to push the sampling out as input
+# # note that "output_shape" isn't necessary with the TensorFlow backend
+# z = Lambda(sampling, output_shape=(latent_dim,), name='z')([z_mean, z_log_var])
+
+# # Decoder
+# latent_inputs = Input(shape=(latent_dim,), name='latent_input')
+# y = Dense(shape[1] * shape[2] * shape[3], activation='relu')(latent_inputs)
+# y = Reshape((shape[1], shape[2], shape[3]))(y)
+# y = UpSampling2D(kernel_pooling)(y)
+# y = Dropout(dropout)(y)
+# y = Conv2DTranspose(filters=filters_count[1],
+#                 kernel_size=kernel_size,
+#                 padding='same',
+#                 activation='relu',
+#                 kernel_initializer=initializer,
+#                 strides=strides)(y)
+# y = UpSampling2D(kernel_pooling)(y)
+# y = Dropout(dropout)(y)
+# y = Conv2DTranspose(filters=filters_count[0],
+#                 kernel_size=kernel_size,
+#                 padding='same',
+#                 activation='relu',
+#                 kernel_initializer=initializer,
+#                 strides=strides)(y)
+# y = Conv2DTranspose(filters=(1 if len(input_shape) == 2 else 3),
+#                 kernel_size=kernel_size,
+#                 padding='same',
+#                 activation='relu',
+#                 kernel_initializer=initializer,
+#                 strides=strides,
+#                 name='decoder_output')(y)
+# if len(input_shape) == 2:
+#     output = Reshape((input_shape[0], input_shape[1]))(y)
+# elif len(input_shape) == 3:
+#     output = Reshape(input_shape)(y)
+
+# # Create models
+# encoder = Model(input_tensor, [z_mean, z_log_var, z], name='encoder')
+# decoder = Model(latent_inputs, output, name='decoder')
+# autoencoder = Model(input_tensor, decoder(encoder(input_tensor)[2]), name='ae')
+
+# reconstruction_loss = mse(K.flatten(input_tensor), K.flatten(output))
+# reconstruction_loss *= img_size
+# kl_loss = 1 + z_log_var - K.square(z_mean) - K.exp(z_log_var)
+# kl_loss = K.sum(kl_loss, axis=-1)
+# kl_loss *= -0.5
+# vae_loss = K.mean(reconstruction_loss + kl_loss)
+# autoencoder.add_loss(vae_loss)
+# autoencoder.compile(optimizer='rmsprop', metrics=['acc'])
+# #==============
+
 autoencoder.compile(optimizer='rmsprop', loss='mse', metrics=['acc'])
 
-action = 'train1'
 if action in ['train2', 'predict']:
     autoencoder.load_weights(wgt_path + model_name + '.hdf5', by_name=True)
 if action in ['train1', 'train2']:
     # reduce_lr = ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.00001, verbose=1)
     
     history = autoencoder.fit(x_train, x_train,
-                            epochs=3,
+                            epochs=epochs,
                             batch_size=batch,
                             shuffle=True,
                             # callbacks=[reduce_lr],
@@ -90,16 +196,15 @@ if action in ['train1', 'train2']:
 
 #====== View ======
 n = 10
-z_mean, z_log_var, z = encoder.predict(x_test, batch_size=batch)
+test_z_mean, test_z_log_var, test_z = encoder.predict(x_test, batch_size=batch)
 
-# display a 2D plot of the digit classes in the latent space
-filename = wgt_path + model_name + '_latent-distr.png'
-for idx in range(n*n):
-    plt.plot(z_mean[idx])
-plt.xlabel('latent space index')
-plt.ylabel('z size')
-plt.savefig(filename)
-plt.show()
+# # display a histogram of the digit classes in the latent space
+# filename = wgt_path + model_name + '_latent-distr.png'
+# for idx in range(n*n):
+#     plt.hist(test_z_mean[idx], bins=50)
+# plt.xlabel('z size')
+# plt.savefig(filename)
+# plt.close()
 
 ## Origin test data
 figure = np.zeros((img_width * n, img_width * n, 3))
@@ -114,13 +219,13 @@ filename = wgt_path + model_name + '_origin_pics.png'
 fig = plt.figure()
 img = plt.imshow(figure) 
 plt.colorbar(img)
-plt.title('100 examples')
+plt.title('origin 100 examples')
 plt.savefig(filename)
-plt.show()
+plt.close()
 
 ## Decoded test data
 figure = np.zeros((img_width * n, img_width * n, 3))
-z_sample = z_mean[:100, :]
+z_sample = test_z_mean[:100, :]
 x_decoded = decoder.predict(z_sample)
 for idx in range(10):
     for jdx in range(10):
@@ -132,12 +237,12 @@ filename = wgt_path + model_name + '_restored_from_z__mean.png'
 fig = plt.figure()
 img = plt.imshow(figure) 
 plt.colorbar(img)
-plt.title('100 examples')
+plt.title('z mean 100 examples')
 plt.savefig(filename)
-plt.show()
+plt.close()
 
 figure = np.zeros((img_width * n, img_width * n, 3))
-z_sample = z_log_var[:100, :]
+z_sample = test_z_log_var[:100, :]
 x_decoded = decoder.predict(z_sample)
 for idx in range(10):
     for jdx in range(10):
@@ -149,12 +254,12 @@ filename = wgt_path + model_name + '_restored_from_z_log.png'
 fig = plt.figure()
 img = plt.imshow(figure) 
 plt.colorbar(img)
-plt.title('100 examples')
+plt.title('z log 100 examples')
 plt.savefig(filename)
-plt.show()
+plt.close()
 
 figure = np.zeros((img_width * n, img_width * n, 3))
-z_sample = z[:100, :]
+z_sample = test_z[:100, :]
 x_decoded = decoder.predict(z_sample)
 for idx in range(10):
     for jdx in range(10):
@@ -166,6 +271,6 @@ filename = wgt_path + model_name + '_restored_from_z.png'
 fig = plt.figure()
 img = plt.imshow(figure) 
 plt.colorbar(img)
-plt.title('100 examples')
+plt.title('z 100 examples')
 plt.savefig(filename)
-plt.show()
+plt.close()
