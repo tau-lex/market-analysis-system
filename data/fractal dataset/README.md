@@ -1,1 +1,0 @@
-## Directory for storing data of one-symbol timeseries, united according to the principle - two timeframes, synchronized by lines.

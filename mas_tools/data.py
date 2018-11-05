@@ -7,7 +7,8 @@ from PIL import Image, ImageDraw
 
 
 def create_timeseries_matrix(data_x, data_y=[], look_back=3):
-    """Converts a dataset into a time series matrix.
+    """
+    Converts a dataset into a time series matrix.
     
     Arguments
         data_x (array like): Features data.
@@ -16,7 +17,8 @@ def create_timeseries_matrix(data_x, data_y=[], look_back=3):
         
     Returns
         data_x (array): Transformed features data.
-        data_y (array): Transformed target data."""
+        data_y (array): Transformed target data.
+    """
 
     if look_back <= 1:
         return np.array(data_x), np.array(data_y)
@@ -53,37 +55,10 @@ def create_timeseries_matrix(data_x, data_y=[], look_back=3):
     return result, data_y[back:]
 
 
-def dataset_to_traintest(data, train_ratio=0.6, limit=0):
-    """Returns a data set divided into two matrices.
-    train = train_ratio * data.
-    limit > 0 - limits the size of the dataset.
-    ! Depricated."""
-
-    data = np.array(data)
-
-    start, size = 0, len(data)
-    if limit > 0:
-        if size > limit:
-            start, size = size - limit, limit
-    elif limit < 0:
-        if size > abs(limit):
-            start, size = 0, abs(limit)
-
-    if train_ratio <= 0.0:
-        return None, data[start:size, :]
-    elif train_ratio >= 1.0:
-        return data[start:size, :], None
-
-    train_size = int(size * train_ratio)
-    # test_size = len(data) - train_size
-
-    if len(data.shape) == 1:
-        return data[start:(start + train_size),], data[(start + train_size):len(data),]
-    return data[start:(start + train_size), :], data[(start + train_size):len(data), :]
-
-
 def shuffle_xy(data_a = [], data_b = []):
-    """Shuffle data sets."""
+    """
+    Shuffle data sets.
+    """
 
     data_a = np.array(data_a)
     data_b = np.array(data_b)
@@ -99,13 +74,15 @@ def shuffle_xy(data_a = [], data_b = []):
 
 
 def timeseries_to_img(data):
-    """Creates an image of a time series window of the 'ohlc' type.
+    """
+    Creates an image of a time series window of the 'ohlc' type.
     
     Arguments
         data (array like): Input array size (window_size, 4).
         
     Returns
-        img (Image object): PIL module image object."""
+        img (Image object): PIL module image object.
+    """
 
     width = len(data) * 4
     height = width
@@ -139,14 +116,18 @@ def timeseries_to_img(data):
 
 
 def get_delta(data, index1=0, index2=1):
-    """Returns the difference between [,index1] and [,index2] in 2-D array."""
+    """
+    Returns the difference between [,index1] and [,index2] in 2-D array.
+    """
 
     return data[:, index1] - data[:, index2]
 
 
 def get_deltas_from_ohlc(data, index1=0):
-    """Calculates the delta prices (open, high, low, close) between index1 and index2.
-    Returns the numpy array with the shape (:, 6): [O-C, H-L, H-O, H-C, O-L, C-L]"""
+    """
+    Calculates the delta prices (open, high, low, close) between index1 and index2.
+    Returns the numpy array with the shape (:, 6): [O-C, H-L, H-O, H-C, O-L, C-L]
+    """
 
     return np.column_stack((get_delta(data, index1, index1 + 3),    # Open - Close
                                 get_delta(data, index1 + 1, index1 + 2),# High - Low
@@ -158,8 +139,10 @@ def get_deltas_from_ohlc(data, index1=0):
 
 
 def get_diff(data, rate=1):
-    """Computes a derivative and returns an array equal to
-    the length of the original array."""
+    """
+    Computes a derivative and returns an array equal to
+    the length of the original array.
+    """
 
     result = np.array([])
     for idx in range(rate):
@@ -175,8 +158,10 @@ def get_diff(data, rate=1):
 
 
 def get_log_diff(data, rate=1):
-    """Computes the log-differential and returns an array equal to
-    the length of the original array."""
+    """
+    Computes the log-differential and returns an array equal to
+    the length of the original array.
+    """
 
     result = np.array([])
     for idx in range(rate):
@@ -190,25 +175,27 @@ def get_log_diff(data, rate=1):
 
 
 def get_sigmoid(data):
-    """Sigmoid function."""
+    """
+    Sigmoid function.
+    """
 
-    result = 1 / (1 + np.exp(-data))
+    return 1 / (1 + np.exp(-data))
     # return exp(-np.logaddexp(0, -data))
     # return 0.5 * (1 + data / (1 + abs(data)))
 
-    return result
-
 
 def get_sigmoid_to_zero(data):
-    """Sigmoid function."""
+    """
+    Sigmoid function.
+    """
 
-    result = 1 / (1 + np.exp(-data)) - 0.5
-
-    return result
+    return 1 / (1 + np.exp(-data)) - 0.5
 
 
 def get_sigmoid_stable(data):
-    """Numerically-stable sigmoid function."""
+    """
+    Numerically-stable sigmoid function.
+    """
 
     result = np.array([])
     z = 0.0
@@ -224,8 +211,8 @@ def get_sigmoid_stable(data):
 
 
 def get_sigmoid_ration(data, alpha=2.0):
-    """Rationaly sigmoid."""
+    """
+    Rationaly sigmoid.
+    """
 
-    result = data / (np.abs(data) + alpha)
-
-    return result
+    return data / (np.abs(data) + alpha)

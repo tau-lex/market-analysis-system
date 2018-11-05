@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Exchanges API's base class.
-
-idea from: https://bablofil.ru
+"""
+Exchanges API's base class.
+https://bablofil.ru
 """
 
 class BaseApi():

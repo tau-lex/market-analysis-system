@@ -26,7 +26,7 @@ window = 20     # size history window (bar count)
 
 # model
 action = 'train1' # train1, train2, predict
-wgt_path = 'E:/Projects/market-analysis-system/mas_vae/'
+wgt_path = 'E:/Projects/market-analysis-system/mas_cryptobot/vae/wgts/'
 code = 60       # latent tensor size
 filters = (3, 12) # convolution filters count
 dropout = 0.4   # inside dropout

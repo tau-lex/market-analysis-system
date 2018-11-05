@@ -25,7 +25,8 @@ class MarketEnv(Env):
     def __init__(self, market: AbstractMarket,
                     use_deposit=False, use_last_action=False,
                     **kwargs):
-        """MarketEnv constructor.
+        """
+        MarketEnv constructor.
         
         Arguments
             market (AbstractMarket): Wrapper for access to the market through API, or other solutions.
@@ -43,7 +44,8 @@ class MarketEnv(Env):
         self.observation_space = Space(shape=self.market.shape, dtype=np.float)
 
     def step(self, action):
-        """Run one timestep of the environment's dynamics. When end of
+        """
+        Run one timestep of the environment's dynamics. When end of
         episode is reached, you are responsible for calling `reset()`
         to reset this environment's state.
 
@@ -104,7 +106,8 @@ class MarketEnv(Env):
         return (observation, reward, done, info)
 
     def reset(self):
-        """Resets the state of the environment and returns an initial observation.
+        """
+        Resets the state of the environment and returns an initial observation.
 
         Returns
             observation (object): the initial observation of the space.
@@ -134,7 +137,8 @@ class MarketEnv(Env):
                 (len(self.market.symbols) if self.use_last_action else 0))
 
     def render(self, mode='human', close=False):
-        """Renders the environment.
+        """
+        Renders the environment.
         The set of supported modes varies per environment. (And some
         environments do not support rendering at all.) By convention,
         if mode is:
@@ -166,7 +170,8 @@ class MarketEnv(Env):
             super(MarketEnv, self).render(mode=mode) # just raise an exception
 
     def configure(self, **kwargs):
-        """Provides runtime configuration to the environment.
+        """
+        Provides runtime configuration to the environment.
         This configuration should consist of data that tells your
         environment how to run (such as an address of a remote server,
         or path to your ImageNet data). It should not affect the
@@ -180,7 +185,8 @@ class MarketEnv(Env):
         self.reset()
 
     def close(self):
-        """Override _close in your subclass to perform any necessary cleanup.
+        """
+        Override _close in your subclass to perform any necessary cleanup.
 
         Environments will automatically close() themselves when
         garbage collected or when the program exits.
@@ -188,7 +194,8 @@ class MarketEnv(Env):
         if self.viewer: self.viewer.close()
 
     def seed(self, seed=None):
-        """Sets the seed for this env's random number generator(s).
+        """
+        Sets the seed for this env's random number generator(s).
         
         Returns
             list<bigint>: Returns the list of seeds used in this env's random
@@ -205,4 +212,3 @@ class MarketEnv(Env):
 
     def __str__(self):
         return '<{} instance>'.format(type(self).__name__)
-

@@ -1,9 +1,9 @@
 build*/
-__pycache__/
-tmp/
 dist/
 *.egg-info/
-api.conf
+__pycache__/
+wgts/
+arbitrage/
 *.autosave
 *.hdf5
 *.h5f
@@ -11,8 +11,8 @@ api.conf
 *.csv
 *.txt
 *.xlsx
-*.png
 *.user
 *.pyc
 *.rar
 *.npz
+api.conf

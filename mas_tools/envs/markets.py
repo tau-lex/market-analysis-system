@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 # import quandl
-from mas_tools.api import BaseApi
+from mas_tools.api.common import BaseApi
 from mas_tools.trade import calculate_stop_loss, calculate_lot
 
 
