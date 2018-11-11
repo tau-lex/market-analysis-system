@@ -14,7 +14,7 @@ period = '1m'
 limit = 20
 ticks = 0
 save_period = 1000
-path = 'd:/mas/'
+path = 'E:/Projects/market-analysis-system/data/crypto/'
 
 data = dict(zip(symbols, [dict({'data':[]}) for i in symbols]))
 

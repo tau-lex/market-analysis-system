@@ -109,7 +109,6 @@ def timeseries_to_img(data):
         clr_line = (255, 0, 127) if o < c else (0, 255, 127)
         draw.rectangle((x-1, o, x+1, c), fill=clr_bar)
         draw.line((x, h, x, l), fill=clr_line, width=1)
-
     del draw
 
     return img
