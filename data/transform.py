@@ -16,20 +16,17 @@ def get_script_dir(follow_symlinks=True):
         path = os.path.realpath(path)
     return os.path.dirname(path)
 
-
+## Files list
 directory = get_script_dir()
+files = list(filter(lambda x: x.endswith('.csv'), os.listdir(directory+'/exported')))
 
-files = os.listdir(directory + '/exported')
-
-files_tf_one = list(filter(lambda x: x.endswith('.csv'), files))
-
-# print(files_tf_one)
-
-for filename in files_tf_one:
+for filename in files:
+    ## Read
     table = pd.read_csv(directory + '/exported/' + filename, sep=',', header=None)
-
+    ## Format time
     table[1] = pd.to_datetime(table[0] + ' ' + table[1])
     table.drop([0], axis='columns')
-
-    table.to_csv(directory + '/transformed/' + filename, sep=';', header=False, index=False,
+    ## Save
+    table.to_csv(directory + '/transformed/' + filename, sep=';',
+                    header=False, index=False,
                     date_format="%Y.%m.%d %H:%M")

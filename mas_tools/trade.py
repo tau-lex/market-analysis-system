@@ -12,7 +12,8 @@ log = logging.getLogger(__name__)
 
 
 def calculate_stop_loss(data, direction: str, position=0, factor=3.0):
-    """Calculates the price of a stop order on an array of the latest prices.
+    """
+    Calculates the price of a stop order on an array of the latest prices.
 
     The minimum size of the history of the 12 last candles,
     including the bar for which the stop level is calculated,
@@ -74,7 +75,8 @@ def calculate_stop_loss(data, direction: str, position=0, factor=3.0):
 
 
 def calculate_lot(one_lot_risk, balance_risk, min_lot, precision=2):
-    """Calculates the size of lot by the size of risk.
+    """
+    Calculates the size of lot by the size of risk.
     Be careful, the risk values must be calculated in one currency.
     
     Arguments
@@ -94,9 +96,9 @@ def calculate_lot(one_lot_risk, balance_risk, min_lot, precision=2):
 
 
 def adjust_to_step(value, step, increase=False):
-    """Rounds any number to a multiple of the specified step.
-
-    Author: https://bablofil.ru
+    """
+    Rounds any number to a multiple of the specified step.
+    https://bablofil.ru
 
     Arguments
         increase (bool): if True - rounding will occur to a larger step value.
@@ -108,7 +110,8 @@ def adjust_to_step(value, step, increase=False):
 
 def calculate_cointegration_scores(x, y, log_info=True, plot_graph=False,
                                     save_graph_path='', raise_error=False):
-    """Write me, please
+    """
+    Write me, please
     
     Arguments
         x, y (array like):
@@ -119,7 +122,8 @@ def calculate_cointegration_scores(x, y, log_info=True, plot_graph=False,
     Returns
         eps:
         mu:
-        std:"""
+        std:
+    """
 
     # correlation
     corr = pearsonr(x, y)

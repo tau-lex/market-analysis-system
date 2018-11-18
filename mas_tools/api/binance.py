@@ -2,15 +2,12 @@
 """https://github.com/binance-exchange/binance-official-api-docs"""
 
 import time
-import json
 import urllib
 import hmac, hashlib
 import requests
+from urllib.parse import urlencode
 
-from urllib.parse import urlparse, urlencode
-from urllib.request import Request, urlopen
-
-from mas_tools.api import BaseApi
+from mas_tools.api.common import BaseApi
 
 
 class Binance(BaseApi):

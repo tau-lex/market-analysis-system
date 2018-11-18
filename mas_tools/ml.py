@@ -9,30 +9,26 @@ from keras.utils import plot_model
 
 
 def plot_history(history, acc='accuracy'):
-    """Plot functions graph."""
+    """
+    Plot history train graph.
+    """
 
-    # summarize history for loss
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
     plt.title('Model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    # plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.show()
 
-    try:
-        # summarize history for accuracy
+    if acc:
         plt.plot(history.history[acc])
         plt.plot(history.history['val_'+acc])
         plt.title('Model accuracy')
         plt.ylabel('accuracy')
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
-        # plt.axhline(y=0.5, color='grey', linestyle='--')
         plt.show()
-    except RuntimeError:
-        pass
 
 
 def classification_scores(true_y, test_y, n=3):
@@ -70,10 +66,9 @@ def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
-    """This function prints and plots the confusion matrix.
+    """
+    This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
-    
-    Arguments
     """
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -105,7 +100,10 @@ def plot_confusion_matrix(cm, classes,
 
 
 def save_model_arch(model, name):
-    """Save model architecture."""
+    """
+    Save model architecture.
+    """
+
     plot_model(model, to_file=name+'.png',
                 show_shapes=True,
                 show_layer_names=True)

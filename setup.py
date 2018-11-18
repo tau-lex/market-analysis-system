@@ -16,9 +16,11 @@ setup(
 #    include_package_data=True,
     install_requires=[
             'numpy', 'pandas', 'matplotlib',
-            'scikit-learn', 'keras>=2.1', 'tensorflow>=1.8',
-            'plaidml-keras', 'plaidbench',
-            'gym', 'keras-rl'
-            # 'cntk>=2.5', 'ccxt>=1.16'
+            'scikit-learn', 'keras>=2.1',
+            'tensorflow>=1.8',
+            # 'cntk>=2.5',
+            'gym', 'keras-rl',
+            'plaidml-keras', 'plaidbench', # for OpenCL calculation
+            # 'ccxt>=1.16', # universal api for crypto exchanges
         ]
 )

@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-The module contains the data processing functions.
-"""
-
 import numpy as np
 
 
@@ -10,11 +6,11 @@ def signal_to_class(data, n=2, normalize=True):
     """
     Converts a list of signals to a n-dimensional list of classes [buy, .., sell].
 
-    Arguments:
+    Arguments
         n (int): Number of classes.
         normalize (bool): It normalizes to unity. False - the signal changes only the sign.
         
-    Returns:
+    Returns
         Array of classes.
     """
 
@@ -70,7 +66,9 @@ def signal_to_class(data, n=2, normalize=True):
 
 
 def class_to_signal(data, n=2, normalized=True):
-    """Converts a n-dimensional list of classes to a list of signals."""
+    """
+    Converts a n-dimensional list of classes to a list of signals.
+    """
 
     result = np.array([])
 
