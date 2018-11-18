@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import random
 import numpy as np
 
@@ -7,186 +9,159 @@ import plaidml.keras
 plaidml.keras.install_backend()
 
 from mas_tools.models.autoencoders import deep_conv2d_vae
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 
-from sklearn.model_selection import train_test_split
 from mas_tools.ml import plot_history
 import matplotlib.pyplot as plt
 
-# data
+
+random.seed(666)
+
+## Data
+# 1
 dt_path = 'E:/Projects/market-analysis-system/data/pictured/'
-symbols = ['AUDJPY', 'AUDUSD', 'CHFJPY', 'EURAUD',
-            'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY',
-            'EURRUB', 'EURUSD', 'GBPAUD', 'GBPCAD',
-            'GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDJPY',
-            'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY',
-            'USDRUB', 'XAGUSD', 'XAUUSD']
+symbols = [
+    'AUDJPY', 'AUDUSD', 'CHFJPY', 'EURAUD',
+    'EURCAD', 'EURCHF', 'EURGBP', 'EURJPY',
+    'EURRUB', 'EURUSD', 'GBPAUD', 'GBPCAD',
+    'GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDJPY',
+    'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY',
+    'USDRUB', 'XAGUSD', 'XAUUSD'
+]
+tfs = [
+    '1', '5', '15', '30',
+    '60', '240', '1440'
+]
 tf = 240        # timeframe (period)
 window = 20     # size history window (bar count)
+# .. from random files
+rnd = random.sample
+filenames = ['{}{}_w{}.npz'.format(symbol, rnd(tfs, 1)[0], window) for symbol in rnd(symbols, 6)]
+# # 2
+# dt_path = 'E:/Projects/market-analysis-system/data/crypto/'
+# symbols = [
+#     'BCCUSDT', 'BNBETH', 'BNBUSDT',
+#     'BTCUSDT', 'ETHUSDT'
+# ]
+# postfix = '{n}_candles.csv'
+# window = 20     # size history window (bar count)
 
-# model
-action = 'train1' # train1, train2, predict
+
+## Model
 wgt_path = 'E:/Projects/market-analysis-system/mas_cryptobot/wgts/'
-code = 60       # latent tensor size
-filters = (3, 12) # convolution filters count
-dropout = 0.4   # inside dropout
+# Select mode:
+# Training from scratch - train1, 
+# Training a trained model - train2,
+# Predicting - predict
+action = 'train1'
+# latent tensor size
+code = 60
+# convolution filters count
+filters = (4, 12)
+# inside dropout
+dropout = 0.5
 
+model_name = 'vae_w{}_flt{}-{}_code{}'.format(window, filters[0], filters[1], code)
 epochs = 10
 batch = 128
+# image sizes
 img_width = window * 4
 img_size = img_width * img_width * 3
 
 
-#====== load data ======
+## Load data
 print('Load data...')
-random.seed(666)
-symbols = random.sample(symbols, 6)
-filename = str(tf) + '_w' + str(window) + '.npz'
-# create form
-data = np.ones((img_size,), dtype=np.float)
-data = np.reshape(data, (1, img_width, img_width, 3))
-# load
-for symbol in symbols:
+# Create form
+x_data = np.ones((img_size,), dtype=np.float)
+x_data = np.reshape(x_data, (1, img_width, img_width, 3))
+# Load
+for filename in filenames:
     # compressed npz
-    npz_file = np.load(dt_path + symbol + filename)
+    npz_file = np.load(dt_path + filename)
     new_data = npz_file.f.arr_0
     new_data = np.reshape(new_data, (len(new_data), img_width, img_width, 3))
-    data = np.vstack((data, new_data))
+    x_data = np.vstack((x_data, new_data))
 # clean first row
-data = data[1:]
-x_train, x_test = train_test_split(data, shuffle=True, test_size=0.1)
-# clear memory
-data = None
+x_data = x_data[1:]
 # normalize imagess data
-x_train = x_train.astype('float32') / 255
-x_test = x_test.astype('float32') / 255
-
-print('New data shape: {}'.format(x_train.shape))
+x_data = x_data.astype('float32') / 255
+print('New data shape:', x_data.shape)
 
 
-#====== Build VAE ======
+## Build VAE
 print('Build autoencoder...')
-model_name = 'vae_img{}_flt{}-{}_code{}'.format(window, filters[0], filters[1], code)
 encoder, decoder, autoencoder, vae_loss = deep_conv2d_vae((img_width, img_width, 3),
                                                             filters_count=filters,
                                                             latent_dim=code,
                                                             dropout=dropout)
+# TODO How to use vae_loss?
 # print(type(vae_loss))
-
 autoencoder.compile(optimizer='rmsprop', loss='mse', metrics=['acc'])
 
+
+## Train or do prediction
 if action in ['train2', 'predict']:
     autoencoder.load_weights(wgt_path + model_name + '.hdf5', by_name=True)
 if action in ['train1', 'train2']:
+    print('Train model...')
     # reduce_lr = ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.00001, verbose=1)
+    # chpt = ModelCheckpoint(wgt_path + model_name + '_{}.hdf5')
+    # tb = TensorBoard()
     
-    history = autoencoder.fit(x_train, x_train,
-                            epochs=epochs,
-                            batch_size=batch,
-                            shuffle=True,
-                            # callbacks=[reduce_lr],
-                            validation_data=(x_test, x_test))
+    # Train
+    history = autoencoder.fit(
+        x_data, x_data,
+        epochs=epochs,
+        batch_size=batch,
+        validation_split=0.1,
+        shuffle=True,
+        # callbacks=[tb]
+    )
 
+    # Save weights
     autoencoder.save_weights(wgt_path + model_name + '.hdf5')
     encoder.save_weights(wgt_path + model_name + '_enc.hdf5')
-    # decoder.save_weights(wgt_path + model_name + '_dec.hdf5')
     plot_history(history, acc='acc')
-    print('Weight saved.')
 
 
-#====== View ======
+## Visual evaluation
+# Number of examples = n^2
 n = 10
-test_z_mean, test_z_log_var, test_z = encoder.predict(x_test, batch_size=batch)
+test_z_mean, test_z_log_var, test_z = encoder.predict(x_data[-100:], batch_size=batch)
 
-if action == 'predict':
-    # display a histogram of the digit classes in the latent space
-    filename = wgt_path + model_name + '_latent-distr.png'
-    for idx in range(n*n):
-        plt.hist(test_z[idx], bins=50)
-    plt.xlabel('z size')
-    plt.savefig(filename)
-    plt.close()
+# Save images of origin and decoded data
+if action in ['train1', 'train2', 'predict']:
+    def plot_data(fname, plot_data):
+        figure = np.zeros((img_width * n, img_width * n, 3))
+        plot_data = plot_data[-(n*n):]
+        for idx in range(n):
+            for jdx in range(n):
+                digit = plot_data[idx*n+jdx].reshape(img_width, img_width, 3)
+                figure[(idx * img_width): ((idx + 1) * img_width),
+                        (jdx * img_width): ((jdx + 1) * img_width)] = digit
 
-    filename = wgt_path + model_name + '_latent-distr-mean.png'
-    for idx in range(n*n):
-        plt.hist(test_z_mean[idx], bins=50)
-    plt.xlabel('z size')
-    plt.savefig(filename)
-    plt.close()
+        fig = plt.figure()
+        img = plt.imshow(figure) 
+        plt.colorbar(img)
+        plt.savefig(fname)
+        plt.close()
 
-    filename = wgt_path + model_name + '_latent-distr--log.png'
-    for idx in range(n*n):
-        plt.hist(test_z_log_var[idx], bins=50)
-    plt.xlabel('z size')
-    plt.savefig(filename)
-    plt.close()
+    # Origin test data
+    plot_data(wgt_path+model_name+'_origin_pics.png', x_data)
+    # Decoded test data
+    plot_data(wgt_path+model_name+'_restored_from_z_1.png', decoder.predict(test_z[:100, :]))
+    # plot_data(wgt_path+model_name+'_restored_from_z_mean.png', decoder.predict(test_z_mean[:100, :]))
+    # plot_data(wgt_path+model_name+'_restored_from_z_log.png', decoder.predict(test_z_log_var[:100, :]))
 
-if action == 'train1' or action == 'train2':
-    ## Origin test data
-    figure = np.zeros((img_width * n, img_width * n, 3))
-    _test = x_test[:100]
-    for idx in range(10):
-        for jdx in range(10):
-            digit = _test[idx*10+jdx].reshape(img_width, img_width, 3)
-            figure[idx * img_width: (idx + 1) * img_width,
-                    jdx * img_width: (jdx + 1) * img_width] = digit
-
-    filename = wgt_path + model_name + '_origin_pics.png'
-    fig = plt.figure()
-    img = plt.imshow(figure) 
-    plt.colorbar(img)
-    plt.title('origin 100 examples')
-    plt.savefig(filename)
-    plt.close()
-
-    ## Decoded test data
-    figure = np.zeros((img_width * n, img_width * n, 3))
-    z_sample = test_z_mean[:100, :]
-    x_decoded = decoder.predict(z_sample)
-    for idx in range(10):
-        for jdx in range(10):
-            digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
-            figure[idx * img_width: (idx + 1) * img_width,
-                    jdx * img_width: (jdx + 1) * img_width] = digit * 100
-
-    filename = wgt_path + model_name + '_restored_from_z__mean.png'
-    fig = plt.figure()
-    img = plt.imshow(figure) 
-    plt.colorbar(img)
-    plt.title('z mean 100 examples')
-    plt.savefig(filename)
-    plt.close()
-
-    figure = np.zeros((img_width * n, img_width * n, 3))
-    z_sample = test_z_log_var[:100, :]
-    x_decoded = decoder.predict(z_sample)
-    for idx in range(10):
-        for jdx in range(10):
-            digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
-            figure[idx * img_width: (idx + 1) * img_width,
-                    jdx * img_width: (jdx + 1) * img_width] = digit * 100
-
-    filename = wgt_path + model_name + '_restored_from_z_log.png'
-    fig = plt.figure()
-    img = plt.imshow(figure) 
-    plt.colorbar(img)
-    plt.title('z log 100 examples')
-    plt.savefig(filename)
-    plt.close()
-
-    figure = np.zeros((img_width * n, img_width * n, 3))
-    z_sample = test_z[:100, :]
-    x_decoded = decoder.predict(z_sample)
-    for idx in range(10):
-        for jdx in range(10):
-            digit = x_decoded[idx*10+jdx].reshape(img_width, img_width, 3)
-            figure[idx * img_width: (idx + 1) * img_width,
-                    jdx * img_width: (jdx + 1) * img_width] = digit * 100
-
-    filename = wgt_path + model_name + '_restored_from_z.png'
-    fig = plt.figure()
-    img = plt.imshow(figure) 
-    plt.colorbar(img)
-    plt.title('z 100 examples')
-    plt.savefig(filename)
-    plt.close()
+# Save a histogram of the digit classes in the latent space
+if action in ['train2']:
+    def plot_hist(fname, hist_data):
+        for idx in range(n):
+            plt.hist(hist_data[idx], bins=100)
+        plt.xlabel('z size')
+        plt.savefig(fname)
+        plt.close()
+    
+    plot_hist(wgt_path+model_name+'_latent-distr.png', test_z)
+    # plot_hist(wgt_path+model_name+'_latent-distr-mean.png', test_z_mean)
+    # plot_hist(wgt_path+model_name+'_latent-distr--log.png', test_z_log_var)
