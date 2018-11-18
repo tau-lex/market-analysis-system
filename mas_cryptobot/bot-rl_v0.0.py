@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from keras.optimizers import Adam
 
 from rl.agents.dqn import DQNAgent

@@ -1,5 +1,5 @@
 # The Market Analysis System
-Join: [Discord](https://404.com "Discord")
+Join: [Discord](https://discordapp.com/invite/p4SKkhV "Discord")
 
 ## The Market analysis system
 MAS - a set of tools and examples of their use, the purpose of which is to analyze time series, build models based on machine learning, forecast signals for entering the market, automate trade.

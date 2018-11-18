@@ -36,3 +36,23 @@ def get_script_dir(follow_symlinks=True):
         path = os.path.realpath(path)
 
     return os.path.dirname(path)
+
+def get_api_pair(filename):
+    """
+    Return api key-secret pair from file.
+    """
+
+    key, secret = '', ''
+
+    ## Read file in to lines list
+    f = open(filename, 'r')
+    lines = f.readlines()
+    f.close()
+
+    for line in lines:
+        if line.find('KEY', 0, 7) > 0:
+            key = line.split('=')[1]
+        if line.find('SECRET', 0, 10) > 0:
+            secret = line.split('=')[1]
+
+    return key, secret         
